@@ -69,7 +69,8 @@ cd backend
 python -m venv ../venv && ../venv/Scripts/activate      # macOS/Linux: source ../venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env                                     # then edit (see §3)
-createdb -U postgres rafiki
+# Local dev defaults to SQLite (DATABASE_URL=sqlite:///db.sqlite3) — no database server needed.
+# To develop on PostgreSQL instead: createdb -U postgres rafiki, and set DATABASE_URL=postgres://...
 python manage.py migrate                                 # also seeds the core fees and site settings
 python manage.py createsuperuser                         # your first ADMIN user
 python manage.py runserver
@@ -139,7 +140,7 @@ Never commit `.env`. It is listed in `.gitignore`.
 - A submitted booking creates a **hold** (`blocks_inventory=True`, `hold_expires_at`).
 - Double booking is prevented at two levels:
   1. **In the application:** the vehicle row is locked with `SELECT … FOR UPDATE` and conflicts are checked.
-  2. **In the database:** a PostgreSQL `EXCLUSION` constraint (`btree_gist`) forbids two blocking bookings for the same vehicle whose time ranges overlap, including the turnaround buffer.
+  2. **In the database:** a PostgreSQL `EXCLUSION` constraint (`btree_gist`, added by migration `bookings.0003`) forbids two blocking bookings for the same vehicle whose time ranges overlap, including the turnaround buffer. SQLite (local development only) relies on check 1. Production settings refuse to start unless the database is PostgreSQL.
 - Rejected, cancelled, expired and completed bookings release the car. Lapsed holds expire automatically (Celery beat, plus a check on every new booking). Bookings with any verified payment are never expired automatically.
 
 ### Invoices (`apps/invoices`)

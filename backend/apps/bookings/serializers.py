@@ -85,14 +85,14 @@ class ExtraServicePublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExtraService
         fields = ["code", "name", "description", "price", "pricing_type", "pricing_type_display", "max_quantity",
-                  "requires_documents"]
+                  "bulk_min_quantity", "bulk_unit_price", "requires_documents"]
 
 
 class ExtraServiceAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExtraService
-        fields = ["id", "code", "name", "description", "price", "pricing_type", "max_quantity", "requires_documents",
-                  "is_active", "is_system", "display_order"]
+        fields = ["id", "code", "name", "description", "price", "pricing_type", "max_quantity", "bulk_min_quantity",
+                  "bulk_unit_price", "requires_documents", "is_active", "is_system", "display_order"]
         read_only_fields = ["id", "is_system"]
 
     def validate(self, attrs):
@@ -101,6 +101,12 @@ class ExtraServiceAdminSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"code": "System service codes cannot be changed."})
         if attrs.get("price") is not None and attrs["price"] < 0:
             raise serializers.ValidationError({"price": "Price cannot be negative."})
+        bmin = attrs.get("bulk_min_quantity", getattr(inst, "bulk_min_quantity", None))
+        bprice = attrs.get("bulk_unit_price", getattr(inst, "bulk_unit_price", None))
+        if bool(bmin) != (bprice is not None):
+            raise serializers.ValidationError({"bulk_unit_price": "Set both the bulk quantity and the bulk price, or neither."})
+        if bmin is not None and bmin < 2:
+            raise serializers.ValidationError({"bulk_min_quantity": "Bulk pricing must start at 2 or more."})
         return attrs
 
 
@@ -118,11 +124,7 @@ class FlightSerializer(serializers.ModelSerializer):
 
 def _vehicle_brief(v, request):
     img = v.primary_image
-    url = None
-    if img:
-        url = img.image.url
-        if request and url.startswith("/"):
-            url = request.build_absolute_uri(url)
+    url = img.image.url if img else None
     return {"id": str(v.pk), "slug": v.slug, "name": v.name, "brand": v.brand, "model": v.model, "image": url,
             "transmission": v.get_transmission_display(), "passenger_capacity": v.passenger_capacity}
 

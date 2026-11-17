@@ -2,18 +2,12 @@ import uuid
 from decimal import Decimal
 
 from django.conf import settings
-from django.contrib.postgres.constraints import ExclusionConstraint
-from django.contrib.postgres.fields import DateTimeRangeField, RangeBoundary, RangeOperators
 from django.db import models
-from django.db.models import Func, Q
+from django.db.models import Q
 
 from apps.core.files import RandomUploadPath, private_storage
 from apps.core.models import TimeStampedModel, UUIDModel
 
-
-class TsTzRange(Func):
-    function = "TSTZRANGE"
-    output_field = DateTimeRangeField()
 
 
 class LocationType(models.TextChoices):
@@ -71,6 +65,9 @@ class ExtraService(UUIDModel, TimeStampedModel):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     pricing_type = models.CharField(max_length=20, choices=PricingType.choices, default=PricingType.PER_BOOKING)
     max_quantity = models.PositiveSmallIntegerField(default=1)
+    # Optional volume price, e.g. baby seats: $60 each, or $50 each when taking 2 or more.
+    bulk_min_quantity = models.PositiveSmallIntegerField(null=True, blank=True)
+    bulk_unit_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     requires_documents = models.BooleanField(default=False)
     is_system = models.BooleanField(default=False, editable=False)
     is_active = models.BooleanField(default=True)
@@ -143,16 +140,8 @@ class Booking(UUIDModel, TimeStampedModel):
             models.CheckConstraint(condition=Q(blocked_until__gte=models.F("return_at")), name="booking_block_after_return"),
             models.CheckConstraint(condition=Q(rental_days__gte=1), name="booking_min_one_day"),
             models.CheckConstraint(condition=Q(grand_total__gte=0), name="booking_total_non_negative"),
-            # Database-level guarantee: no two active holds/reservations for the
-            # same vehicle may overlap in time (requires btree_gist).
-            ExclusionConstraint(
-                name="booking_no_vehicle_overlap",
-                expressions=[
-                    ("vehicle", RangeOperators.EQUAL),
-                    (TsTzRange("pickup_at", "blocked_until", RangeBoundary()), RangeOperators.OVERLAPS),
-                ],
-                condition=Q(blocks_inventory=True),
-            ),
+            # The PostgreSQL EXCLUSION constraint "booking_no_vehicle_overlap" is
+            # added by migration 0003 (PostgreSQL only, so SQLite works for dev).
         ]
         indexes = [
             models.Index(fields=["vehicle", "blocks_inventory", "pickup_at"]),

@@ -9,6 +9,12 @@
   force = true
 
 [[redirects]]
+  from = "/media/*"
+  to = "https://api.rafikicarhire.com/media/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "https://api.rafikicarhire.com/sitemap.xml"
   status = 200

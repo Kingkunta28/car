@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CreditCard, Download, FileText, KeyRound, Landmark, MessageCircle, Receipt, Upload } from "lucide-react";
+import { Clock, CreditCard, Download, FileText, KeyRound, Landmark, MessageCircle, Receipt, Upload } from "lucide-react";
 import { api, download } from "../../lib/api";
-import { fmtDate, fmtDateTime, fmtTime, usd } from "../../lib/format";
+import { fmtDate, fmtDateTime, fmtTime, usd, whatsappLink } from "../../lib/format";
+import { useSite } from "../../lib/hooks";
 import { clearGuest, loadGuest, saveGuest } from "../../lib/guest";
 import { Seo } from "../../lib/seo";
 import { Alert, Badge, Button, ErrorState, Field, Modal, PageLoader, useToast } from "../../components/ui";
@@ -73,6 +74,8 @@ export default function ManageBooking() {
   const toast = useToast();
   const [modal, setModal] = useState(null);
   const [paying, setPaying] = useState(false);
+  const { data: site } = useSite();
+  const wa = whatsappLink(site?.whatsapp_number, `Hello Rafiki Car Hire, I need a new link for my booking ${guest?.reference || ""}.`);
   const q = useQuery({
     queryKey: ["guest-booking", guest?.reference], enabled: !!guest, retry: false,
     queryFn: () => api.get("/bookings/track/", { guest }),
@@ -80,13 +83,25 @@ export default function ManageBooking() {
 
   if (!guest) return (<><Seo title="Manage booking" noindex /><AccessForm onAccess={() => setGuest(loadGuest())} /></>);
   if (q.isLoading) return <PageLoader />;
-  if (q.error) return (
-    <div className="container-x max-w-xl py-16">
-      <Seo title="Manage booking" noindex />
-      <ErrorState error={q.error} title="We couldn't open this booking" />
-      <Button variant="outline" className="mt-6" onClick={() => { clearGuest(); setGuest(null); }}>Enter details manually</Button>
-    </div>
-  );
+  if (q.error) {
+    const expired = q.error.status === 404;
+    return (
+      <div className="container-x max-w-xl py-20 text-center">
+        <Seo title="Manage booking" noindex />
+        {expired ? (
+          <>
+            <span className="mx-auto grid size-16 place-items-center rounded-full bg-orange-100 text-orange-600"><Clock className="size-8" /></span>
+            <h1 className="display-md mt-6">This booking link has expired</h1>
+            <p className="lead mt-3">For your security, booking links stop working after a while. Message us with your booking reference and we'll send you a fresh link straight away.</p>
+          </>
+        ) : <ErrorState error={q.error} onRetry={q.refetch} title="We couldn't open this booking" />}
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          {wa && <Button href={wa} target="_blank" rel="noopener noreferrer" variant="whatsapp" icon={MessageCircle}>Request a new link</Button>}
+          <Button variant="outline" onClick={() => { clearGuest(); setGuest(null); }}>Enter details manually</Button>
+        </div>
+      </div>
+    );
+  }
 
   const b = q.data;
   const refresh = () => qc.invalidateQueries({ queryKey: ["guest-booking"] });

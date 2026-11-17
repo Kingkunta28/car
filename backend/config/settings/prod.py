@@ -3,6 +3,11 @@ from .base import STORAGES, env
 
 DEBUG = False
 
+from .base import DATABASES  # noqa: E402
+
+if not DATABASES["default"]["ENGINE"].endswith("postgresql"):
+    raise RuntimeError("Production requires PostgreSQL (set DATABASE_URL=postgres://...).")
+
 # HTTPS / cookies
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)

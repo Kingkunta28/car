@@ -81,9 +81,16 @@ TEMPLATES = [
 # --------------------------------------------------------------------------
 # Database — PostgreSQL is required (exclusion constraints, range types).
 # --------------------------------------------------------------------------
-DATABASES = {"default": env.db("DATABASE_URL")}
-DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
-DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+DATABASES = {"default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")}
+if DATABASES["default"]["ENGINE"].endswith("sqlite3"):
+    # SQLite is for local development only. Production must use PostgreSQL,
+    # which adds the database-level double-booking EXCLUSION constraint.
+    name = Path(DATABASES["default"]["NAME"])
+    DATABASES["default"]["NAME"] = str(name if name.is_absolute() else BASE_DIR / name)
+    DATABASES["default"]["OPTIONS"] = {"timeout": 20, "transaction_mode": "IMMEDIATE"}
+else:
+    DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
+    DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 
 # --------------------------------------------------------------------------
 # Passwords & auth

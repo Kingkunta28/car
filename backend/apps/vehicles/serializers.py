@@ -14,9 +14,9 @@ class VehicleImageSerializer(serializers.ModelSerializer):
         fields = ["id", "url", "alt_text", "display_order"]
 
     def get_url(self, obj):
-        request = self.context.get("request")
-        url = obj.image.url
-        return request.build_absolute_uri(url) if request and url.startswith("/") else url
+        # Relative for local storage (served same-origin via the /media proxy/rewrite);
+        # absolute when object storage (S3/R2) returns a full URL.
+        return obj.image.url
 
 
 class _VehicleBase(serializers.ModelSerializer):

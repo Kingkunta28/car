@@ -1,3 +1,4 @@
+from unittest import skipUnless
 import threading
 from datetime import timedelta
 from decimal import Decimal
@@ -137,6 +138,7 @@ class EmailRetryTests(TestCase):
         self.assertEqual(log.delivery_status, DeliveryStatus.ABANDONED)
 
 
+@skipUnless(connection.vendor == "postgresql", "PostgreSQL-only behaviour")
 class SequenceConcurrencyTests(TransactionTestCase):
     """Real concurrent transactions must never receive the same number."""
 

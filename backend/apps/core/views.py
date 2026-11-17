@@ -25,10 +25,7 @@ class PublicSiteSerializer(serializers.ModelSerializer):
                   "business_address", "logo_url", "hero_image_url", "currency"]
 
     def _url(self, f):
-        if not f:
-            return None
-        r = self.context.get("request")
-        return r.build_absolute_uri(f.url) if r and f.url.startswith("/") else f.url
+        return f.url if f else None
 
     def get_logo_url(self, obj):
         return self._url(obj.logo)

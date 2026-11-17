@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CheckCircle2, Clock, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, RotateCcw, XCircle } from "lucide-react";
 import { api } from "../../lib/api";
 import { usd } from "../../lib/format";
 import { Seo } from "../../lib/seo";
@@ -45,7 +45,13 @@ export default function PaymentReturn() {
       <h1 className="mt-6 text-3xl font-bold">{state.loading ? "Checking your payment…" : title}</h1>
       {!state.loading && <p className="mt-3 text-lg text-muted">{text}</p>}
       {d && !state.loading && <p className="mt-4 text-sm text-muted">Payment status: <strong>{d.booking_payment_status}</strong> · Balance due {usd(d.balance_due)}</p>}
-      <Button to="/booking/manage" size="lg" className="mt-8">Go to my booking</Button>
+      {!state.loading && (
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          {(cancelled || !trackingId || d?.status === "FAILED")
+            ? <><Button to="/booking/manage" size="lg" icon={RotateCcw}>Try again</Button><Button to="/booking/manage" size="lg" variant="outline">Pay manually instead</Button></>
+            : <Button to="/booking/manage" size="lg" arrow>Go to my booking</Button>}
+        </div>
+      )}
     </div>
   );
 }

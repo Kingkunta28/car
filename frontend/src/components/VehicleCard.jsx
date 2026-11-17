@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import { Briefcase, Car, Fuel, Settings2, Users } from "lucide-react";
+import { ArrowUpRight, Briefcase, Car, Fuel, Settings2, Users } from "lucide-react";
 import { cx, usd } from "../lib/format";
-import { Badge, Button } from "./ui";
+import { Badge } from "./ui";
 
-/** Real photo if uploaded; otherwise a neutral branded panel (never a cartoon car). */
-export function VehicleImage({ vehicle, image, className, eager = false, sizes = "(min-width:1024px) 33vw, 100vw" }) {
+/** Real photo if uploaded; otherwise a composed, branded panel (never a cartoon car). */
+export function VehicleImage({ vehicle, image, className, eager = false, sizes = "(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" }) {
   const img = image || vehicle?.images?.[0];
   if (img?.url) {
     return (
@@ -14,10 +14,13 @@ export function VehicleImage({ vehicle, image, className, eager = false, sizes =
     );
   }
   return (
-    <div className={cx("flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-navy-800 to-navy-950 text-white/70", className)}
-      role="img" aria-label={`${vehicle?.name || "Vehicle"} — photo coming soon`}>
-      <Car className="size-10 text-orange-400/80" strokeWidth={1.4} aria-hidden />
-      <span className="mt-2 text-xs font-medium uppercase tracking-[0.2em]">{vehicle?.brand} {vehicle?.model}</span>
+    <div role="img" aria-label={`${vehicle?.name || "Vehicle"} — photo coming soon`}
+      className={cx("relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-navy-900 text-white/70", className)}>
+      <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_70%_20%,rgb(242_140_40/0.28),transparent_60%)]" aria-hidden />
+      <div className="hairline-grid absolute inset-0" aria-hidden />
+      <Car className="relative size-10 text-orange-400" strokeWidth={1.3} aria-hidden />
+      <span className="relative mt-3 font-display text-lg font-semibold text-white">{vehicle?.brand} {vehicle?.model}</span>
+      <span className="relative mt-0.5 text-[11px] uppercase tracking-[0.25em] text-white/50">Photo coming soon</span>
     </div>
   );
 }
@@ -33,37 +36,38 @@ export function Spec({ icon: Icon, children }) {
 export default function VehicleCard({ vehicle, query = "" }) {
   const available = vehicle.availability_status === "AVAILABLE";
   return (
-    <article className="group card flex flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]">
-      <Link to={`/fleet/${vehicle.slug}`} className="relative block aspect-[16/10] overflow-hidden bg-slate-100" tabIndex={-1} aria-hidden>
-        <VehicleImage vehicle={vehicle} className="transition duration-700 group-hover:scale-[1.04]" />
-        <span className="absolute left-3 top-3"><Badge tone="navy" className="bg-white/95">{vehicle.category_display}</Badge></span>
+    <article className="group card card-hover relative flex h-full flex-col overflow-hidden">
+      <Link to={`/fleet/${vehicle.slug}`} className="relative block aspect-[16/11] overflow-hidden bg-slate-100" tabIndex={-1} aria-hidden>
+        <VehicleImage vehicle={vehicle} className="transition duration-[1.2s] ease-[var(--ease-out-soft)] group-hover:scale-[1.06]" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-navy-950/70 to-transparent" />
+        <span className="absolute left-4 top-4"><Badge tone="navy" className="bg-white/95 backdrop-blur">{vehicle.category_display}</Badge></span>
+        {!available && <span className="absolute right-4 top-4"><Badge status={vehicle.availability_status} className="bg-white/95">{vehicle.availability_display}</Badge></span>}
+        <p className="absolute bottom-3 left-4 text-white">
+          <span className="font-display text-2xl font-bold">{usd(vehicle.price_per_day)}</span>
+          <span className="text-sm text-white/75"> / day</span>
+        </p>
+        <span className="absolute bottom-3 right-4 grid size-10 translate-y-2 place-items-center rounded-full bg-white text-navy-900 opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+          <ArrowUpRight className="size-5" />
+        </span>
       </Link>
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="truncate text-lg font-semibold">
-              <Link to={`/fleet/${vehicle.slug}`} className="hover:text-navy-700">{vehicle.name}</Link>
-            </h3>
-            <p className="text-sm text-muted">{vehicle.brand} {vehicle.model}{vehicle.year ? ` · ${vehicle.year}` : ""}</p>
-          </div>
-          <Badge status={vehicle.availability_status}>{available ? "Available" : vehicle.availability_display}</Badge>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2">
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <h3 className="text-xl font-semibold">
+          <Link to={`/fleet/${vehicle.slug}`} className="after:absolute after:inset-0 focus:outline-none">{vehicle.name}</Link>
+        </h3>
+        <p className="mt-0.5 text-sm text-muted">{vehicle.brand} {vehicle.model}{vehicle.year ? ` · ${vehicle.year}` : ""}</p>
+        <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-2.5 border-t border-line pt-5">
           <Spec icon={Settings2}>{vehicle.transmission_display}</Spec>
           <Spec icon={Users}>{vehicle.passenger_capacity} seats</Spec>
           <Spec icon={Fuel}>{vehicle.fuel_type_display}</Spec>
           <Spec icon={Briefcase}>{vehicle.luggage_capacity} bags</Spec>
         </div>
-        <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-4 mt-5">
-          <p>
-            <span className="font-display text-2xl font-semibold text-navy-900">{usd(vehicle.price_per_day)}</span>
-            <span className="text-sm text-muted"> / day</span>
-          </p>
-          <div className="flex gap-2">
-            <Button to={`/fleet/${vehicle.slug}`} variant="outline" size="sm">Details</Button>
-            <Button to={`/book?vehicle=${vehicle.slug}${query}`} size="sm" disabled={!available}
-              aria-disabled={!available} className={!available ? "pointer-events-none opacity-50" : ""}>Book now</Button>
-          </div>
+        <div className="relative z-10 mt-6 flex gap-2 pt-1">
+          <Link to={`/fleet/${vehicle.slug}`} className="inline-flex h-10 flex-1 items-center justify-center rounded-full border border-line text-sm font-semibold text-navy-900 transition hover:border-navy-600 hover:bg-navy-50">Details</Link>
+          {available ? (
+            <Link to={`/book?vehicle=${vehicle.slug}${query}`} className="inline-flex h-10 flex-1 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-navy-950 transition hover:bg-orange-400">Book now</Link>
+          ) : (
+            <span className="inline-flex h-10 flex-1 cursor-not-allowed items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-400" aria-disabled="true">Unavailable</span>
+          )}
         </div>
       </div>
     </article>

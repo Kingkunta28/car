@@ -1,22 +1,24 @@
 import { createContext, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle, CheckCircle2, Info, Loader2, X, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, Info, Loader2, X, XCircle } from "lucide-react";
 import { cx, STATUS_TONES } from "../../lib/format";
 
 const BTN = {
-  primary: "bg-orange-500 text-navy-950 hover:bg-orange-400 shadow-sm shadow-orange-500/20",
-  navy: "bg-navy-900 text-white hover:bg-navy-800",
+  primary: "bg-orange-500 text-navy-950 hover:bg-orange-400 shadow-[0_8px_20px_-8px_rgb(242_140_40/0.6)] hover:shadow-[var(--shadow-glow)]",
+  navy: "bg-navy-900 text-white hover:bg-navy-800 shadow-[0_8px_20px_-10px_rgb(11_31_58/0.6)]",
+  glass: "border border-white/20 bg-white/10 text-white backdrop-blur-md hover:bg-white/20",
+  outlineLight: "border border-white/45 text-white hover:border-white hover:bg-white hover:text-navy-900",
   outline: "border border-line bg-white text-navy-900 hover:border-navy-600 hover:bg-navy-50",
   ghost: "text-navy-900 hover:bg-navy-50",
   light: "bg-white text-navy-900 hover:bg-orange-50",
   danger: "bg-red-600 text-white hover:bg-red-700",
   whatsapp: "bg-[#1FAF38] text-white hover:bg-[#189a30]",
 };
-const SIZE = { sm: "h-9 px-3.5 text-sm", md: "h-11 px-5 text-[15px]", lg: "h-13 px-7 text-base" };
+const SIZE = { sm: "h-10 px-4 text-sm", md: "h-11 px-5 text-[15px]", lg: "h-[52px] px-7 text-base" };
 
-export function Button({ variant = "primary", size = "md", to, href, loading, className, children, icon: Icon, ...rest }) {
+export function Button({ variant = "primary", size = "md", to, href, loading, className, children, icon: Icon, arrow, ...rest }) {
   const cls = cx(
-    "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition duration-200",
+    "group inline-flex items-center justify-center gap-2 rounded-full font-semibold transition duration-300 ease-[var(--ease-out-soft)]",
     "disabled:cursor-not-allowed disabled:opacity-55 active:scale-[0.98] select-none whitespace-nowrap",
     BTN[variant], SIZE[size], className,
   );
@@ -24,6 +26,7 @@ export function Button({ variant = "primary", size = "md", to, href, loading, cl
     <>
       {loading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : Icon && <Icon className="size-4" aria-hidden />}
       {children}
+      {arrow && !loading && <ArrowRight className="arrow size-4" aria-hidden />}
     </>
   );
   if (to) return <Link to={to} className={cls} {...rest}>{content}</Link>;

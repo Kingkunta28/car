@@ -71,7 +71,7 @@ export function AdminShell() {
   const [mobile, setMobile] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const me = useQuery({ queryKey: ["me"], queryFn: () => api.get("/admin/auth/me/"), retry: false, staleTime: 5 * 60_000 });
-  useEffect(() => setMobile(false), [pathname]);
+  useEffect(() => { setMobile(false); }, [pathname]);
 
   if (me.isLoading) return <PageLoader />;
   if (me.error) {

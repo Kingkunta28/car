@@ -31,7 +31,7 @@ export default function Bookings() {
   return (
     <>
       <PageHeader title="Bookings" subtitle="Search, filter and manage every reservation." />
-      <div className="card mb-4 grid gap-3 p-4 md:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
+      <div className="card mb-4 grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-[1.5fr_1fr_1fr_1fr_1fr_1fr]">
         <form onSubmit={(e) => { e.preventDefault(); set({ q }); }} className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
           <input className="input pl-9" placeholder="Reference, name, email, phone, invoice…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search bookings" />
@@ -44,6 +44,11 @@ export default function Bookings() {
         </select>
         <input type="date" className="input" aria-label="Pickup from" value={sp.get("pickup_from") || ""} onChange={(e) => set({ pickup_from: e.target.value })} />
         <input type="date" className="input" aria-label="Pickup to" value={sp.get("pickup_to") || ""} onChange={(e) => set({ pickup_to: e.target.value })} />
+        <select className="input" aria-label="Sort bookings" value={sp.get("ordering") || "-created_at"} onChange={(e) => set({ ordering: e.target.value })}>
+          <option value="-created_at">Newest first</option><option value="created_at">Oldest first</option>
+          <option value="pickup_date">Pickup soonest</option><option value="-pickup_date">Pickup latest</option>
+          <option value="-grand_total">Highest total</option><option value="grand_total">Lowest total</option>
+        </select>
       </div>
       <div className="card overflow-hidden">
         {error ? <div className="p-4"><ErrorState error={error} onRetry={refetch} /></div> : isLoading ? <TableSkeleton /> : (

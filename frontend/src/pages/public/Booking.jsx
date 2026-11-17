@@ -2,18 +2,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, ArrowRight, Baby, Building2, Check, CreditCard, FileCheck2, Landmark, Lock, MapPin, Minus, Plane,
+  ArrowLeft, ArrowRight, Baby, Building2, Check, ChevronDown, CreditCard, FileCheck2, Landmark, Lock, MapPin, Minus, Plane,
   Plus, ShieldCheck, Upload,
 } from "lucide-react";
 import { api, ApiError } from "../../lib/api";
 import { useBookingOptions, useVehicles } from "../../lib/hooks";
 import { cx, fmtDate, rentalDays, todayISO, usd } from "../../lib/format";
+import { babySeatText, unitPrice } from "../../lib/content";
 import { saveGuest } from "../../lib/guest";
 import { Seo } from "../../lib/seo";
 import { Alert, Button, ErrorState, Field, PageLoader, Spinner } from "../../components/ui";
 import { VehicleImage } from "../../components/VehicleCard";
 
-const STEPS = ["Your details", "Car & dates", "Pickup", "Return", "Flight", "Extras", "Summary", "Payment"];
+const STEPS = ["Your details", "Car & dates", "Pickup", "Return", "Flight", "Extras", "Payment", "Review & submit"];
 const DRAFT_KEY = "rafiki.booking-draft";
 
 const emptyLeg = { type: "", area: "", address: "", instructions: "" };
@@ -75,10 +76,8 @@ function validateStep(step, s, files, options) {
       else if (files[k].size > max) e[k] = `File is larger than ${options?.max_upload_mb || 8} MB.`;
     }
   }
-  if (step === 7) {
-    if (!s.payment_method) e.payment_method = "Choose how you'd like to pay.";
-    if (!s.accept_terms) e.accept_terms = "Please accept the terms to continue.";
-  }
+  if (step === 6 && !s.payment_method) e.payment_method = "Choose how you'd like to pay.";
+  if (step === 7 && !s.accept_terms) e.accept_terms = "Please accept the terms to continue.";
   return e;
 }
 
@@ -86,7 +85,7 @@ function validateStep(step, s, files, options) {
 const FIELD_STEP = (k) => k.startsWith("customer") ? 0
   : /^(vehicle|pickup_date|pickup_time|return_date|return_time)/.test(k) ? 1
   : k.startsWith("pickup_") ? 2 : k.startsWith("return_") ? 3 : k.startsWith("flight") ? 4
-  : /^(extras|documents|passport|driving_licence)/.test(k) ? 5 : 7;
+  : /^(extras|documents|passport|driving_licence)/.test(k) ? 5 : k.startsWith("payment") ? 6 : 7;
 
 function toPayload(s) {
   const flight = Object.fromEntries(Object.entries(s.flight).map(([k, v]) => [k, v || (k.includes("date") || k.includes("time") ? null : "")]));
@@ -343,6 +342,16 @@ export default function Booking() {
 
       <div className="container-x grid gap-10 py-10 lg:grid-cols-[1fr_380px]">
         <form noValidate onSubmit={(e) => { e.preventDefault(); step === STEPS.length - 1 ? submit() : next(); }} className="min-w-0">
+          {step < STEPS.length - 1 && (
+            <details className="group mb-8 rounded-2xl border border-line bg-sand-50 lg:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 font-semibold text-navy-900 [&::-webkit-details-marker]:hidden">
+                <span>Price summary</span>
+                <span className="flex items-center gap-2 font-display text-lg">{quote.data ? usd(quote.data.grand_total) : "—"}
+                  <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden /></span>
+              </summary>
+              <div className="px-2 pb-2"><Summary s={s} quote={quote} vehicle={vehicle} compact /></div>
+            </details>
+          )}
           {step === 0 && (
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Full name" required error={errors["customer.full_name"]} className="sm:col-span-2">
@@ -429,8 +438,8 @@ export default function Booking() {
                     <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-orange-100 text-orange-600"><Baby className="size-6" /></span>
                     <div>
                       <h3 className="font-semibold">{babySeat.name}</h3>
-                      <p className="text-sm text-muted">{usd(babySeat.price)} per seat for the whole booking — not per day.</p>
-                      {(s.extras.baby_seat || 0) > 0 && <p className="mt-1 text-sm font-semibold text-navy-900">{s.extras.baby_seat} × {usd(babySeat.price)} = {usd(s.extras.baby_seat * babySeat.price)}</p>}
+                      <p className="text-sm text-muted">{babySeatText(options)} — for the whole booking, not per day.</p>
+                      {(s.extras.baby_seat || 0) > 0 && <p className="mt-1 text-sm font-semibold text-navy-900">{s.extras.baby_seat} × {usd(unitPrice(babySeat, s.extras.baby_seat))} = {usd(s.extras.baby_seat * unitPrice(babySeat, s.extras.baby_seat))}</p>}
                     </div>
                   </div>
                   <Qty label="baby seats" value={s.extras.baby_seat || 0} max={babySeat.max_quantity} onChange={(q) => setExtra("baby_seat", q)} />
@@ -480,30 +489,6 @@ export default function Booking() {
 
           {step === 6 && (
             <div className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                {[
-                  ["Guest", <>{s.customer.full_name}<br />{s.customer.email}<br />{s.customer.phone}</>, 0],
-                  ["Car & dates", <>{vehicle?.name}<br />{fmtDate(s.pickup_date)} {s.pickup_time}<br />→ {fmtDate(s.return_date)} {s.return_time}</>, 1],
-                  ["Pickup", <>{options.locations.find((l) => l.code === s.pickup.type)?.label}{s.pickup.area && ` — ${s.pickup.area}`}<br />{s.pickup.address}</>, 2],
-                  ["Return", <>{options.locations.find((l) => l.code === s.ret.type)?.label}{s.ret.area && ` — ${s.ret.area}`}<br />{s.ret.address}</>, 3],
-                  ["Flight", s.flight.flight_number || s.flight.airline_name ? `${s.flight.airline_name} ${s.flight.flight_number}` : "Not provided", 4],
-                  ["Extras", Object.entries(s.extras).filter(([, q]) => q > 0).map(([c, q]) => `${options.extras.find((e) => e.code === c)?.name} × ${q}`).join(", ") || "None", 5],
-                ].map(([title, body, st]) => (
-                  <div key={title} className="rounded-2xl border border-line p-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted">{title}</h3>
-                      <button type="button" onClick={() => go(st)} className="text-sm font-semibold text-navy-700 underline underline-offset-4">Edit</button>
-                    </div>
-                    <p className="mt-2 text-[15px] leading-relaxed text-navy-900">{body}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="lg:hidden"><Summary s={s} quote={quote} vehicle={vehicle} compact /></div>
-            </div>
-          )}
-
-          {step === 7 && (
-            <div className="space-y-6">
               <fieldset>
                 <legend className="sr-only">Payment method</legend>
                 <div className="grid gap-4 sm:grid-cols-2" role="radiogroup">
@@ -533,6 +518,31 @@ export default function Booking() {
               {s.payment_method === "ONLINE" && (
                 <Alert tone="info">After you submit, you'll get your invoice and can pay securely from the confirmation page. Your booking is only marked paid once the payment provider confirms it to us.</Alert>
               )}
+            </div>
+          )}
+
+          {step === 7 && (
+            <div className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[
+                  ["Guest", <>{s.customer.full_name}<br />{s.customer.email}<br />{s.customer.phone}</>, 0],
+                  ["Car & dates", <>{vehicle?.name}<br />{fmtDate(s.pickup_date)} {s.pickup_time}<br />→ {fmtDate(s.return_date)} {s.return_time}</>, 1],
+                  ["Pickup", <>{options.locations.find((l) => l.code === s.pickup.type)?.label}{s.pickup.area && ` — ${s.pickup.area}`}<br />{s.pickup.address}</>, 2],
+                  ["Return", <>{options.locations.find((l) => l.code === s.ret.type)?.label}{s.ret.area && ` — ${s.ret.area}`}<br />{s.ret.address}</>, 3],
+                  ["Flight", s.flight.flight_number || s.flight.airline_name ? `${s.flight.airline_name} ${s.flight.flight_number}` : "Not provided", 4],
+                  ["Extras", Object.entries(s.extras).filter(([, q]) => q > 0).map(([c, q]) => `${options.extras.find((e) => e.code === c)?.name} × ${q}`).join(", ") || "None", 5],
+                  ["Payment", s.payment_method === "ONLINE" ? "Pay online (secure checkout)" : s.payment_method === "MANUAL" ? "Manual payment" : "Not chosen", 6],
+                ].map(([title, body, st]) => (
+                  <div key={title} className="rounded-2xl border border-line p-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted">{title}</h3>
+                      <button type="button" onClick={() => go(st)} className="text-sm font-semibold text-navy-700 underline underline-offset-4">Edit</button>
+                    </div>
+                    <p className="mt-2 text-[15px] leading-relaxed text-navy-900">{body}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="lg:hidden"><Summary s={s} quote={quote} vehicle={vehicle} compact /></div>
               <label className="flex gap-3 text-sm leading-relaxed">
                 <input type="checkbox" className="mt-0.5 size-5 accent-navy-900" checked={s.accept_terms} onChange={(e) => up({ accept_terms: e.target.checked })}
                   aria-invalid={!!errors.accept_terms} />

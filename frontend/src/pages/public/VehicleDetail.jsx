@@ -1,33 +1,73 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Briefcase, Check, DoorOpen, Fuel, Info, Plane, Settings2, Users } from "lucide-react";
+import { ArrowLeft, Briefcase, Check, ChevronLeft, ChevronRight, DoorOpen, Expand, Fuel, Info, Plane, Settings2, Users, X } from "lucide-react";
 import { api } from "../../lib/api";
-import { useBookingOptions } from "../../lib/hooks";
-import { priceOf, zoneFee } from "../../lib/content";
+import { useBookingOptions, useVehicles } from "../../lib/hooks";
+import { babySeatText, priceOf, zoneFee } from "../../lib/content";
 import { cx, fmtDate, usd } from "../../lib/format";
 import { Seo, SITE_URL } from "../../lib/seo";
 import { Badge, Button, ErrorState, PageLoader } from "../../components/ui";
-import { VehicleImage } from "../../components/VehicleCard";
+import VehicleCard, { VehicleImage } from "../../components/VehicleCard";
+
+function Lightbox({ images, index, setIndex, onClose }) {
+  const n = images.length;
+  const go = useCallback((d) => setIndex((i) => (i + d + n) % n), [n, setIndex]);
+  const startX = useRef(null);
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+  }, [go, onClose]);
+  const img = images[index];
+  return (
+    <div className="fixed inset-0 z-[90] flex flex-col bg-navy-950/95 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Photo gallery"
+      onTouchStart={(e) => { startX.current = e.touches[0].clientX; }}
+      onTouchEnd={(e) => { const d = e.changedTouches[0].clientX - (startX.current ?? 0); if (Math.abs(d) > 50) go(d < 0 ? 1 : -1); }}>
+      <div className="flex items-center justify-between p-4 text-white">
+        <span className="text-sm text-white/70">{index + 1} / {n}</span>
+        <button onClick={onClose} className="grid size-11 place-items-center rounded-full hover:bg-white/10" aria-label="Close gallery" autoFocus><X className="size-6" /></button>
+      </div>
+      <div className="relative flex flex-1 items-center justify-center px-4 pb-6">
+        <img key={img.id} src={img.url} alt={img.alt_text || `Photo ${index + 1}`} className="animate-fade-up max-h-full max-w-full rounded-2xl object-contain" />
+        {n > 1 && <>
+          <button onClick={() => go(-1)} className="glass absolute left-4 grid size-12 place-items-center rounded-full text-white" aria-label="Previous photo"><ChevronLeft className="size-6" /></button>
+          <button onClick={() => go(1)} className="glass absolute right-4 grid size-12 place-items-center rounded-full text-white" aria-label="Next photo"><ChevronRight className="size-6" /></button>
+        </>}
+      </div>
+    </div>
+  );
+}
 
 function Gallery({ vehicle }) {
   const [i, setI] = useState(0);
+  const [open, setOpen] = useState(false);
   const images = vehicle.images || [];
   return (
     <div>
-      <div className="aspect-[16/10] overflow-hidden rounded-3xl bg-slate-100">
-        <VehicleImage vehicle={vehicle} image={images[i]} eager sizes="(min-width:1024px) 60vw, 100vw" />
-      </div>
+      <button type="button" disabled={!images.length} onClick={() => setOpen(true)}
+        className="group relative block aspect-[16/10] w-full overflow-hidden rounded-[var(--radius-panel)] bg-slate-100 disabled:cursor-default"
+        aria-label={images.length ? "Open photo gallery" : undefined}>
+        <VehicleImage vehicle={vehicle} image={images[i]} eager sizes="(min-width:1024px) 60vw, 100vw"
+          className="transition duration-700 group-hover:scale-[1.03]" />
+        {images.length > 0 && (
+          <span className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full bg-navy-950/75 px-3.5 py-2 text-sm font-medium text-white backdrop-blur">
+            <Expand className="size-4" /> {images.length} photo{images.length > 1 ? "s" : ""}
+          </span>
+        )}
+      </button>
       {images.length > 1 && (
         <div className="mt-3 flex gap-3 overflow-x-auto pb-1" role="tablist" aria-label="Vehicle photos">
           {images.map((img, idx) => (
             <button key={img.id} role="tab" aria-selected={i === idx} onClick={() => setI(idx)}
-              className={cx("h-20 w-28 shrink-0 overflow-hidden rounded-xl ring-2 transition", i === idx ? "ring-orange-500" : "ring-transparent opacity-75 hover:opacity-100")}>
+              className={cx("h-20 w-28 shrink-0 overflow-hidden rounded-xl ring-2 ring-offset-2 transition", i === idx ? "ring-orange-500" : "ring-transparent opacity-70 hover:opacity-100")}>
               <img src={img.url} alt={img.alt_text || `Photo ${idx + 1}`} loading="lazy" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
       )}
+      {open && <Lightbox images={images} index={i} setIndex={setI} onClose={() => setOpen(false)} />}
     </div>
   );
 }
@@ -37,6 +77,7 @@ export default function VehicleDetail() {
   const { data: v, isLoading, error, refetch } = useQuery({ queryKey: ["vehicle", slug], queryFn: () => api.get(`/vehicles/${slug}/`) });
   const avail = useQuery({ queryKey: ["vehicle-avail", slug], queryFn: () => api.get(`/vehicles/${slug}/availability/`), enabled: !!v });
   const { data: options } = useBookingOptions();
+  const fleet = useVehicles({});
 
   if (isLoading) return <PageLoader />;
   if (error) return <div className="container-x py-16"><ErrorState error={error} onRetry={refetch} title={error.status === 404 ? "Vehicle not found" : undefined} /></div>;
@@ -66,11 +107,11 @@ export default function VehicleDetail() {
           <div>
             <Gallery vehicle={v} />
             <div className="mt-10">
-              <h2 className="text-2xl font-bold">About this car</h2>
+              <h2 className="display-md">About this car</h2>
               <p className="mt-3 whitespace-pre-line leading-relaxed text-muted">{v.description || `${v.brand} ${v.model} — a reliable choice for exploring Zanzibar.`}</p>
             </div>
             <div className="mt-10">
-              <h2 className="text-2xl font-bold">Specifications</h2>
+              <h2 className="display-md">Specifications</h2>
               <dl className="mt-4 grid gap-3 sm:grid-cols-3">
                 {specs.map(([Icon, k, val]) => (
                   <div key={k} className="flex items-center gap-3 rounded-xl bg-sand-50 p-4">
@@ -82,18 +123,19 @@ export default function VehicleDetail() {
             </div>
             {v.features?.length > 0 && (
               <div className="mt-10">
-                <h2 className="text-2xl font-bold">Features</h2>
+                <h2 className="display-md">Features</h2>
                 <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
                   {v.features.map((f) => <li key={f} className="flex items-center gap-2.5"><Check className="size-5 text-emerald-600" aria-hidden />{f}</li>)}
                 </ul>
               </div>
             )}
             <div className="mt-10 rounded-2xl border border-line p-6">
-              <h2 className="flex items-center gap-2 text-xl font-bold"><Info className="size-5 text-orange-600" /> Important rental information</h2>
+              <h2 className="flex items-center gap-2 text-xl font-bold"><Info className="size-5 text-orange-600" /> Rental conditions</h2>
               <ul className="mt-4 space-y-2.5 text-[15px] leading-relaxed text-muted">
                 <li>• Bring your passport and a valid driving licence. Visitors also need a Zanzibar driving permit — we can arrange it for {priceOf(options, "driving_permit") ? usd(priceOf(options, "driving_permit")) : "a small fee"}.</li>
                 <li>• Delivery to Zanzibar Airport and Zanzibar Town is free; other locations cost {zoneFee(options) ? usd(zoneFee(options)) : "a flat fee"} each way.</li>
-                <li>• Child seats are {priceOf(options, "baby_seat") ? usd(priceOf(options, "baby_seat")) : "available"} per seat for the whole rental.</li>
+                <li>• Child seats are {babySeatText(options)}, for the whole rental.</li>
+                <li>• Prices are per day. Fuel is not included.</li>
                 <li>• Each started 24-hour period counts as one rental day.</li>
               </ul>
               <Link to="/before-you-rent" className="mt-4 inline-block text-sm font-semibold text-navy-700 underline underline-offset-4">Read everything before you rent</Link>
@@ -103,7 +145,7 @@ export default function VehicleDetail() {
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <div className="card p-6">
               <Badge status={v.availability_status}>{v.availability_display}</Badge>
-              <h1 className="mt-3 text-3xl font-bold">{v.name}</h1>
+              <h1 className="display-md mt-3">{v.name}</h1>
               <p className="text-muted">{v.brand} {v.model}{v.year ? ` · ${v.year}` : ""} · {v.category_display}</p>
               <p className="mt-6">
                 <span className="font-display text-4xl font-bold text-navy-900">{usd(v.price_per_day)}</span>
@@ -127,6 +169,36 @@ export default function VehicleDetail() {
           </aside>
         </div>
       </div>
+      {/* Related vehicles: same category first, then closest price */}
+      {(() => {
+        const others = (fleet.data || []).filter((x) => x.slug !== v.slug && x.availability_status === "AVAILABLE");
+        const related = [...others].sort((a, b) =>
+          (a.category === v.category ? 0 : 1) - (b.category === v.category ? 0 : 1)
+          || Math.abs(a.price_per_day - v.price_per_day) - Math.abs(b.price_per_day - v.price_per_day)).slice(0, 3);
+        if (!related.length) return null;
+        return (
+          <section className="border-t border-line bg-sand-50 py-16 sm:py-20" aria-labelledby="related-heading">
+            <div className="container-x">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="eyebrow">You might also like</p>
+                  <h2 id="related-heading" className="display-md mt-3">Similar cars in our fleet</h2>
+                </div>
+                <Button to="/fleet" variant="outline" arrow>View all</Button>
+              </div>
+              <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{related.map((x) => <VehicleCard key={x.id} vehicle={x} />)}</div>
+            </div>
+          </section>
+        );
+      })()}
+      {/* Mobile sticky booking bar */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 py-3 backdrop-blur-lg lg:hidden" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+        <div className="flex items-center justify-between gap-4">
+          <p><span className="font-display text-2xl font-bold text-navy-900">{usd(v.price_per_day)}</span><span className="text-sm text-muted"> / day</span></p>
+          <Button to={`/book?vehicle=${v.slug}`} disabled={!bookable} arrow={bookable}>{bookable ? "Book this car" : "Unavailable"}</Button>
+        </div>
+      </div>
+      <div className="h-20 lg:hidden" aria-hidden />
     </>
   );
 }

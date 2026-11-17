@@ -109,8 +109,16 @@ def rental_days_between(pickup_at: datetime, return_at: datetime) -> int:
     return max(1, math.ceil(seconds / 86400))
 
 
+def unit_price_for(extra: ExtraService, qty: int) -> Decimal:
+    """Per-unit price, applying the volume price when the quantity qualifies."""
+    if (extra.bulk_min_quantity and extra.bulk_unit_price is not None and qty >= extra.bulk_min_quantity
+            and extra.pricing_type in (PricingType.PER_UNIT, PricingType.PER_UNIT_PER_DAY)):
+        return money(extra.bulk_unit_price)
+    return money(extra.price)
+
+
 def _extra_total(extra: ExtraService, qty: int, days: int) -> tuple[Decimal, Decimal]:
-    unit = money(extra.price)
+    unit = unit_price_for(extra, qty)
     multiplier = {
         PricingType.PER_BOOKING: 1,
         PricingType.PER_UNIT: qty,

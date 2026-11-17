@@ -9,6 +9,7 @@ import { PageHeader, TableSkeleton, useAdmin } from "./AdminShell";
 export default function Overview() {
   const user = useAdmin();
   const { data: d, isLoading, error, refetch } = useQuery({ queryKey: ["dashboard"], queryFn: () => api.get("/admin/dashboard/"), refetchInterval: 60_000 });
+  const recent = useQuery({ queryKey: ["admin-bookings", { recent: 1 }], queryFn: () => api.get("/admin/bookings/", { params: { page_size: 6, ordering: "-created_at" } }) });
   if (error) return <ErrorState error={error} onRetry={refetch} />;
   return (
     <>
@@ -59,6 +60,25 @@ export default function Overview() {
               )}
             </section>
           </div>
+
+          <section className="card mt-6 overflow-hidden">
+            <div className="flex items-center justify-between border-b border-line px-5 py-4">
+              <h2 className="text-lg font-semibold">Recent bookings</h2>
+              <Link to="/admin/bookings" className="text-sm font-semibold text-navy-700 underline underline-offset-4">View all</Link>
+            </div>
+            {recent.isLoading ? <TableSkeleton /> : !recent.data?.results?.length ? <p className="px-5 py-10 text-center text-muted">No bookings yet.</p> : (
+              <ul className="divide-y divide-line">
+                {recent.data.results.map((b) => (
+                  <li key={b.id}><Link to={`/admin/bookings/${b.id}`} className="grid gap-2 px-5 py-3.5 hover:bg-navy-50/60 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-center sm:gap-4">
+                    <span><span className="block font-semibold text-navy-900">{b.booking_reference}</span><span className="text-sm text-muted">{b.customer_name}</span></span>
+                    <span className="text-sm text-muted">{b.vehicle.name} · {fmtDate(b.pickup_date, { day: "numeric", month: "short" })} → {fmtDate(b.return_date, { day: "numeric", month: "short" })}</span>
+                    <span className="font-semibold tabular-nums">{usd(b.grand_total)}</span>
+                    <span className="flex gap-1.5"><Badge status={b.booking_status}>{b.booking_status_display}</Badge><Badge status={b.payment_status}>{b.payment_status_display}</Badge></span>
+                  </Link></li>
+                ))}
+              </ul>
+            )}
+          </section>
         </>
       )}
     </>

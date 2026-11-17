@@ -6,10 +6,12 @@ import {
 } from "lucide-react";
 import { api } from "../../lib/api";
 import { useBookingOptions, useReveal, useSite } from "../../lib/hooks";
-import { priceOf, zoneFee } from "../../lib/content";
+import { babySeatText, priceOf, zoneFee } from "../../lib/content";
 import { usd, whatsappLink } from "../../lib/format";
 import { Seo, businessJsonLd } from "../../lib/seo";
 import { Alert, Button, Field } from "../../components/ui";
+import PageHero from "../../components/PageHero";
+import ZanzibarMap from "../../components/ZanzibarMap";
 
 /* ------------------------------------------------------------------ About */
 export function About() {
@@ -19,18 +21,8 @@ export function About() {
     <div ref={ref}>
       <Seo title="About Us — Local Car Hire in Zanzibar" path="/about"
         description="Rafiki Car Hire is a Zanzibar-based car rental company offering reliable self-drive vehicles, honest pricing and friendly local support." />
-      <section className="relative overflow-hidden bg-navy-900 text-white">
-        <div className="absolute -left-32 top-0 size-[28rem] rounded-full bg-orange-500/20 blur-3xl" aria-hidden />
-        <div className="container-x relative grid gap-10 py-20 sm:py-28 lg:grid-cols-2 lg:items-end">
-          <div>
-            <p className="eyebrow text-orange-400">About Rafiki</p>
-            <h1 className="mt-4 text-4xl font-bold text-white sm:text-6xl">Your friend on the road in Zanzibar.</h1>
-          </div>
-          <p className="text-lg leading-relaxed text-white/75">
-            <em>Rafiki</em> is Swahili for “friend”. We started Rafiki Car Hire to give visitors the freedom of a self-drive holiday with the reassurance of a local team who knows every road, ferry time and beach turn-off on the island.
-          </p>
-        </div>
-      </section>
+      <PageHero tone="navy" eyebrow="About Rafiki" title="Your friend on the road" accent="in Zanzibar."
+        lead="Rafiki is Swahili for “friend”. We give visitors the freedom of a self-drive holiday, with a local team who knows every road, ferry time and beach turn-off on the island." />
       <section className="container-x grid gap-12 py-20 lg:grid-cols-3">
         {[
           { icon: HeartHandshake, t: "Honest & transparent", d: "One clear price in US dollars, an itemised invoice the moment you book, and a receipt for every payment. No surprises at the counter." },
@@ -86,13 +78,13 @@ export function Contact() {
       <section className="container-x grid gap-12 py-14 sm:py-20 lg:grid-cols-[1fr_1.2fr]">
         <div>
           <p className="eyebrow">Contact</p>
-          <h1 className="mt-3 text-4xl font-bold sm:text-5xl">Let's plan your drive.</h1>
-          <p className="mt-4 max-w-md text-lg text-muted">The quickest way to reach us is WhatsApp. We usually reply within the hour during the day (EAT, UTC+3).</p>
+          <h1 className="display-lg mt-4">Let's plan <span className="serif-accent text-orange-600">your drive.</span></h1>
+          <p className="mt-4 max-w-md text-lg text-muted">The quickest way to reach us is WhatsApp — we offer 24/7 support, day or night.</p>
           <ul className="mt-8 space-y-4">
-            {wa && <li><a href={wa} target="_blank" rel="noopener noreferrer" className="card flex items-center gap-4 p-4 transition hover:shadow-[var(--shadow-lift)]"><span className="grid size-11 place-items-center rounded-xl bg-[#1FAF38] text-white"><MessageCircle className="size-5" /></span><span><span className="block font-semibold">WhatsApp</span><span className="text-sm text-muted">+{site.whatsapp_number}</span></span></a></li>}
+            {wa && <li><a href={wa} target="_blank" rel="noopener noreferrer" className="card flex items-center gap-4 p-4 transition hover:shadow-[var(--shadow-lift)]"><span className="grid size-11 place-items-center rounded-xl bg-[#1FAF38] text-white"><MessageCircle className="size-5" /></span><span><span className="block font-semibold">WhatsApp · 24/7</span><span className="text-sm text-muted">{site.business_phone || `+${site.whatsapp_number}`}</span></span></a></li>}
             {site?.business_phone && <li><a href={`tel:${site.business_phone}`} className="card flex items-center gap-4 p-4"><span className="grid size-11 place-items-center rounded-xl bg-navy-50 text-navy-700"><Phone className="size-5" /></span><span><span className="block font-semibold">Phone</span><span className="text-sm text-muted">{site.business_phone}</span></span></a></li>}
             {site?.business_email && <li><a href={`mailto:${site.business_email}`} className="card flex items-center gap-4 p-4"><span className="grid size-11 place-items-center rounded-xl bg-navy-50 text-navy-700"><Mail className="size-5" /></span><span><span className="block font-semibold">Email</span><span className="text-sm text-muted">{site.business_email}</span></span></a></li>}
-            <li className="card flex items-center gap-4 p-4"><span className="grid size-11 place-items-center rounded-xl bg-navy-50 text-navy-700"><MapPin className="size-5" /></span><span><span className="block font-semibold">Based in</span><span className="text-sm text-muted">{site?.business_address || "Zanzibar, Tanzania"}</span></span></li>
+            <li><a href={`https://maps.google.com/?q=${encodeURIComponent(site?.business_address || "Zanzibar, Tanzania")}`} target="_blank" rel="noopener noreferrer" className="card card-hover flex items-center gap-4 p-4"><span className="grid size-11 place-items-center rounded-xl bg-navy-50 text-navy-700"><MapPin className="size-5" /></span><span><span className="block font-semibold">Find us</span><span className="text-sm text-muted">{site?.business_address || "Zanzibar, Tanzania"}</span><span className="block text-xs font-semibold text-orange-600">Open in Google Maps</span></span></a></li>
           </ul>
         </div>
         <div className="card p-6 sm:p-8">
@@ -119,6 +111,13 @@ export function Contact() {
           )}
         </div>
       </section>
+      <section className="container-x pb-20" aria-label="Map">
+        <div className="overflow-hidden rounded-[var(--radius-panel)] border border-line shadow-[var(--shadow-card)]">
+          <iframe title={`Map: ${site?.business_address || "Zanzibar, Tanzania"}`} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+            src={`https://maps.google.com/maps?q=${encodeURIComponent(site?.business_address || "Zanzibar, Tanzania")}&z=13&output=embed`}
+            className="block h-[360px] w-full border-0 sm:h-[440px]" />
+        </div>
+      </section>
     </>
   );
 }
@@ -129,13 +128,13 @@ export function BeforeYouRent() {
   const ref = useReveal([o]);
   const p = (v) => (v ? usd(v) : "—");
   const sections = [
-    { icon: FileText, t: "Documents you'll need", items: [
+    { id: "permit", icon: FileText, t: "Documents you'll need", items: [
       "A valid passport (or national ID for residents).",
       "A valid driving licence from your home country, held for long enough to meet our rental terms.",
       `A Zanzibar driving permit. Visitors need one to drive legally; we can arrange it for ${p(priceOf(o, "driving_permit"))} when you upload copies of your passport and licence while booking. Approval is decided by the issuing authority.`,
     ] },
     { icon: Plane, t: "Pickup & return", items: [
-      "Zanzibar Airport (Abeid Amani Karume International) — free.",
+      "Zanzibar Airport (Abeid Amani Karume International) — free. We meet you in the arrivals hall with a name sign; on departure we meet you at the departures drop-off.",
       "Zanzibar Town, including Stone Town hotels — free.",
       `Anywhere outside the free zone — ${p(zoneFee(o))} per leg. Pickup and return are charged separately.`,
       "Add your flight number and we'll adjust if your flight is delayed.",
@@ -146,7 +145,7 @@ export function BeforeYouRent() {
       "Need to change your dates? Contact us — we'll update your booking and send a revised invoice.",
     ] },
     { icon: Baby, t: "Travelling with children", items: [
-      `Child and baby seats are ${p(priceOf(o, "baby_seat"))} per seat for your whole booking (not per day).`,
+      `Child and baby seats are ${o ? babySeatText(o) : "available"} — for your whole booking, not per day.`,
       "Choose how many you need in step 6 of the booking form.",
     ] },
     { icon: Fuel, t: "On the road", items: [
@@ -154,8 +153,8 @@ export function BeforeYouRent() {
       "Police checkpoints are common; stop when asked and have your licence and permit ready.",
       "Fuel stations are plentiful around Stone Town but sparser on the coasts — fill up before long drives.",
     ] },
-    { icon: ShieldCheck, t: "Payments & paperwork", items: [
-      "Prices are in US dollars. You receive an itemised invoice immediately after booking.",
+    { id: "booking", icon: ShieldCheck, t: "Payments & paperwork", items: [
+      "Prices are per day in US dollars. Fuel is not included. You receive an itemised invoice immediately after booking.",
       "Pay online or manually (bank transfer, mobile money). Manual payments are verified by our team before they count.",
       "A receipt is issued for every verified payment. An invoice on its own is not proof of payment.",
     ] },
@@ -164,16 +163,21 @@ export function BeforeYouRent() {
     <div ref={ref}>
       <Seo title="Before You Rent — Driving in Zanzibar Guide" path="/before-you-rent"
         description="Everything to know before hiring a car in Zanzibar: driving permits, documents, airport delivery, child seats, payments and local driving tips." />
-      <section className="bg-orange-50">
-        <div className="container-x py-14 sm:py-20">
-          <p className="eyebrow">Before you rent</p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-bold sm:text-5xl">Everything you need for a smooth start.</h1>
-          <p className="mt-4 max-w-2xl text-lg text-muted">A two-minute read that answers the questions most of our guests ask before they land.</p>
+      <PageHero eyebrow="Before you rent" title="Everything you need" accent="for a smooth start."
+        lead="A two-minute read that answers the questions most of our guests ask before they land." />
+      <section className="container-x py-14">
+        <div className="card grid gap-8 p-5 sm:p-8 lg:grid-cols-[1fr_1fr] lg:items-center">
+          <div>
+            <p className="eyebrow">Delivery zones</p>
+            <h2 className="display-md mt-3">Free at the airport and in town.</h2>
+            <p className="mt-3 leading-relaxed text-muted">Anywhere else on the island costs {zoneFee(o) ? usd(zoneFee(o)) : "a flat fee"} per leg. Tap a place to check.</p>
+          </div>
+          <ZanzibarMap fee={zoneFee(o)} />
         </div>
       </section>
-      <section className="container-x grid gap-6 py-14 md:grid-cols-2">
+      <section className="container-x grid gap-6 pb-14 md:grid-cols-2">
         {sections.map((s, i) => (
-          <div key={s.t} className="card p-6 sm:p-7" data-reveal={(i % 2) * 80}>
+          <div key={s.t} id={s.id} className="card scroll-mt-28 p-6 sm:p-7" data-reveal={(i % 2) * 80}>
             <h2 className="flex items-center gap-3 text-xl font-bold"><span className="grid size-10 place-items-center rounded-xl bg-navy-900 text-orange-400"><s.icon className="size-5" /></span>{s.t}</h2>
             <ul className="mt-5 space-y-3">
               {s.items.map((it) => <li key={it} className="flex gap-3 leading-relaxed text-muted"><BadgeCheck className="mt-0.5 size-5 shrink-0 text-orange-600" />{it}</li>)}

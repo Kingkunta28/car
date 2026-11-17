@@ -83,7 +83,7 @@ function Pricing() {
       <div className="card overflow-hidden">
         <Table rows={data} onRow={edit ? (r) => setDraft({ ...r }) : undefined} columns={[
           { key: "n", label: "Service", render: (r) => <><span className="font-semibold">{r.name}</span>{r.is_system && <Badge tone="navy" className="ml-2">Core</Badge>}<span className="block text-xs text-muted">{r.description}</span></> },
-          { key: "p", label: "Price", className: "text-right", render: (r) => <span className="font-semibold tabular-nums">{usd(r.price)}</span> },
+          { key: "p", label: "Price", className: "text-right", render: (r) => <><span className="font-semibold tabular-nums">{usd(r.price)}</span>{r.bulk_min_quantity && <span className="block text-xs text-muted">{usd(r.bulk_unit_price)} each for {r.bulk_min_quantity}+</span>}</> },
           { key: "t", label: "Charged", render: (r) => ({ PER_BOOKING: r.code === "outside_zone_delivery" ? "Per leg" : "Per booking", PER_UNIT: "Per unit, per booking", PER_DAY: "Per day", PER_UNIT_PER_DAY: "Per unit, per day" })[r.pricing_type] },
           { key: "m", label: "Max qty", render: (r) => r.max_quantity },
           { key: "a", label: "Active", render: (r) => <Badge tone={r.is_active ? "green" : "slate"}>{r.is_active ? "Active" : "Off"}</Badge> },
@@ -100,6 +100,10 @@ function Pricing() {
             <option value="PER_BOOKING">Per booking</option><option value="PER_UNIT">Per unit, per booking</option><option value="PER_DAY">Per day</option><option value="PER_UNIT_PER_DAY">Per unit, per day</option></select>}</Field>
           <Field label="Max quantity">{(a) => <input {...a} type="number" min="1" max="20" className="input" value={draft.max_quantity} onChange={(e) => setDraft({ ...draft, max_quantity: e.target.value })} />}</Field>
           <label className="flex items-center gap-2 self-end pb-3 text-sm"><input type="checkbox" className="size-4 accent-navy-900" checked={draft.is_active} onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })} /> Active</label>
+          {["PER_UNIT", "PER_UNIT_PER_DAY"].includes(draft.pricing_type) && <>
+            <Field label="Bulk price from quantity" hint="Optional, e.g. 2">{(a) => <input {...a} type="number" min="2" max="20" className="input" value={draft.bulk_min_quantity ?? ""} onChange={(e) => setDraft({ ...draft, bulk_min_quantity: e.target.value ? Number(e.target.value) : null })} />}</Field>
+            <Field label="Bulk unit price (USD)" hint="Price each when the quantity is reached">{(a) => <input {...a} type="number" step="0.01" min="0" className="input" value={draft.bulk_unit_price ?? ""} onChange={(e) => setDraft({ ...draft, bulk_unit_price: e.target.value || null })} />}</Field>
+          </>}
           <Field label="Description" className="sm:col-span-2">{(a) => <textarea {...a} rows={2} className="input" value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />}</Field>
         </div>}
       </Modal>

@@ -9,15 +9,30 @@ export function zoneFee(options) {
 }
 const p = (v, fallback = "a small fee") => (v != null ? usd(v) : fallback);
 
+/** Unit price for an extra at a quantity (applies the volume price, e.g. 2+ baby seats). */
+export function unitPrice(extra, qty) {
+  if (extra?.bulk_min_quantity && extra.bulk_unit_price != null && qty >= extra.bulk_min_quantity) return Number(extra.bulk_unit_price);
+  return Number(extra?.price || 0);
+}
+
+/** "$60.00 per seat ($50.00 each for 2 or more)" */
+export function babySeatText(options) {
+  const e = options?.extras?.find((x) => x.code === "baby_seat");
+  if (!e) return "available";
+  return e.bulk_min_quantity && e.bulk_unit_price != null
+    ? `${usd(e.price)} per seat, or ${usd(e.bulk_unit_price)} each for ${e.bulk_min_quantity} or more`
+    : `${usd(e.price)} per seat`;
+}
+
 export function faqs(options) {
   return [
     {
       q: "Can you deliver the car to Zanzibar Airport?",
-      a: `Yes. Handover at Abeid Amani Karume International Airport is free. Add your flight details when you book and we'll plan around your arrival time.`,
+      a: `Yes — and it's free. We meet you in the arrivals hall at Abeid Amani Karume International Airport with a name sign, and when you leave we meet you at the departures drop-off. Add your flight details when you book and we'll plan around your arrival time.`,
     },
     {
       q: "Where else can I collect and return the car?",
-      a: `Zanzibar Airport and Zanzibar Town (Stone Town area) are free. Anywhere outside the free zone — such as hotels on the east, north or south coasts — costs ${p(zoneFee(options))} each way. Pickup and return are charged separately, so you only pay for the leg that's outside the zone.`,
+      a: `Zanzibar Airport and Zanzibar Town (Stone Town area) are free. Anywhere outside the free zone — such as Nungwi, Kendwa, Matemwe, Pongwe, Paje, Jambiani, Bwejuu, Michamvi or Kizimkazi — costs ${p(zoneFee(options))} each way. Pickup and return are charged separately, so you only pay for the leg that's outside the zone.`,
     },
     {
       q: "Do I need a special permit to drive in Zanzibar?",
@@ -25,7 +40,11 @@ export function faqs(options) {
     },
     {
       q: "Do you have child seats?",
-      a: `Yes. Baby and child seats are ${p(priceOf(options, "baby_seat"))} per seat for your whole rental — not per day. Choose how many you need in the booking form.`,
+      a: `Yes. Baby and child seats are ${babySeatText(options)} — charged once for your whole rental, not per day. Choose how many you need in the booking form.`,
+    },
+    {
+      q: "Is fuel included?",
+      a: "Prices are per day and fuel is not included. Fuel stations are easy to find around Stone Town — fill up before long drives to the coasts.",
     },
     {
       q: "How do I pay?",
@@ -34,6 +53,10 @@ export function faqs(options) {
     {
       q: "Is my booking confirmed straight away?",
       a: `When you submit a booking we reserve the car for you and email your invoice immediately. Our team then confirms the booking — usually within a few hours, and always before the reservation hold expires.`,
+    },
+    {
+      q: "How can I reach you during my trip?",
+      a: "Message us on WhatsApp day or night — we offer 24/7 support for directions, fuel, breakdowns or anything else you need.",
     },
     {
       q: "Which side of the road do you drive on?",

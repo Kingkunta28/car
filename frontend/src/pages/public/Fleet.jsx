@@ -6,6 +6,7 @@ import { cx, todayISO } from "../../lib/format";
 import { Seo } from "../../lib/seo";
 import { Button, EmptyState, ErrorState, Skeleton } from "../../components/ui";
 import VehicleCard from "../../components/VehicleCard";
+import PageHero from "../../components/PageHero";
 
 const CATEGORIES = [
   ["ECONOMY", "Economy"], ["COMPACT", "Compact"], ["COMPACT_SUV", "Compact SUV"], ["SUV", "SUV"],
@@ -85,7 +86,7 @@ export default function Fleet() {
   const [showFilters, setShowFilters] = useState(false);
   const query = useMemo(() => {
     const q = {};
-    for (const k of ["transmission", "min_price", "max_price", "min_passengers", "available"]) if (params.get(k)) q[k] = params.get(k);
+    for (const k of ["transmission", "min_price", "max_price", "min_passengers", "available", "ordering"]) if (params.get(k)) q[k] = params.get(k);
     const cats = params.getAll("category");
     if (cats.length === 1) q.category = cats[0]; // several types are filtered client-side below
     const from = params.get("from"), to = params.get("to");
@@ -113,21 +114,28 @@ export default function Fleet() {
     <>
       <Seo title="Our Fleet — Rental Cars in Zanzibar" path="/fleet"
         description="Compare Rafiki Car Hire's Zanzibar rental cars: SUVs, 4x4s and compact automatics with daily USD prices, passenger capacity and live availability." />
-      <section className="border-b border-line bg-sand-50">
-        <div className="container-x py-12 sm:py-16">
-          <p className="eyebrow">Our fleet</p>
-          <h1 className="mt-3 text-4xl font-bold sm:text-5xl">Find the right car for your trip</h1>
-          <p className="mt-3 max-w-2xl text-lg text-muted">Every price is per day in USD. Airport and Zanzibar Town handover are always free.</p>
-        </div>
-      </section>
-      <section className="container-x grid gap-10 py-10 lg:grid-cols-[280px_1fr]">
+      <PageHero eyebrow="Our fleet" title="Find the right car" accent="for your trip."
+        lead="Every price is per day in US dollars. Handover at Zanzibar Airport and in Zanzibar Town is always free." />
+      <section className="container-x grid gap-10 py-12 lg:grid-cols-[280px_1fr]">
         <aside className="hidden lg:block">
-          <div className="sticky top-24"><Filters params={params} set={set} clear={() => setParams({})} count={list.length} /></div>
+          <div className="card sticky top-28 p-6"><Filters params={params} set={set} clear={() => setParams({})} count={list.length} /></div>
         </aside>
         <div>
-          <div className="mb-5 flex items-center justify-between lg:hidden">
-            <p className="text-sm text-muted">{list.length} vehicles</p>
-            <Button variant="outline" size="sm" icon={SlidersHorizontal} onClick={() => setShowFilters(true)}>Filters</Button>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted" aria-live="polite"><span className="font-semibold text-navy-900">{list.length}</span> vehicle{list.length === 1 ? "" : "s"}</p>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm text-muted">
+                <span className="hidden sm:inline">Sort by</span>
+                <select className="input h-10 w-auto py-0 pr-9 text-sm" aria-label="Sort vehicles" value={params.get("ordering") || ""} onChange={(e) => set({ ordering: e.target.value })}>
+                  <option value="">Recommended</option>
+                  <option value="price_per_day">Price: low to high</option>
+                  <option value="-price_per_day">Price: high to low</option>
+                  <option value="-passenger_capacity">Most seats</option>
+                  <option value="name">Name A–Z</option>
+                </select>
+              </label>
+              <Button variant="outline" size="sm" icon={SlidersHorizontal} onClick={() => setShowFilters(true)} className="lg:hidden">Filters</Button>
+            </div>
           </div>
           {error ? <ErrorState error={error} onRetry={refetch} /> : isLoading ? (
             <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-[420px]" />)}</div>

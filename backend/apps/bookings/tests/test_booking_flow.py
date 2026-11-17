@@ -1,8 +1,9 @@
+from unittest import skipUnless
 from datetime import timedelta
 from decimal import Decimal
 
 from django.core import mail
-from django.db import IntegrityError, transaction
+from django.db import connection, IntegrityError, transaction
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -40,18 +41,18 @@ class BookingFlowTests(TestCase):
         self.assertEqual(res.status_code, 201, res.data)
         self.assertEqual(res.data["booking_status"], "PENDING_CONFIRMATION")
         self.assertEqual(res.data["payment_status"], "UNPAID")
-        # 3 days × 55 + 25 outside zone + 2 × 60
-        self.assertEqual(res.data["grand_total"], "310.00")
+        # 3 days × 55 + 25 outside zone + 2 × 50 (2+ baby seats)
+        self.assertEqual(res.data["grand_total"], "290.00")
         self.assertTrue(res.data["invoice_number"].startswith(f"RCI-{timezone.localdate().year}-"))
 
         b = Booking.objects.get(booking_reference=res.data["booking_reference"])
         self.assertTrue(b.blocks_inventory)
         self.assertIsNotNone(b.hold_expires_at)
-        self.assertEqual(b.pricing_breakdown["grand_total"], "310.00")
+        self.assertEqual(b.pricing_breakdown["grand_total"], "290.00")
         self.assertEqual(b.extras.get(code="baby_seat").quantity, 2)
         inv = Invoice.objects.get(booking=b)
         self.assertTrue(inv.pdf_file)
-        self.assertEqual(inv.total_amount, Decimal("310.00"))
+        self.assertEqual(inv.total_amount, Decimal("290.00"))
 
         # Emails to guest and owner, with invoice attached and a secure link (no raw token stored).
         recipients = sorted(m.to[0] for m in mail.outbox)
@@ -66,7 +67,7 @@ class BookingFlowTests(TestCase):
         # Guest can view their booking and download the invoice PDF.
         track = self.client.get("/api/v1/bookings/track/", **self.guest_headers(res))
         self.assertEqual(track.status_code, 200)
-        self.assertEqual(track.data["grand_total"], "310.00")
+        self.assertEqual(track.data["grand_total"], "290.00")
         pdf = self.client.get("/api/v1/invoices/download/", **self.guest_headers(res))
         self.assertEqual(pdf.status_code, 200)
         self.assertEqual(pdf["Content-Type"], "application/pdf")
@@ -129,6 +130,7 @@ class BookingFlowTests(TestCase):
         p["pickup_time"] = "13:00"
         self.assertEqual(self.create(p).status_code, 201)
 
+    @skipUnless(connection.vendor == "postgresql", "PostgreSQL-only behaviour")
     def test_database_constraint_blocks_overlap_even_without_app_check(self):
         res = self.create()
         b = Booking.objects.get(booking_reference=res.data["booking_reference"])
