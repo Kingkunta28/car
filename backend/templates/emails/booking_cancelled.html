@@ -1,0 +1,7 @@
+{% extends "emails/base.html" %}{% block content %}
+<h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">Booking cancelled</h1>
+<p>Dear {{ customer.full_name }}, booking <strong>{{ booking.booking_reference }}</strong> for the {{ vehicle.name }} ({{ booking.pickup_date|date:"j M Y" }} &ndash; {{ booking.return_date|date:"j M Y" }}) has been cancelled.</p>
+{% if ctx.message %}<p style="background:#FFF7ED;border-left:4px solid #F28C28;padding:10px 14px;">{{ ctx.message }}</p>{% endif %}
+{% if booking.amount_paid > 0 %}<p>Our team will contact you regarding the ${{ booking.amount_paid }} you have paid.</p>{% endif %}
+<p>If you did not expect this, please contact us straight away.</p>
+{% endblock %}

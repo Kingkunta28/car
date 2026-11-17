@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /booking/
+Disallow: /payment/
+
+Sitemap: https://www.rafikicarhire.com/sitemap.xml

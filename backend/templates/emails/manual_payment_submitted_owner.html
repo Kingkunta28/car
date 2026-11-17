@@ -1,0 +1,6 @@
+{% extends "emails/base.html" %}{% block content %}
+<h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">Manual payment awaiting verification</h1>
+<p>{{ customer.full_name }} reports paying <strong>${{ payment.amount }}</strong> by {{ payment.get_channel_display }} for {{ booking.booking_reference }}.{% if payment.transaction_reference %} Reference: <strong>{{ payment.transaction_reference }}</strong>.{% endif %}{% if payment.proof_file %} Proof of payment was uploaded.{% endif %}</p>
+<p>Check that the funds have arrived, then verify or reject the payment in the dashboard. It does not count as paid until it is verified.</p>
+{% include "emails/_button.html" with url=admin_url label="Review payment" %}
+{% endblock %}

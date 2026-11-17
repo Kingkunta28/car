@@ -1,0 +1,10 @@
+{% extends "emails/base.html" %}{% block content %}
+<h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">New booking request</h1>
+<p><strong>{{ customer.full_name }}</strong> &middot; {{ customer.email }} &middot; {{ customer.phone }}{% if customer.nationality %} &middot; {{ customer.nationality }}{% endif %}</p>
+{% include "emails/_summary.html" %}
+{% if flight %}<p><strong>Flight:</strong> {{ flight.airline_name }} {{ flight.flight_number }}{% if flight.arrival_date %} &middot; arrives {{ flight.arrival_date|date:"j M" }} {{ flight.arrival_time|time:"H:i" }}{% endif %}</p>{% endif %}
+{% if booking.customer_notes %}<p><strong>Guest notes:</strong> {{ booking.customer_notes }}</p>{% endif %}
+{% if booking.documents.exists %}<p><strong>Permit documents were uploaded.</strong> View them securely in the dashboard &mdash; they are never sent by email.</p>{% endif %}
+<p>The vehicle is on hold until <strong>{{ booking.hold_expires_at|date:"D j M, H:i" }}</strong>. Please confirm or reject before then.</p>
+{% include "emails/_button.html" with url=admin_url label="Review in dashboard" %}
+{% endblock %}

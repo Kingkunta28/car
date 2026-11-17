@@ -1,0 +1,7 @@
+{% extends "emails/base.html" %}{% block content %}
+<h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">We could not verify your payment</h1>
+<p>Dear {{ customer.full_name }}, we were unable to verify the payment of ${{ payment.amount }} you submitted for booking {{ booking.booking_reference }}.</p>
+{% if ctx.message %}<p style="background:#FFF7ED;border-left:4px solid #F28C28;padding:10px 14px;">{{ ctx.message }}</p>{% endif %}
+<p>Please check the details and submit again, or contact us and we will sort it out together.</p>
+{% include "emails/_button.html" with url=manage_url label="Manage booking" %}
+{% endblock %}

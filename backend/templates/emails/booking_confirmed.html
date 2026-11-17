@@ -1,0 +1,9 @@
+{% extends "emails/base.html" %}{% block content %}
+<h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">Your booking is confirmed</h1>
+<p>Dear {{ customer.full_name }}, great news &mdash; your {{ vehicle.name }} is reserved. Karibu Zanzibar!</p>
+{% if ctx.message %}<p style="background:#FFF7ED;border-left:4px solid #F28C28;padding:10px 14px;">{{ ctx.message }}</p>{% endif %}
+{% include "emails/_summary.html" %}
+{% if booking.balance_due > 0 %}<p>Outstanding balance: <strong>${{ booking.balance_due }}</strong>.</p>{% endif %}
+<p>Please bring your passport and driving licence when you collect the vehicle.</p>
+{% include "emails/_button.html" with url=manage_url label="Manage booking" %}
+{% endblock %}

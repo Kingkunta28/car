@@ -1,0 +1,23 @@
+# Secrets — never commit
+.env
+*.env
+!.env.example
+.mcp.json
+
+# Python
+venv/
+__pycache__/
+*.pyc
+backend/staticfiles/
+backend/media/
+backend/private_media/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

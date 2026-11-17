@@ -1,0 +1,7 @@
+{% extends "emails/base.html" %}{% block content %}
+<h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">We are sorry</h1>
+<p>Dear {{ customer.full_name }}, unfortunately we are unable to accept booking request <strong>{{ booking.booking_reference }}</strong> for the {{ vehicle.name }}.</p>
+{% if ctx.message %}<p style="background:#FFF7ED;border-left:4px solid #F28C28;padding:10px 14px;">{{ ctx.message }}</p>{% endif %}
+<p>{% if booking.amount_paid > 0 %}We will contact you about refunding the ${{ booking.amount_paid }} you have paid.{% else %}No payment has been taken.{% endif %} We would love to help you find an alternative vehicle &mdash; reply to this email or contact us on WhatsApp.</p>
+{% include "emails/_button.html" with url=frontend_url|add:"/fleet" label="Browse other vehicles" %}
+{% endblock %}

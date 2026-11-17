@@ -1,0 +1,6 @@
+{% extends "emails/base.html" %}{% block content %}
+<h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">{% if ctx.revised %}Revised invoice issued{% else %}Invoice issued{% endif %}</h1>
+<p>Invoice <strong>{{ invoice.invoice_number }}</strong> (${{ invoice.total_amount }}) for {{ customer.full_name }} is attached.{% if invoice.revision_reason %} Reason: {{ invoice.revision_reason }}{% endif %}</p>
+{% include "emails/_summary.html" %}
+{% include "emails/_button.html" with url=admin_url label="Open booking" %}
+{% endblock %}

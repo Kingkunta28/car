@@ -1,0 +1,56 @@
+# Render Blueprint — backend API, Celery worker + beat, PostgreSQL, Redis.
+# Frontend is deployed separately (Vercel/Netlify) and rewrites /api here.
+databases:
+  - name: rafiki-db
+    plan: basic-256mb
+    databaseName: rafiki
+    postgresMajorVersion: "16"
+
+services:
+  - type: keyvalue
+    name: rafiki-redis
+    plan: starter
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+  - type: web
+    name: rafiki-api
+    runtime: python
+    rootDir: backend
+    plan: starter
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    preDeployCommand: python manage.py migrate --noinput
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 60 --access-logfile -
+    healthCheckPath: /api/v1/health/
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.prod
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase: { name: rafiki-db, property: connectionString }
+      - key: REDIS_URL
+        fromService: { type: keyvalue, name: rafiki-redis, property: connectionString }
+      - fromGroup: rafiki-secrets   # SMTP, Pesapal, S3, URLs — create this group in the dashboard
+
+  - type: worker
+    name: rafiki-worker
+    runtime: python
+    rootDir: backend
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A config worker -B --loglevel=info --concurrency=2
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.prod
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: DJANGO_SECRET_KEY
+        fromService: { type: web, name: rafiki-api, envVarKey: DJANGO_SECRET_KEY }
+      - key: DATABASE_URL
+        fromDatabase: { name: rafiki-db, property: connectionString }
+      - key: REDIS_URL
+        fromService: { type: keyvalue, name: rafiki-redis, property: connectionString }
+      - fromGroup: rafiki-secrets

@@ -1,0 +1,6 @@
+{% extends "emails/base.html" %}{% block content %}
+<h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">{% if ctx.revised %}Your revised invoice{% else %}Your invoice{% endif %}</h1>
+<p>Dear {{ customer.full_name }}, please find {% if ctx.revised %}the revised {% endif %}invoice <strong>{{ invoice.invoice_number }}</strong> for booking {{ booking.booking_reference }} attached.{% if ctx.revised %} It replaces the previous invoice{% if invoice.revision_reason %}: {{ invoice.revision_reason }}{% endif %}.{% endif %}</p>
+{% include "emails/_summary.html" %}
+{% include "emails/_button.html" with url=manage_url label="View booking &amp; download invoice" %}
+{% endblock %}

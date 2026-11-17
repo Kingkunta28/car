@@ -1,0 +1,6 @@
+{% extends "emails/base.html" %}{% block content %}
+<h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">Payment verified</h1>
+<p><strong>${{ payment.amount }}</strong> from {{ customer.full_name }} for {{ booking.booking_reference }} &mdash; {{ payment.get_verification_source_display }}{% if payment.transaction_reference %} &middot; ref {{ payment.transaction_reference }}{% endif %}.</p>
+<p>Total paid ${{ booking.amount_paid }} of ${{ booking.grand_total }} &middot; {{ booking.get_payment_status_display }}.</p>
+{% include "emails/_button.html" with url=admin_url label="Open booking" %}
+{% endblock %}

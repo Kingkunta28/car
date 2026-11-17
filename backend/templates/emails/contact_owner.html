@@ -1,0 +1,6 @@
+{% extends "emails/base.html" %}{% block content %}
+<h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">New website enquiry</h1>
+<p><strong>{{ ctx.name }}</strong> &middot; {{ ctx.email }}{% if ctx.phone %} &middot; {{ ctx.phone }}{% endif %}</p>
+{% if ctx.subject %}<p><strong>Subject:</strong> {{ ctx.subject }}</p>{% endif %}
+<p style="white-space:pre-line;background:#F9FAFB;padding:12px 14px;border-radius:8px;">{{ ctx.message }}</p>
+{% endblock %}

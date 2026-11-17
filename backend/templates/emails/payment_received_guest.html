@@ -1,0 +1,7 @@
+{% extends "emails/base.html" %}{% block content %}
+<h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">Payment received &mdash; thank you</h1>
+<p>Dear {{ customer.full_name }}, we have verified your payment of <strong>${{ payment.amount }}</strong> ({{ payment.payment_reference }}). Your receipt {{ payment.receipt.receipt_number }} is attached.</p>
+{% include "emails/_summary.html" %}
+<p>Total paid: <strong>${{ booking.amount_paid }}</strong> &middot; Balance due: <strong>${{ booking.balance_due }}</strong></p>
+{% include "emails/_button.html" with url=manage_url label="View booking" %}
+{% endblock %}
