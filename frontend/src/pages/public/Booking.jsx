@@ -189,10 +189,10 @@ function FileDrop({ id, label, file, onFile, error, maxMb }) {
         {file ? <FileCheck2 className="size-6 text-emerald-700" /> : <Upload className="size-6 text-navy-600" />}
         <span className="min-w-0">
           <span className="block truncate font-medium text-navy-900">{file ? file.name : "Choose a file"}</span>
-          <span id={`${id}-h`} className="text-sm text-muted">PDF, JPG or PNG · max {maxMb} MB</span>
+          <span id={`${id}-h`} className="text-sm text-muted">PDF, JPG, PNG or WebP · max {maxMb} MB</span>
         </span>
       </button>
-      <input ref={ref} id={id} type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="sr-only"
+      <input ref={ref} id={id} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" className="sr-only"
         onChange={(e) => onFile(e.target.files?.[0] || null)} />
       {error && <p className="mt-1.5 text-sm text-red-600" role="alert">{error}</p>}
     </div>

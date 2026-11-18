@@ -1,5 +1,6 @@
 import django_filters
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status, viewsets
@@ -11,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import ALL_ROLES, FINANCE_ROLES
+from apps.core.exceptions import BusinessRuleError
 from apps.core.files import private_file_response
 from apps.core.throttles import BookingAccessThrottle, BookingCreateThrottle, QuoteThrottle
 from apps.core.utils import audit
@@ -114,6 +116,24 @@ class BookingTrackView(APIView):
         return Response(data)
 
 
+class GuestBookingConfirmationDownloadView(APIView):
+    """Generate a private PDF only after validating the guest's booking token."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [BookingAccessThrottle]
+
+    def get(self, request):
+        booking = guest_booking_or_404(request)
+        from .pdf import render_confirmation_pdf
+
+        pdf = render_confirmation_pdf(booking)
+        response = HttpResponse(pdf, content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="Rafiki-Booking-{booking.booking_reference}.pdf"'
+        response["Cache-Control"] = "private, no-store, max-age=0"
+        response["X-Content-Type-Options"] = "nosniff"
+        return response
+
+
 # --------------------------------------------------------------------------
 # Admin
 # --------------------------------------------------------------------------
@@ -144,7 +164,8 @@ class AdminBookingViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = AdminBookingFilter
     ordering_fields = ["created_at", "pickup_date", "grand_total", "booking_reference"]
     ordering = ["-created_at"]
-    action_roles = {"modify": FINANCE_ROLES, "document_download": FINANCE_ROLES, "document_verify": FINANCE_ROLES}
+    action_roles = {"modify": FINANCE_ROLES, "document_download": FINANCE_ROLES, "document_verify": FINANCE_ROLES,
+                    "dossier": FINANCE_ROLES}
 
     def get_queryset(self):
         qs = Booking.objects.select_related("customer", "vehicle").prefetch_related("extras", "vehicle__images")
@@ -216,6 +237,20 @@ class AdminBookingViewSet(viewsets.ReadOnlyModelViewSet):
               summary=f"{doc.get_document_type_display()} for {booking.booking_reference}")
         name = f"{booking.booking_reference}-{doc.document_type.lower()}.{doc.file_kind or 'bin'}"
         return private_file_response(doc.secure_file, name, as_attachment=request.query_params.get("inline") != "1")
+
+    @action(detail=True, methods=["get"])
+    def dossier(self, request, pk=None):
+        booking = self.get_object()
+        from .dossier import ensure_dossier
+
+        try:
+            dossier = ensure_dossier(booking, actor=request.user, request=request)
+        except Exception as exc:
+            raise BusinessRuleError("The private booking dossier could not be generated.") from exc
+        audit("dossier.downloaded", actor=request.user, target=booking, request=request,
+              summary=f"Private booking dossier downloaded for {booking.booking_reference}")
+        return private_file_response(dossier.pdf_file,
+                                     f"Rafiki-Internal-Dossier-{booking.booking_reference}.pdf")
 
     @action(detail=True, methods=["post"], url_path=r"documents/(?P<doc_id>[0-9a-f-]+)/verify")
     def document_verify(self, request, pk=None, doc_id=None):

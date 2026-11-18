@@ -13,6 +13,7 @@ from apps.core.files import file_sha256, validate_upload
 from apps.core.utils import audit, random_reference
 from apps.customers.models import Customer
 from apps.vehicles.models import Vehicle
+import pypdfium2 as pdfium
 
 from . import availability
 from .models import (
@@ -23,6 +24,26 @@ from .pricing import Quote, build_quote
 from .tokens import issue_access_token
 
 logger = logging.getLogger(__name__)
+MAX_IDENTITY_PDF_PAGES = 12
+
+
+def validate_identity_upload(upload):
+    """Validate identity files and bound the cost of rendering uploaded PDFs."""
+    kind = validate_upload(upload)
+    if kind != "pdf":
+        return kind
+    upload.seek(0)
+    try:
+        source = pdfium.PdfDocument(upload.read())
+        page_count = len(source)
+        source.close()
+    except Exception as exc:
+        raise ValidationError("The uploaded PDF could not be opened. Upload an unlocked, valid PDF.") from exc
+    finally:
+        upload.seek(0)
+    if page_count < 1 or page_count > MAX_IDENTITY_PDF_PAGES:
+        raise ValidationError(f"Identity PDFs must contain between 1 and {MAX_IDENTITY_PDF_PAGES} pages.")
+    return kind
 
 OVERLAP_MESSAGE = "Sorry — this vehicle is already reserved for some or all of the selected dates."
 
@@ -130,7 +151,7 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
             raise ValidationError({"documents": "The driving permit service requires a copy of your passport "
                                                 "and your driving licence."})
     for f in documents.values():
-        validate_upload(f)
+        validate_identity_upload(f)
 
     try:
         with transaction.atomic():
@@ -178,7 +199,7 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
                 })
 
             for doc_type, f in documents.items():
-                kind = validate_upload(f)
+                kind = validate_identity_upload(f)
                 BookingDocument.objects.create(
                     booking=booking, document_type=doc_type, secure_file=f, original_filename=(f.name or "")[:255],
                     file_kind=kind, file_size=f.size, sha256=file_sha256(f),
@@ -195,6 +216,15 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
         if _is_overlap_error(exc):
             raise ConflictError(OVERLAP_MESSAGE) from exc
         raise
+    if documents:
+        # The booking is already committed. A dossier-rendering failure must
+        # never roll back a valid reservation request or its invoice.
+        try:
+            from .dossier import ensure_dossier
+
+            ensure_dossier(booking)
+        except Exception:
+            logger.exception("Private booking dossier generation failed for %s", booking.booking_reference)
     return BookingResult(booking=booking, access_token=token, invoice=invoice)
 
 

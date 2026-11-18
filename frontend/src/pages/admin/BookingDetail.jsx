@@ -158,6 +158,7 @@ export default function BookingDetail() {
   const qc = useQueryClient();
   const toast = useToast();
   const [dialog, setDialog] = useState(null);
+  const [dossierBusy, setDossierBusy] = useState(false);
   const [note, setNote] = useState("");
   const key = ["admin-booking", id];
   const { data: b, isLoading, error, refetch } = useQuery({ queryKey: key, queryFn: () => api.get(`/admin/bookings/${id}/`) });
@@ -176,6 +177,12 @@ export default function BookingDetail() {
     catch (e) { toast(e.message, "error"); }
   };
   const dl = (path, opts = {}) => download(path, opts).catch((e) => toast(e.message, "error"));
+  const downloadDossier = async () => {
+    setDossierBusy(true);
+    try { await download(`/admin/bookings/${id}/dossier/`); }
+    catch (e) { toast(e.message || "The private dossier could not be downloaded.", "error"); }
+    finally { setDossierBusy(false); }
+  };
   const resendInvoice = async (inv) => {
     try { await api.post(`/admin/invoices/${inv.id}/resend/`, {}); toast(`Invoice emailed to ${b.customer.email}`); refresh(); }
     catch (e) { toast(e.message, "error"); }
@@ -250,6 +257,10 @@ export default function BookingDetail() {
               </ul>
             </Section>
           )}
+          {finance && <Section title="Internal booking dossier · restricted"
+            actions={<Button size="sm" variant="outline" icon={Download} loading={dossierBusy} onClick={downloadDossier}>Generate &amp; download</Button>}>
+            <p className="text-sm text-muted">Private staff PDF with booking details and uploaded passport and driving licence pages. Identity files are never included in customer invoices or email attachments.</p>
+          </Section>}
           <Section title="Internal notes">
             <form onSubmit={(e) => { e.preventDefault(); note.trim() && addNote.mutate(); }} className="flex gap-2">
               <input className="input" placeholder="Add a note for the team (never shown to the guest)" value={note} onChange={(e) => setNote(e.target.value)} aria-label="New note" />

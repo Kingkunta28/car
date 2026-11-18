@@ -74,6 +74,7 @@ export default function ManageBooking() {
   const toast = useToast();
   const [modal, setModal] = useState(null);
   const [paying, setPaying] = useState(false);
+  const [confirmationBusy, setConfirmationBusy] = useState(false);
   const { data: site } = useSite();
   const wa = whatsappLink(site?.whatsapp_number, `Hello Rafiki Car Hire, I need a new link for my booking ${guest?.reference || ""}.`);
   const q = useQuery({
@@ -108,6 +109,12 @@ export default function ManageBooking() {
   const canPay = Number(b.balance_due) > 0 && ["PENDING_CONFIRMATION", "CONFIRMED"].includes(b.booking_status);
   const dl = async (path, params, name) => {
     try { await download(path, { guest, params }, name); } catch (e) { toast(e.message, "error"); }
+  };
+  const downloadConfirmation = async () => {
+    setConfirmationBusy(true);
+    try { await download("/bookings/confirmation/download/", { guest }, `${b.booking_reference}-confirmation.pdf`); }
+    catch (e) { toast(e.message || "Download failed — please try again.", "error"); }
+    finally { setConfirmationBusy(false); }
   };
   const payOnline = async () => {
     setPaying(true);
@@ -149,6 +156,11 @@ export default function ManageBooking() {
               <div><dt className="text-sm text-muted">Pickup</dt><dd className="font-medium">{fmtDate(b.pickup_date)}, {fmtTime(b.pickup_time)}</dd><dd className="text-sm text-muted">{b.pickup_type_display}{b.pickup_area && ` — ${b.pickup_area}`}{b.pickup_address && <><br />{b.pickup_address}</>}</dd></div>
               <div><dt className="text-sm text-muted">Return</dt><dd className="font-medium">{fmtDate(b.return_date)}, {fmtTime(b.return_time)}</dd><dd className="text-sm text-muted">{b.return_type_display}{b.return_area && ` — ${b.return_area}`}{b.return_address && <><br />{b.return_address}</>}</dd></div>
             </dl>
+          </div>
+
+          <div className="card flex flex-wrap items-center justify-between gap-3 p-5">
+            <div><h2 className="font-semibold">Booking confirmation</h2><p className="mt-1 text-sm text-muted">Download the latest booking and payment status.</p></div>
+            <Button size="sm" variant="outline" icon={Download} loading={confirmationBusy} onClick={downloadConfirmation}>Download PDF</Button>
           </div>
 
           <div className="card p-5">

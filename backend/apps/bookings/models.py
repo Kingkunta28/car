@@ -242,6 +242,18 @@ class BookingDocument(UUIDModel):
         return f"{self.get_document_type_display()} — {self.booking}"
 
 
+class BookingDossier(UUIDModel, TimeStampedModel):
+    """Private staff-only PDF containing a booking and uploaded identity files."""
+
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name="dossier")
+    pdf_file = models.FileField(storage=private_storage, upload_to=RandomUploadPath("dossiers"), blank=True,
+                                max_length=255)
+    source_digest = models.CharField(max_length=64, blank=True)
+
+    def __str__(self):
+        return f"Dossier for {self.booking.booking_reference}"
+
+
 class BookingStatusHistory(models.Model):
     class Field(models.TextChoices):
         BOOKING = "booking_status", "Booking status"

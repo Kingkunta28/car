@@ -51,6 +51,7 @@ api_v1 = [
     path("booking-options/", booking_views.BookingOptionsView.as_view()),
     path("bookings/quote/", booking_views.QuoteView.as_view()),
     path("bookings/track/", booking_views.BookingTrackView.as_view()),
+    path("bookings/confirmation/download/", booking_views.GuestBookingConfirmationDownloadView.as_view()),
     path("bookings/", booking_views.BookingCreateView.as_view()),
     path("invoices/download/", invoice_views.GuestInvoiceDownloadView.as_view()),
     path("receipts/download/", invoice_views.GuestReceiptDownloadView.as_view()),

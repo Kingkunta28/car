@@ -4,8 +4,10 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.core import mail
+from django.core.cache import cache
 from django.db import connection, transaction
 from django.test import TestCase, TransactionTestCase
+import pypdfium2 as pdfium
 from rest_framework.test import APIClient
 
 from apps.accounts.models import Role
@@ -15,12 +17,14 @@ from apps.core.models import Sequence
 from apps.core.tests import factories as f
 from apps.core.utils import next_sequence_value
 from apps.invoices.models import Invoice, InvoiceStatus
+from apps.invoices.pdf import render_invoice_pdf
 from apps.notifications.models import DeliveryStatus, NotificationLog
 from apps.notifications.services import deliver, due_for_retry
 
 
 class InvoiceTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
         self.v = f.vehicle()
         self.manager = f.staff(Role.MANAGER)
@@ -50,6 +54,27 @@ class InvoiceTests(TestCase):
         self.assertTrue(any("Outside Free Zone" in d for d in descriptions))
         self.assertEqual(inv.items.count(), len(snap["items"]))
         self.assertEqual(sum(i.total_price for i in inv.items.all()), inv.total_amount)
+
+    def test_guest_booking_confirmation_pdf_requires_booking_token(self):
+        res, booking = self.book()
+        headers = {"HTTP_X_BOOKING_REFERENCE": booking.booking_reference,
+                   "HTTP_X_BOOKING_TOKEN": res.data["access_token"]}
+        response = self.client.get("/api/v1/bookings/confirmation/download/", **headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertEqual(response["Cache-Control"], "private, no-store, max-age=0")
+        self.assertTrue(b"%PDF" in response.content[:10])
+
+        denied = self.client.get("/api/v1/bookings/confirmation/download/")
+        self.assertEqual(denied.status_code, 404)
+
+    def test_customer_invoice_has_four_pages_and_no_identity_document_fields(self):
+        _, booking = self.book()
+        invoice = booking.invoices.get()
+        self.assertNotIn("documents", invoice.snapshot)
+        pdf = pdfium.PdfDocument(render_invoice_pdf(invoice.snapshot))
+        self.assertEqual(len(pdf), 4)
+        pdf.close()
 
     def test_revision_preserves_original(self):
         _, b = self.book(days=3)

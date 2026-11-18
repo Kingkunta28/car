@@ -33,6 +33,7 @@ def build_snapshot(booking, *, invoice_number, issue_date, revision_number, supe
                       "total_price": line["total"], "sort_order": i})
     flight = BookingFlight.objects.filter(booking=booking).first()
     v = booking.vehicle
+    vehicle_image = v.primary_image
     return {
         "invoice_number": invoice_number,
         "booking_reference": booking.booking_reference,
@@ -46,6 +47,8 @@ def build_snapshot(booking, *, invoice_number, issue_date, revision_number, supe
                      "phone": booking.customer.phone, "nationality": booking.customer.nationality},
         "trip": {
             "vehicle": f"{v.name} ({v.brand} {v.model}{', ' + str(v.year) if v.year else ''})",
+            "vehicle_image": vehicle_image.image.name if vehicle_image else None,
+            "daily_rate": str(booking.daily_rate),
             "rental_days": booking.rental_days,
             "pickup_datetime": _fmt_dt(booking.pickup_date, booking.pickup_time),
             "return_datetime": _fmt_dt(booking.return_date, booking.return_time),
@@ -53,10 +56,14 @@ def build_snapshot(booking, *, invoice_number, issue_date, revision_number, supe
             "return_location": booking.location_label("return"),
             "pickup_address": booking.location_address("pickup"),
             "return_address": booking.location_address("return"),
+            "pickup_instructions": booking.pickup_instructions,
+            "return_instructions": booking.return_instructions,
         },
         "flight": {
             "summary": f"{flight.airline_name} {flight.flight_number}".strip(),
             "arrival": f"{flight.arrival_date or ''} {flight.arrival_time.strftime('%H:%M') if flight.arrival_time else ''}".strip(),
+            "airport": flight.arrival_airport,
+            "notes": flight.notes,
         } if flight and (flight.airline_name or flight.flight_number) else None,
         "items": items,
         "subtotal": bd.get("subtotal"),
@@ -67,6 +74,8 @@ def build_snapshot(booking, *, invoice_number, issue_date, revision_number, supe
         "payment_method": booking.get_payment_method_display(),
         "payment_method_code": booking.payment_method,
         "payment_status": booking.get_payment_status_display(),
+        "amount_paid": str(booking.amount_paid),
+        "balance_due": str(booking.balance_due),
         "booking_status": booking.get_booking_status_display(),
         "payment_instructions": site.payment_instructions,
         "terms": site.invoice_terms,

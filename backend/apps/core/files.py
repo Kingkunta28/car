@@ -22,7 +22,7 @@ SIGNATURES = {
     "webp": [b"RIFF"],
 }
 EXT_ALIASES = {"jpeg": "jpg"}
-DOCUMENT_TYPES = ("pdf", "jpg", "png")
+DOCUMENT_TYPES = ("pdf", "jpg", "png", "webp")
 IMAGE_TYPES = ("jpg", "png", "webp")
 
 

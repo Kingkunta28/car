@@ -106,9 +106,32 @@ def monthly_revenue(year: int) -> dict:
         g, rf = received.get(m, ZERO), refunded.get(m, ZERO)
         total += g - rf
         rows.append({"label": calendar.month_name[m], "received": str(g), "refunded": str(rf), "net": str(g - rf)})
+    year_bookings = Booking.objects.filter(created_at__year=year)
+    counts = year_bookings.aggregate(
+        total=Count("id"),
+        confirmed=Count("id", filter=Q(booking_status=BookingStatus.CONFIRMED)),
+        completed=Count("id", filter=Q(booking_status=BookingStatus.COMPLETED)),
+    )
+    outstanding = Booking.objects.filter(booking_status__in=ACTIVE, amount_paid__lt=F("grand_total")) \
+        .aggregate(amount=Sum(F("grand_total") - F("amount_paid")))
+    vehicle_rows = []
+    for vehicle in Vehicle.objects.all():
+        metrics = vehicle.bookings.filter(
+            booking_status__in=[BookingStatus.CONFIRMED, BookingStatus.COMPLETED],
+            pickup_date__year=year,
+        ).aggregate(bookings=Count("id"), days=Sum("rental_days"), value=Sum("grand_total"))
+        vehicle_rows.append((metrics["value"] or ZERO, vehicle.name, metrics["bookings"], metrics["days"] or 0))
+    vehicle_rows.sort(reverse=True)
+    top_vehicles = "; ".join(f"{name} ({count} bookings, {days} rental days)"
+                              for _, name, count, days in vehicle_rows[:5] if count)
     return {"title": f"Monthly revenue {year} (verified payments)", "columns": ["label", "received", "refunded", "net"],
             "headers": ["Month", "Received (USD)", "Refunded (USD)", "Net (USD)"], "rows": rows,
-            "summary": {"net_total": str(total)}}
+            "summary": {"total_bookings": counts["total"], "confirmed_bookings": counts["confirmed"],
+                        "completed_bookings": counts["completed"],
+                        "payments_received_usd": str(sum(received.values(), ZERO)),
+                        "refunds_usd": str(sum(refunded.values(), ZERO)), "net_total_usd": str(total),
+                        "outstanding_balances_usd": str(_d(outstanding["amount"])),
+                        "vehicle_performance_top_5": top_vehicles or "No confirmed or completed rentals"}}
 
 
 def vehicle_performance(start: date, end: date) -> dict:

@@ -140,7 +140,7 @@ function QuickSearch() {
   );
 }
 
-/* ------------------------------------------------------------ Sections */
+/* --------------------- Sections */
 function Stats({ vehicles, options, fromPrice }) {
   const stats = [
     vehicles?.length ? { v: vehicles.length, label: "cars in our fleet", sub: "serviced between every rental" } : null,

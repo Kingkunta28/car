@@ -22,6 +22,7 @@ export default function Confirmation() {
   const { state } = useLocation();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [confirmationBusy, setConfirmationBusy] = useState(false);
   const guest = loadGuest();
   // Full booking details come from the backend (authorised by the guest token), never from the form.
   const booking = useQuery({ queryKey: ["guest-booking", guest?.reference], enabled: !!guest && !!state,
@@ -37,6 +38,16 @@ export default function Confirmation() {
       toast(e.message || "Download failed — please try again.", "error");
     } finally {
       setBusy(false);
+    }
+  };
+  const getConfirmation = async () => {
+    setConfirmationBusy(true);
+    try {
+      await download("/bookings/confirmation/download/", { guest }, `${state.booking_reference}-confirmation.pdf`);
+    } catch (e) {
+      toast(e.message || "Download failed — please try again.", "error");
+    } finally {
+      setConfirmationBusy(false);
     }
   };
 
@@ -106,6 +117,7 @@ export default function Confirmation() {
               </div>
               <div className="space-y-2.5">
                 <Button onClick={getInvoice} loading={busy} icon={Download} size="lg" className="w-full">Download invoice PDF</Button>
+                <Button onClick={getConfirmation} loading={confirmationBusy} icon={Download} variant="outline" size="lg" className="w-full">Download booking confirmation</Button>
                 <Button to="/booking/manage" variant="navy" size="lg" icon={Settings} className="w-full">
                   {state.payment_method === "ONLINE" ? "Pay now & view booking" : "View booking & payment"}
                 </Button>

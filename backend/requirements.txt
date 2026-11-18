@@ -8,6 +8,7 @@ celery>=5.5
 redis>=6.0
 reportlab>=4.4
 Pillow>=11.3
+pypdfium2>=4.30,<6
 django-storages[s3]>=1.14
 boto3>=1.38
 whitenoise>=6.9
