@@ -1,4 +1,4 @@
-# Free Render setup for the Django API and best-effort Celery tasks.
+﻿# Free Render setup for the Django API and best-effort Celery tasks.
 # Neon and the existing Render Key Value instance are configured in Render;
 # this Blueprint doesn't create either datastore.
 services:
@@ -11,7 +11,7 @@ services:
     # Free services don't support pre-deploy commands or standalone workers.
     # Migrations and Celery run alongside Gunicorn in this single web instance.
     startCommand: >-
-      sh -c 'DATABASE_URL="$DATABASE_URL_UNPOOLED" python manage.py migrate --noinput &&
+      sh -c 'DATABASE_URL_POOLED="$DATABASE_URL" python manage.py migrate --noinput &&
       (celery -A config worker --beat --loglevel=info --concurrency=1 &
       exec gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 --access-logfile -)'
     healthCheckPath: /api/v1/health/
@@ -27,9 +27,9 @@ services:
       - key: DJANGO_ALLOWED_HOSTS
         value: rafiki-api.onrender.com,api.rafikicarhire.com
       - key: DATABASE_URL
-        value: postgresql://neondb_owner:npg_b2kuYPEB6yrj@ep-soft-queen-bee046o9.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require # Neon pooled URL; application traffic
-      - key: DATABASE_URL_UNPOOLED
-        value: postgresql://neondb_owner:npg_b2kuYPEB6yrj@ep-soft-queen-bee046o9-pooler.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require # Neon direct URL; used only for migrations
+        sync: false # Neon direct URL; used by migrations
+      - key: DATABASE_URL_POOLED
+        sync: false # Neon pooled URL; Django application traffic
       - key: REDIS_URL
         sync: false # Paste the connection URL for the existing free Key Value instance.
       - key: FRONTEND_URL

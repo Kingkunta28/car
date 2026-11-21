@@ -84,7 +84,11 @@ TEMPLATES = [
 # --------------------------------------------------------------------------
 # Database — PostgreSQL is required (exclusion constraints, range types).
 # --------------------------------------------------------------------------
-DATABASES = {"default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")}
+database_url = env(
+    "DATABASE_URL_POOLED",
+    default=env("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+)
+DATABASES = {"default": env.db_url_config(database_url)}
 if DATABASES["default"]["ENGINE"].endswith("sqlite3"):
     # SQLite is for local development only. Production must use PostgreSQL,
     # which adds the database-level double-booking EXCLUSION constraint.
