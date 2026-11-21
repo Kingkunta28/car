@@ -1,12 +1,7 @@
-# Free Render setup for the Django API, Redis, and best-effort Celery tasks.
-# The Neon database is configured securely in Render; no Render Postgres is created.
+# Free Render setup for the Django API and best-effort Celery tasks.
+# Neon and the existing Render Key Value instance are configured in Render;
+# this Blueprint doesn't create either datastore.
 services:
-  - type: keyvalue
-    name: rafiki-redis
-    plan: free
-    ipAllowList: []
-    maxmemoryPolicy: noeviction
-
   - type: web
     name: rafiki-api
     runtime: python
@@ -36,10 +31,7 @@ services:
       - key: DATABASE_URL_UNPOOLED
         sync: false # Neon direct URL; used only for migrations
       - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: rafiki-redis
-          property: connectionString
+        sync: false # Paste the connection URL for the existing free Key Value instance.
       - key: FRONTEND_URL
         value: https://www.rafikicarhire.com
       - key: BACKEND_URL
