@@ -1,5 +1,6 @@
 from .base import *  # noqa: F401,F403
 from .base import STORAGES, env
+from django.core.exceptions import ImproperlyConfigured
 
 DEBUG = False
 
@@ -21,20 +22,59 @@ SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
-# Object storage (S3-compatible: AWS S3, Cloudflare R2, Backblaze B2, DO Spaces)
-if env.bool("USE_S3", default=False):
+# Public media and private booking documents must use persistent object storage
+# in production. collectstatic uses WhiteNoise (configured in base.py), so the
+# Render build command opts out of S3 only for that command.
+_collectstatic_build = env.bool("DJANGO_COLLECTSTATIC_BUILD", default=False)
+_use_s3 = env.bool("USE_S3", default=False)
+
+if not _use_s3 and not _collectstatic_build:
+    raise ImproperlyConfigured(
+        "Production requires persistent S3-compatible storage (set USE_S3=True). "
+        "Render's local filesystem is temporary and cannot hold customer documents."
+    )
+
+if _use_s3:
+    _access_key = env("AWS_ACCESS_KEY_ID", default="").strip()
+    _secret_key = env("AWS_SECRET_ACCESS_KEY", default="").strip()
+    _public_bucket = env(
+        "AWS_PUBLIC_BUCKET_NAME",
+        default=env("AWS_STORAGE_BUCKET_NAME", default=""),
+    ).strip()
+    _private_bucket = env("AWS_PRIVATE_BUCKET_NAME", default="").strip()
+    _region = env("AWS_S3_REGION_NAME", default="").strip()
+    _endpoint = env("AWS_S3_ENDPOINT_URL", default="").strip() or None
+
+    _missing = []
+    if not _access_key:
+        _missing.append("AWS_ACCESS_KEY_ID")
+    if not _secret_key:
+        _missing.append("AWS_SECRET_ACCESS_KEY")
+    if not _public_bucket:
+        _missing.append("AWS_PUBLIC_BUCKET_NAME (or AWS_STORAGE_BUCKET_NAME)")
+    if not _private_bucket:
+        _missing.append("AWS_PRIVATE_BUCKET_NAME")
+    if not _region:
+        _missing.append("AWS_S3_REGION_NAME")
+    if _region.lower() == "auto" and not _endpoint:
+        _missing.append("AWS_S3_ENDPOINT_URL (required with region 'auto', e.g. Cloudflare R2)")
+    if _missing:
+        raise ImproperlyConfigured(
+            "USE_S3=True requires these Render environment variables: " + ", ".join(_missing)
+        )
+
     _s3_common = {
-        "access_key": env("AWS_ACCESS_KEY_ID"),
-        "secret_key": env("AWS_SECRET_ACCESS_KEY"),
-        "endpoint_url": env("AWS_S3_ENDPOINT_URL", default=None),
-        "region_name": env("AWS_S3_REGION_NAME", default=None),
+        "access_key": _access_key,
+        "secret_key": _secret_key,
+        "endpoint_url": _endpoint,
+        "region_name": _region,
         "file_overwrite": False,
     }
     STORAGES["default"] = {
         "BACKEND": "storages.backends.s3.S3Storage",
         "OPTIONS": {
             **_s3_common,
-            "bucket_name": env("AWS_PUBLIC_BUCKET_NAME"),
+            "bucket_name": _public_bucket,
             "custom_domain": env("AWS_PUBLIC_CUSTOM_DOMAIN", default=None),
             "querystring_auth": False,
         },
@@ -43,7 +83,7 @@ if env.bool("USE_S3", default=False):
         "BACKEND": "storages.backends.s3.S3Storage",
         "OPTIONS": {
             **_s3_common,
-            "bucket_name": env("AWS_PRIVATE_BUCKET_NAME"),
+            "bucket_name": _private_bucket,
             "default_acl": "private",
             "querystring_auth": True,
             "querystring_expire": 60,

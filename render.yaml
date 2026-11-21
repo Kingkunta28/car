@@ -7,7 +7,7 @@ services:
     runtime: python
     plan: free
     rootDir: backend
-    buildCommand: python -m pip install -r requirements.txt && python manage.py collectstatic --noinput
+    buildCommand: python -m pip install -r requirements.txt && USE_S3=false DJANGO_COLLECTSTATIC_BUILD=true python manage.py collectstatic --noinput
     # Free services don't support pre-deploy commands or standalone workers.
     # Migrations and Celery run alongside Gunicorn in this single web instance.
     startCommand: >-
@@ -71,7 +71,7 @@ services:
       - key: AWS_S3_ENDPOINT_URL
         sync: false # Cloudflare R2 endpoint, per backend/.env.example
       - key: AWS_S3_REGION_NAME
-        value: auto
+        sync: false # Use auto for R2 or the AWS region for Amazon S3.
       - key: AWS_PUBLIC_BUCKET_NAME
         value: rafiki-public
       - key: AWS_PRIVATE_BUCKET_NAME
