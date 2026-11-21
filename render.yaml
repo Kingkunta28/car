@@ -38,4 +38,3 @@ services:
         fromDatabase: { name: rafiki-db, property: connectionString }
       - key: REDIS_URL
         fromService: { type: keyvalue, name: rafiki-redis, property: connectionString }
-      - fromGroup: rafiki-secrets   # SMTP, Pesapal, S3, URLs; create this group in Render
