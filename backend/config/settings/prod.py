@@ -8,6 +8,9 @@ from .base import DATABASES  # noqa: E402
 if not DATABASES["default"]["ENGINE"].endswith("postgresql"):
     raise RuntimeError("Production requires PostgreSQL (set DATABASE_URL=postgres://...).")
 
+# Neon requires TLS. Keep this explicit even if the URL omits sslmode.
+DATABASES["default"].setdefault("OPTIONS", {})["sslmode"] = "require"
+
 # HTTPS / cookies
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)

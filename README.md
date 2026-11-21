@@ -204,16 +204,16 @@ Frontend: `npm run build` completes without errors.
 
 ## 6. Deployment
 
-The recommended setup is **frontend on Vercel or Netlify**, and **API, Celery worker, PostgreSQL and Redis on Render** (`render.yaml`).
+The production setup is **frontend on Vercel**, **Django API and Celery worker on Render**, and **PostgreSQL on Neon**. Render Key Value supplies Redis for Celery and Django's cache (`render.yaml`).
 
 1. **Object storage.** Create two buckets (Cloudflare R2, S3, Backblaze B2 or similar):
    - `rafiki-public` for vehicle photos and the logo, with public read access;
    - `rafiki-private` for documents, invoices and receipts. **Block all public access** on this one.
-2. **Render.** Choose New → Blueprint and select this repository. Then create an environment group called `rafiki-secrets` containing `DJANGO_ALLOWED_HOSTS`, `FRONTEND_URL`, `BACKEND_URL`, `CSRF_TRUSTED_ORIGINS`, `CORS_ALLOWED_ORIGINS`, the `EMAIL_*` settings, `OWNER_NOTIFICATION_EMAIL`, `PESAPAL_*`, `USE_S3=True`, the `AWS_*` settings, `SENTRY_DSN` and `DJANGO_ADMIN_URL`. Migrations run automatically on every deploy. Then run `python manage.py createsuperuser` in the Render shell.
-3. **Frontend.** Import the `frontend/` folder into Vercel (or Netlify) and set `VITE_SITE_URL`. Change the domain `api.rafikicarhire.com` in `vercel.json` or `netlify.toml` to your API's domain. The rewrite makes `/api` same-origin, so cookies and CSRF work with no cross-site setup.
-4. **DNS and HTTPS.** Point `www` at Vercel or Netlify and `api` at Render. Both issue TLS certificates automatically. Django enforces HTTPS, HSTS and secure cookies in production.
-5. **Pesapal.** Run `python manage.py register_pesapal_ipn` on the server, put the printed id in `PESAPAL_IPN_ID`, and redeploy.
-6. **Backups.** Enable Render PostgreSQL's daily backups and point-in-time recovery. Turn on versioning for the private bucket.
+2. **Render.** Choose New → Blueprint and select this repository and its production branch. The Blueprint uses the existing Neon database; it does not create a Render Postgres database. During first setup, provide `DATABASE_URL` (Neon's pooled URL) and `DATABASE_URL_UNPOOLED` (Neon's direct URL), both with TLS enabled. Also provide the AWS-compatible storage credentials/endpoint and SMTP, owner email, and Pesapal settings when prompted. If the Blueprint already exists, Render ignores newly added `sync: false` entries during later syncs, so add those values manually under the service's Environment settings. The web service applies migrations once in its pre-deploy phase. Then create the admin user in the Render shell.
+3. **Frontend.** Import the `frontend/` folder into Vercel, set the root directory to `frontend`, build command to `npm run build`, output directory to `dist`, and set `VITE_SITE_URL=https://www.rafikicarhire.com`. Leave `VITE_API_BASE` empty: the existing rewrite sends `/api` to `https://api.rafikicarhire.com`, preserving same-origin session and CSRF behavior. Do not put database or backend secrets in any `VITE_*` variable.
+4. **DNS and HTTPS.** Add `api.rafikicarhire.com` to the Render web service and point its DNS record to Render. Point the `www` and apex site domains to Vercel. Both providers issue TLS certificates automatically. Django enforces HTTPS, HSTS and secure cookies in production.
+5. **Pesapal.** After the API domain is live, run `python manage.py register_pesapal_ipn` in the Render shell, set the resulting value as `PESAPAL_IPN_ID`, and redeploy the web and worker services.
+6. **Backups.** Configure Neon backups/restore for the production branch and turn on versioning for the private object-storage bucket. The old Render database, if one was created by an earlier Blueprint, is no longer used and is left untouched by this configuration.
 7. **Monitoring.** Set `SENTRY_DSN`. The health check is at `/api/v1/health/`.
 
 ---

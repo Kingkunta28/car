@@ -1,6 +1,7 @@
 # Secrets — never commit
 .env
 *.env
+.env.local
 !.env.example
 .mcp.json
 
@@ -21,3 +22,5 @@ frontend/dist/
 Thumbs.db
 .vscode/
 .idea/
+.neon
+node_modules/

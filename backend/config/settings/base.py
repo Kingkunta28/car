@@ -13,6 +13,10 @@ from celery.schedules import crontab
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
+# Neon CLI writes connection variables to the repository-root .env.local when
+# no root .env exists. Load it first so its DATABASE_URL takes precedence over
+# the backend's existing local-development .env file.
+environ.Env.read_env(BASE_DIR.parent / ".env.local")
 environ.Env.read_env(BASE_DIR / ".env")
 
 # --------------------------------------------------------------------------
