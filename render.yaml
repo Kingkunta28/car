@@ -1,21 +1,24 @@
-# Rafiki Car Hire production API and background worker.
-# The existing Neon database is configured securely in the Render dashboard;
-# this Blueprint intentionally does not create a Render Postgres database.
+# Free Render setup for the Django API, Redis, and best-effort Celery tasks.
+# The Neon database is configured securely in Render; no Render Postgres is created.
 services:
   - type: keyvalue
     name: rafiki-redis
-    plan: 256mb
+    plan: free
     ipAllowList: []
     maxmemoryPolicy: noeviction
 
   - type: web
     name: rafiki-api
     runtime: python
-    plan: 0.5c-512mb
+    plan: free
     rootDir: backend
     buildCommand: python -m pip install -r requirements.txt && python manage.py collectstatic --noinput
-    preDeployCommand: DATABASE_URL="$DATABASE_URL_UNPOOLED" python manage.py migrate --noinput
-    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 60 --access-logfile -
+    # Free services don't support pre-deploy commands or standalone workers.
+    # Migrations and Celery run alongside Gunicorn in this single web instance.
+    startCommand: >-
+      sh -c 'DATABASE_URL="$DATABASE_URL_UNPOOLED" python manage.py migrate --noinput &&
+      (celery -A config worker --beat --loglevel=info --concurrency=1 &
+      exec gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 --access-logfile -)'
     healthCheckPath: /api/v1/health/
     envVars:
       - key: PYTHON_VERSION
@@ -81,125 +84,3 @@ services:
         value: rafiki-public
       - key: AWS_PRIVATE_BUCKET_NAME
         value: rafiki-private
-
-  - type: worker
-    name: rafiki-worker
-    runtime: python
-    plan: 0.5c-512mb
-    rootDir: backend
-    buildCommand: python -m pip install -r requirements.txt
-    startCommand: celery -A config worker --beat --loglevel=info --concurrency=1
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.13.5
-      - key: DJANGO_SETTINGS_MODULE
-        value: config.settings.prod
-      - key: DJANGO_SECRET_KEY
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: DJANGO_SECRET_KEY
-      - key: DJANGO_ALLOWED_HOSTS
-        value: rafiki-api.onrender.com,api.rafikicarhire.com
-      - key: DATABASE_URL
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: DATABASE_URL
-      - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: rafiki-redis
-          property: connectionString
-      - key: USE_S3
-        value: "true"
-      - key: AWS_ACCESS_KEY_ID
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: AWS_ACCESS_KEY_ID
-      - key: AWS_SECRET_ACCESS_KEY
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: AWS_SECRET_ACCESS_KEY
-      - key: AWS_S3_ENDPOINT_URL
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: AWS_S3_ENDPOINT_URL
-      - key: AWS_S3_REGION_NAME
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: AWS_S3_REGION_NAME
-      - key: AWS_PUBLIC_BUCKET_NAME
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: AWS_PUBLIC_BUCKET_NAME
-      - key: AWS_PRIVATE_BUCKET_NAME
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: AWS_PRIVATE_BUCKET_NAME
-      - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: FRONTEND_URL
-      - key: BACKEND_URL
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: BACKEND_URL
-      - key: EMAIL_HOST
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: EMAIL_HOST
-      - key: EMAIL_HOST_USER
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: EMAIL_HOST_USER
-      - key: EMAIL_HOST_PASSWORD
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: EMAIL_HOST_PASSWORD
-      - key: DEFAULT_FROM_EMAIL
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: DEFAULT_FROM_EMAIL
-      - key: OWNER_NOTIFICATION_EMAIL
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: OWNER_NOTIFICATION_EMAIL
-      - key: PAYMENT_GATEWAYS_ENABLED
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: PAYMENT_GATEWAYS_ENABLED
-      - key: PESAPAL_ENV
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: PESAPAL_ENV
-      - key: PESAPAL_CONSUMER_KEY
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: PESAPAL_CONSUMER_KEY
-      - key: PESAPAL_CONSUMER_SECRET
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: PESAPAL_CONSUMER_SECRET
-      - key: PESAPAL_IPN_ID
-        fromService:
-          type: web
-          name: rafiki-api
-          envVarKey: PESAPAL_IPN_ID
