@@ -27,9 +27,9 @@ services:
       - key: DJANGO_ALLOWED_HOSTS
         value: rafiki-api.onrender.com,api.rafikicarhire.com
       - key: DATABASE_URL
-        sync: false # Neon pooled URL; application traffic
+        value: postgresql://neondb_owner:npg_b2kuYPEB6yrj@ep-soft-queen-bee046o9.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require # Neon pooled URL; application traffic
       - key: DATABASE_URL_UNPOOLED
-        sync: false # Neon direct URL; used only for migrations
+        value: postgresql://neondb_owner:npg_b2kuYPEB6yrj@ep-soft-queen-bee046o9-pooler.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require # Neon direct URL; used only for migrations
       - key: REDIS_URL
         sync: false # Paste the connection URL for the existing free Key Value instance.
       - key: FRONTEND_URL
