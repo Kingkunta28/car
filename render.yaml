@@ -9,9 +9,10 @@ services:
     rootDir: backend
     buildCommand: python -m pip install -r requirements.txt && USE_S3=false DJANGO_COLLECTSTATIC_BUILD=true python manage.py collectstatic --noinput
     # Free services don't support pre-deploy commands or standalone workers.
-    # Migrations and Celery run alongside Gunicorn in this single web instance.
+    # Migrations, fleet seed/media repair and Celery run alongside Gunicorn here.
     startCommand: >-
       sh -c 'DATABASE_URL_POOLED="$DATABASE_URL" python manage.py migrate --noinput &&
+      python manage.py import_fleet &&
       (celery -A config worker --beat --loglevel=info --concurrency=1 &
       exec gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 --access-logfile -)'
     healthCheckPath: /api/v1/health/
