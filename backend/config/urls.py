@@ -69,8 +69,9 @@ urlpatterns = [
     path("sitemap.xml", core_views.sitemap_xml),
 ]
 
-# Public media (vehicle photos, logo) in development. Private files are never routed.
-if settings.DEBUG:
+# Public media (vehicle photos, logo) in development or local-storage deployments.
+# Private files are never routed; they are streamed through permission-checked views.
+if settings.DEBUG or getattr(settings, "SERVE_LOCAL_MEDIA", False):
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 admin.site.site_header = "Rafiki Car Hire — system administration"

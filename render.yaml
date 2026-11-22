@@ -63,16 +63,4 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: https://www.rafikicarhire.com
       - key: USE_S3
-        value: "true"
-      - key: AWS_ACCESS_KEY_ID
-        sync: false
-      - key: AWS_SECRET_ACCESS_KEY
-        sync: false
-      - key: AWS_S3_ENDPOINT_URL
-        sync: false # Cloudflare R2 endpoint, per backend/.env.example
-      - key: AWS_S3_REGION_NAME
-        sync: false # Use auto for R2 or the AWS region for Amazon S3.
-      - key: AWS_PUBLIC_BUCKET_NAME
-        value: rafiki-public
-      - key: AWS_PRIVATE_BUCKET_NAME
-        value: rafiki-private
+        value: "false"

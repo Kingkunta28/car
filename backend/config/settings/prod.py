@@ -22,17 +22,10 @@ SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
-# Public media and private booking documents must use persistent object storage
-# in production. collectstatic uses WhiteNoise (configured in base.py), so the
-# Render build command opts out of S3 only for that command.
-_collectstatic_build = env.bool("DJANGO_COLLECTSTATIC_BUILD", default=False)
+# S3-compatible storage is optional. If disabled, uploads use the local
+# filesystem; on Render's free service those files are ephemeral.
 _use_s3 = env.bool("USE_S3", default=False)
-
-if not _use_s3 and not _collectstatic_build:
-    raise ImproperlyConfigured(
-        "Production requires persistent S3-compatible storage (set USE_S3=True). "
-        "Render's local filesystem is temporary and cannot hold customer documents."
-    )
+SERVE_LOCAL_MEDIA = not _use_s3
 
 if _use_s3:
     _access_key = env("AWS_ACCESS_KEY_ID", default="").strip()
