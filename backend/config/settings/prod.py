@@ -4,6 +4,13 @@ from django.core.exceptions import ImproperlyConfigured
 
 DEBUG = False
 
+# Render can assign or change the generated service hostname. Trust the
+# hostname Render injects at runtime; custom domains remain configured through
+# DJANGO_ALLOWED_HOSTS.
+_render_hostname = env("RENDER_EXTERNAL_HOSTNAME", default="").strip()
+if _render_hostname and _render_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_render_hostname)
+
 from .base import DATABASES  # noqa: E402
 
 if not DATABASES["default"]["ENGINE"].endswith("postgresql"):

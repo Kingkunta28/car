@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Briefcase, Car, Fuel, Settings2, Users } from "lucide-react";
 import { cx, usd } from "../lib/format";
@@ -6,12 +7,20 @@ import { Badge } from "./ui";
 
 /** Real photo if uploaded; otherwise a composed, branded panel (never a cartoon car). */
 export function VehicleImage({ vehicle, image, className, eager = false, sizes = "(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" }) {
+  const [useRemoteFallback, setUseRemoteFallback] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const img = image || vehicle?.images?.[0];
-  const imageUrl = vehiclePhotos[vehicle?.slug] || img?.url;
-  if (imageUrl) {
+  const bundledUrl = vehiclePhotos[vehicle?.slug];
+  const remoteUrl = img?.url && img.url !== bundledUrl ? img.url : null;
+  const imageUrl = useRemoteFallback ? remoteUrl : bundledUrl || remoteUrl;
+  if (imageUrl && !imageFailed) {
     return (
       <img src={imageUrl} alt={img?.alt_text || `${vehicle.brand} ${vehicle.model} for hire in Zanzibar`}
         loading={eager ? "eager" : "lazy"} decoding="async" sizes={sizes}
+        onError={() => {
+          if (!useRemoteFallback && bundledUrl && remoteUrl) setUseRemoteFallback(true);
+          else setImageFailed(true);
+        }}
         className={cx("h-full w-full object-cover", className)} />
     );
   }
