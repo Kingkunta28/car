@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Briefcase, Car, Fuel, Settings2, Users } from "lucide-react";
 import { cx, usd } from "../lib/format";
+import vehiclePhotos from "../lib/vehicle-photos";
 import { Badge } from "./ui";
 
 /** Real photo if uploaded; otherwise a composed, branded panel (never a cartoon car). */
 export function VehicleImage({ vehicle, image, className, eager = false, sizes = "(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" }) {
   const img = image || vehicle?.images?.[0];
-  if (img?.url) {
+  const imageUrl = vehiclePhotos[vehicle?.slug] || img?.url;
+  if (imageUrl) {
     return (
-      <img src={img.url} alt={img.alt_text || `${vehicle.brand} ${vehicle.model} for hire in Zanzibar`}
+      <img src={imageUrl} alt={img?.alt_text || `${vehicle.brand} ${vehicle.model} for hire in Zanzibar`}
         loading={eager ? "eager" : "lazy"} decoding="async" sizes={sizes}
         className={cx("h-full w-full object-cover", className)} />
     );
