@@ -39,6 +39,15 @@ class PaymentMethodChoice(models.TextChoices):
     ONLINE = "ONLINE", "Online payment"
 
 
+class CustomerLanguage(models.TextChoices):
+    ENGLISH = "en", "English"
+    ITALIAN = "it", "Italian"
+    SPANISH = "es", "Spanish"
+    FRENCH = "fr", "French"
+    GERMAN = "de", "German"
+    PORTUGUESE = "pt", "Portuguese"
+
+
 class PricingType(models.TextChoices):
     PER_BOOKING = "PER_BOOKING", "Per booking"
     PER_UNIT = "PER_UNIT", "Per unit, per booking"
@@ -128,6 +137,7 @@ class Booking(UUIDModel, TimeStampedModel):
     payment_status = models.CharField(max_length=22, choices=PaymentStatus.choices,
                                       default=PaymentStatus.UNPAID, db_index=True)
     payment_method = models.CharField(max_length=10, choices=PaymentMethodChoice.choices)
+    language = models.CharField(max_length=2, choices=CustomerLanguage.choices, default=CustomerLanguage.ENGLISH)
 
     # Inventory hold: True while the booking reserves the vehicle.
     blocks_inventory = models.BooleanField(default=True)

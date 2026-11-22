@@ -9,7 +9,7 @@ export function fmtDate(d, opts = { weekday: "short", day: "numeric", month: "sh
 }
 
 export const fmtDateTime = (d) =>
-  d ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(d)) : "—";
+  d ? new Intl.DateTimeFormat(locale(), { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(d)) : "—";
 
 export const fmtTime = (t) => (t ? t.slice(0, 5) : "");
 

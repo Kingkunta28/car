@@ -53,7 +53,7 @@ function Gallery({ vehicle }) {
           className="transition duration-700 group-hover:scale-[1.03]" />
         {images.length > 0 && (
           <span className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full bg-navy-950/75 px-3.5 py-2 text-sm font-medium text-white backdrop-blur">
-            <Expand className="size-4" /> {images.length} photo{images.length > 1 ? "s" : ""}
+            <Expand className="size-4" /> {images.length} {t("vehicle.photos")}
           </span>
         )}
       </button>
@@ -89,8 +89,8 @@ export default function VehicleDetail() {
 
   return (
     <>
-      <Seo title={`${v.name} Rental in Zanzibar`} path={`/fleet/${v.slug}`} image={v.images?.[0]?.url}
-        description={`Hire a ${v.brand} ${v.model} in Zanzibar from ${usd(v.price_per_day)} per day. ${v.transmission_display}, ${v.passenger_capacity} seats, free airport delivery.`}
+      <Seo title={t("vehicle.seoTitle", { name: v.name })} path={`/fleet/${v.slug}`} image={v.images?.[0]?.url}
+        description={t("vehicle.seoDescription", { name: `${v.brand} ${v.model}`, price: usd(v.price_per_day), transmission: v.transmission_display, seats: v.passenger_capacity })}
         jsonLd={{
           "@context": "https://schema.org", "@type": "Product", name: `${v.brand} ${v.model} rental — ${v.name}`,
           image: v.images?.map((i) => i.url), description: v.description, brand: { "@type": "Brand", name: v.brand },
@@ -99,7 +99,7 @@ export default function VehicleDetail() {
         }} />
       <div className="container-x py-8 sm:py-12">
         <Link to="/fleet" className="inline-flex items-center gap-1.5 text-sm font-medium text-navy-700 hover:text-navy-900">
-          <ArrowLeft className="size-4" /> Back to fleet
+          <ArrowLeft className="size-4" /> {t("vehicle.backFleet")}
         </Link>
         <div className="mt-6 grid gap-10 lg:grid-cols-[1.5fr_1fr]">
           <div>
@@ -130,11 +130,7 @@ export default function VehicleDetail() {
             <div className="mt-10 rounded-2xl border border-line p-6">
               <h2 className="flex items-center gap-2 text-xl font-bold"><Info className="size-5 text-orange-600" /> {t("vehicle.conditions")}</h2>
               <ul className="mt-4 space-y-2.5 text-[15px] leading-relaxed text-muted">
-                <li>• Bring your passport and a valid driving licence. Visitors also need a Zanzibar driving permit; ask us for the current fee.</li>
-                <li>• Delivery to Zanzibar Airport and Zanzibar Town is free; other locations may incur a fee confirmed in your booking quote.</li>
-                <li>• Ask us about child-seat availability and pricing when booking.</li>
-                <li>• Prices are per day. Fuel is not included.</li>
-                <li>• Each started 24-hour period counts as one rental day.</li>
+                {["permit", "delivery", "childSeat", "fuelNotIncluded", "dayRule"].map((key) => <li key={key}>• {t(`vehicle.${key}`)}</li>)}
               </ul>
               <Link to="/before-you-rent" className="mt-4 inline-block text-sm font-semibold text-navy-700 underline underline-offset-4">{t("vehicle.readGuide")}</Link>
             </div>

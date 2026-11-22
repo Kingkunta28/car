@@ -227,7 +227,7 @@ function Footer() {
         </div>
 
         <div className="flex flex-col gap-4 border-t border-white/10 py-6 text-sm text-white/45 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} {name}. All rights reserved. Prices in US dollars.</p>
+          <p>© {year} {name}. {t("footer.rights")}</p>
           <nav aria-label="Legal" className="flex gap-6">
             <Link to="/privacy" className="transition-colors hover:text-orange-400">{t("footer.privacy")}</Link>
             <Link to="/terms" className="transition-colors hover:text-orange-400">{t("footer.terms")}</Link>

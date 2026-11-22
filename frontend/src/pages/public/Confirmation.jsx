@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Navigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, CheckCircle2, Clock, Download, Home, MapPin, MessageCircle, Settings } from "lucide-react";
@@ -19,6 +20,7 @@ function Row({ label, value, strong }) {
 }
 
 export default function Confirmation() {
+  const { t } = useTranslation();
   const { state } = useLocation();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
@@ -53,22 +55,22 @@ export default function Confirmation() {
 
   return (
     <>
-      <Seo title="Booking received" noindex />
+      <Seo title={t("confirmation.title")} noindex />
       <section className="bg-sand-50">
         <div className="container-x max-w-5xl py-14 sm:py-20">
           <div className="stagger text-center">
             <span className="mx-auto grid size-16 place-items-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 className="size-9" /></span>
-            <p className="eyebrow mt-6 justify-center">Booking submitted</p>
-            <h1 className="display-lg mt-3">Asante, {b?.customer?.full_name?.split(" ")[0] || "we've got it"}.</h1>
-            <p className="lead mx-auto mt-4 max-w-xl">Your car is reserved and your invoice is on its way by email. Our team will confirm your booking shortly.</p>
+            <p className="eyebrow mt-6 justify-center">{t("confirmation.submitted")}</p>
+            <h1 className="display-lg mt-3">{t("confirmation.thanks", { name: b?.customer?.full_name?.split(" ")[0] || "" })}</h1>
+            <p className="lead mx-auto mt-4 max-w-xl">{t("confirmation.lead")}</p>
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
             {/* Booking card */}
             <div className="card overflow-hidden">
               <div className="grid gap-px bg-line sm:grid-cols-2">
-                <div className="bg-white p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted">Booking reference</p><p className="mt-1 font-display text-2xl font-bold tracking-wide text-navy-900">{state.booking_reference}</p></div>
-                <div className="bg-white p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted">Invoice number</p><p className="mt-1 font-display text-2xl font-bold text-navy-900">{state.invoice_number}</p></div>
+                <div className="bg-white p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted">{t("confirmation.reference")}</p><p className="mt-1 font-display text-2xl font-bold tracking-wide text-navy-900">{state.booking_reference}</p></div>
+                <div className="bg-white p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted">{t("confirmation.invoiceNumber")}</p><p className="mt-1 font-display text-2xl font-bold text-navy-900">{state.invoice_number}</p></div>
               </div>
               {booking.isLoading ? <div className="space-y-3 p-5"><Skeleton className="h-32" /><Skeleton className="h-16" /></div> : b ? (
                 <div className="p-5">
@@ -81,18 +83,18 @@ export default function Confirmation() {
                     </div>
                   </div>
                   <dl className="mt-5 grid gap-4 border-t border-line pt-5 sm:grid-cols-2">
-                    <div className="flex gap-3"><CalendarDays className="mt-0.5 size-5 shrink-0 text-orange-600" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted">Pickup</dt>
+                    <div className="flex gap-3"><CalendarDays className="mt-0.5 size-5 shrink-0 text-orange-600" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted">{t("confirmation.pickup")}</dt>
                       <dd className="text-sm text-navy-900">{fmtDate(b.pickup_date)}, {fmtTime(b.pickup_time)}</dd>
                       <dd className="text-sm text-muted">{b.pickup_type_display}{b.pickup_area && ` — ${b.pickup_area}`}</dd></div></div>
-                    <div className="flex gap-3"><MapPin className="mt-0.5 size-5 shrink-0 text-orange-600" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted">Return</dt>
+                    <div className="flex gap-3"><MapPin className="mt-0.5 size-5 shrink-0 text-orange-600" /><div><dt className="text-xs font-semibold uppercase tracking-wider text-muted">{t("confirmation.return")}</dt>
                       <dd className="text-sm text-navy-900">{fmtDate(b.return_date)}, {fmtTime(b.return_time)}</dd>
                       <dd className="text-sm text-muted">{b.return_type_display}{b.return_area && ` — ${b.return_area}`}</dd></div></div>
                   </dl>
                 </div>
-              ) : <Alert tone="info" className="m-5">Your full booking details are in the email we just sent.</Alert>}
+              ) : <Alert tone="info" className="m-5">{t("confirmation.fallback")}</Alert>}
               <div className="flex items-start gap-3 border-t border-line bg-sand-50 p-5 text-sm text-muted">
                 <Clock className="mt-0.5 size-5 shrink-0 text-orange-600" />
-                <p>Your car is held until <strong className="text-navy-900">{fmtDateTime(state.hold_expires_at)}</strong> while we confirm. An invoice is not a receipt — you'll receive a receipt for each payment once it's verified.</p>
+                <p>{t("confirmation.hold", { date: fmtDateTime(state.hold_expires_at) })}</p>
               </div>
             </div>
 
@@ -106,27 +108,27 @@ export default function Confirmation() {
                 </div>
                 <dl className="mt-4 divide-y divide-line">
                   {b && <>
-                    <Row label={`Rental · ${b.rental_days} × ${usd(b.daily_rate)}`} value={usd(b.rental_total)} />
-                    <Row label="Pickup fee" value={Number(b.pickup_fee) ? usd(b.pickup_fee) : "Free"} />
-                    <Row label="Return fee" value={Number(b.return_fee) ? usd(b.return_fee) : "Free"} />
+                    <Row label={t("confirmation.rental", { days: b.rental_days, rate: usd(b.daily_rate) })} value={usd(b.rental_total)} />
+                    <Row label={t("confirmation.pickupFee")} value={Number(b.pickup_fee) ? usd(b.pickup_fee) : t("confirmation.free")} />
+                    <Row label={t("confirmation.returnFee")} value={Number(b.return_fee) ? usd(b.return_fee) : t("confirmation.free")} />
                     {b.extras.map((e) => <Row key={e.code} label={`${e.service_name} × ${e.quantity}`} value={usd(e.total_price)} />)}
-                    {Number(b.tax_amount) > 0 && <Row label="Tax" value={usd(b.tax_amount)} />}
+                    {Number(b.tax_amount) > 0 && <Row label={t("confirmation.tax")} value={usd(b.tax_amount)} />}
                   </>}
-                  <Row label="Total (USD)" value={usd(state.grand_total)} strong />
+                  <Row label={t("confirmation.total")} value={usd(state.grand_total)} strong />
                 </dl>
               </div>
               <div className="space-y-2.5">
-                <Button onClick={getInvoice} loading={busy} icon={Download} size="lg" className="w-full">Download invoice PDF</Button>
-                <Button onClick={getConfirmation} loading={confirmationBusy} icon={Download} variant="outline" size="lg" className="w-full">Download booking confirmation</Button>
+                <Button onClick={getInvoice} loading={busy} icon={Download} size="lg" className="w-full">{t("confirmation.downloadInvoice")}</Button>
+                <Button onClick={getConfirmation} loading={confirmationBusy} icon={Download} variant="outline" size="lg" className="w-full">{t("confirmation.downloadConfirmation")}</Button>
                 <Button to="/booking/manage" variant="navy" size="lg" icon={Settings} className="w-full">
-                  {state.payment_method === "ONLINE" ? "Pay now & view booking" : "View booking & payment"}
+                  {state.payment_method === "ONLINE" ? t("confirmation.payView") : t("confirmation.viewPayment")}
                 </Button>
                 <div className="grid gap-2.5 sm:grid-cols-2">
-                  {state.whatsapp_url && <Button href={state.whatsapp_url} target="_blank" rel="noopener noreferrer" variant="whatsapp" icon={MessageCircle}>WhatsApp us</Button>}
-                  <Button to="/" variant="outline" icon={Home} className={state.whatsapp_url ? "" : "sm:col-span-2"}>Back to home</Button>
+                  {state.whatsapp_url && <Button href={state.whatsapp_url} target="_blank" rel="noopener noreferrer" variant="whatsapp" icon={MessageCircle}>{t("confirmation.whatsapp")}</Button>}
+                  <Button to="/" variant="outline" icon={Home} className={state.whatsapp_url ? "" : "sm:col-span-2"}>{t("confirmation.home")}</Button>
                 </div>
               </div>
-              <p className="text-center text-xs text-muted">Keep the email we sent you — its private link lets you return to this booking at any time.</p>
+              <p className="text-center text-xs text-muted">{t("confirmation.private")}</p>
             </div>
           </div>
         </div>

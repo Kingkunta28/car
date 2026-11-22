@@ -20,9 +20,9 @@ import heroCar from "../../assets/hero-prado.webp";
 
 /* ------------------------------------------------------------------ Hero */
 const TRUST = [
-  { icon: CalendarDays, title: "Flexible rentals", text: "From one day to several weeks" },
-  { icon: MessageCircle, title: "24/7 support", text: "Real people on WhatsApp" },
-  { icon: Plane, title: "Convenient pickup", text: "Free at the airport & Stone Town" },
+  { icon: CalendarDays, title: "home.flexible", text: "home.flexibleText" },
+  { icon: MessageCircle, title: "home.support", text: "home.supportText" },
+  { icon: Plane, title: "home.convenientPickup", text: "home.convenientPickupText" },
 ];
 
 function HeroVisual({ photo, fromPrice }) {
@@ -85,17 +85,17 @@ function Hero({ site, fromPrice }) {
               {t("home.title")} <span className="serif-accent block text-orange-400">{t("home.accent")}</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/75">
-              Pick up a reliable car at the airport, in Stone Town or at your hotel, and see the island on your own schedule — with clear US-dollar prices, an instant invoice and friendly local support whenever you need it.
+              {t("home.lead")}
             </p>
             <div className="mt-9 grid gap-3 sm:flex sm:flex-wrap">
               <Button to="/fleet" size="lg" arrow className="w-full sm:w-auto">{t("home.explore")}</Button>
               <Button to="/book" size="lg" variant="outlineLight" className="w-full sm:w-auto">{t("home.book")}</Button>
             </div>
             <ul className="mt-10 grid gap-5 border-t border-white/10 pt-8 sm:grid-cols-3">
-              {TRUST.map((t) => (
-                <li key={t.title} className="flex gap-3">
-                  <t.icon className="mt-0.5 size-5 shrink-0 text-orange-400" aria-hidden />
-                  <span><span className="block text-sm font-semibold text-white">{t.title}</span><span className="block text-xs text-white/55">{t.text}</span></span>
+              {TRUST.map((item) => (
+                <li key={item.title} className="flex gap-3">
+                  <item.icon className="mt-0.5 size-5 shrink-0 text-orange-400" aria-hidden />
+                  <span><span className="block text-sm font-semibold text-white">{t(item.title)}</span><span className="block text-xs text-white/55">{t(item.text)}</span></span>
                 </li>
               ))}
             </ul>
@@ -146,11 +146,12 @@ function QuickSearch() {
 
 /* --------------------- Sections */
 function Stats({ vehicles, options, fromPrice }) {
+  const { t } = useTranslation();
   const stats = [
-    vehicles?.length ? { v: vehicles.length, label: "cars in our fleet", sub: "serviced between every rental" } : null,
-    { v: 0, prefix: "$", label: "airport & Stone Town handover", sub: "we meet you at arrivals" },
-    { v: options?.hold_hours ?? 24, suffix: "h", label: "reservation hold", sub: "while we confirm your booking" },
-    fromPrice != null ? { v: Number(fromPrice), prefix: "$", label: "per day, from", sub: "US-dollar pricing, all-in quote" } : null,
+    vehicles?.length ? { v: vehicles.length, label: t("home.stats.fleet"), sub: t("home.stats.fleetNote") } : null,
+    { v: 0, prefix: "$", label: t("home.stats.handover"), sub: t("home.stats.handoverNote") },
+    { v: options?.hold_hours ?? 24, suffix: "h", label: t("home.stats.hold"), sub: t("home.stats.holdNote") },
+    fromPrice != null ? { v: Number(fromPrice), prefix: "$", label: t("home.stats.price"), sub: t("home.stats.priceNote") } : null,
   ].filter(Boolean);
   return (
     <section className="pt-20 sm:pt-24" aria-label="Rafiki at a glance">
@@ -173,6 +174,7 @@ function Stats({ vehicles, options, fromPrice }) {
 const TABS = [["", "All"], ["SUV", "SUV"], ["4X4", "4x4"], ["COMPACT_SUV", "Compact SUV"], ["ECONOMY", "Economy"], ["MINIVAN", "Minivan"]];
 
 function FleetShowcase({ vehicles, loading }) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState("");
   const available = useMemo(() => TABS.filter(([k]) => !k || vehicles?.some((v) => v.category === k)), [vehicles]);
   const list = (vehicles || []).filter((v) => !tab || v.category === tab)
@@ -182,18 +184,18 @@ function FleetShowcase({ vehicles, loading }) {
       <div className="container-x">
         <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end" data-reveal>
           <div>
-            <p className="eyebrow">The fleet</p>
-            <h2 className="display-lg mt-4 max-w-2xl">Cars chosen for <span className="serif-accent text-orange-600">island roads.</span></h2>
-            <p className="lead mt-4 max-w-xl">From easy automatics for Stone Town to 4x4s for the sandy east-coast tracks.</p>
+            <p className="eyebrow">{t("home.fleetEyebrow")}</p>
+            <h2 className="display-lg mt-4 max-w-2xl">{t("home.fleetTitle")}</h2>
+            <p className="lead mt-4 max-w-xl">{t("home.fleetLead")}</p>
           </div>
-          <Button to="/fleet" variant="outline" arrow>View the full fleet</Button>
+          <Button to="/fleet" variant="outline" arrow>{t("home.viewFleet")}</Button>
         </div>
         {available.length > 2 && (
           <div className="mt-10 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Vehicle type">
             {available.map(([k, l]) => (
               <button key={l} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
                 className={cx("shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition",
-                  tab === k ? "border-navy-900 bg-navy-900 text-white" : "border-line bg-white text-navy-900 hover:border-navy-600")}>{l}</button>
+                  tab === k ? "border-navy-900 bg-navy-900 text-white" : "border-line bg-white text-navy-900 hover:border-navy-600")}>{k ? t(`vehicle.categories.${k}`) : t("home.all")}</button>
             ))}
           </div>
         )}
@@ -205,10 +207,10 @@ function FleetShowcase({ vehicles, loading }) {
           <div className="mt-8 grid items-center gap-6 rounded-[var(--radius-panel)] border border-dashed border-sand-200 bg-sand-50 p-8 sm:grid-cols-[auto_1fr_auto] sm:p-10">
             <span className="grid size-14 place-items-center rounded-2xl bg-white text-navy-700 shadow-sm"><CarFront className="size-7" /></span>
             <div>
-              <h3 className="text-xl font-semibold">Our fleet is being updated</h3>
-              <p className="mt-1 text-muted">New vehicles are on their way to the website. Message us and we'll tell you what's available for your dates.</p>
+              <h3 className="text-xl font-semibold">{t("home.fleetUpdating")}</h3>
+              <p className="mt-1 text-muted">{t("home.fleetUpdatingText")}</p>
             </div>
-            <Button to="/contact" variant="navy" arrow>Ask about availability</Button>
+            <Button to="/contact" variant="navy" arrow>{t("home.askAvailability")}</Button>
           </div>
         )}
       </div>
@@ -217,19 +219,20 @@ function FleetShowcase({ vehicles, loading }) {
 }
 
 function Zones({ options }) {
+  const { t } = useTranslation();
   const fee = zoneFee(options);
   const tiers = [
-    { icon: Plane, title: "Zanzibar Airport", price: "Free", text: "We meet you at arrivals with the car ready." },
-    { icon: MapPin, title: "Zanzibar Town", price: "Free", text: "Hotels and guesthouses in and around Stone Town." },
-    { icon: CarFront, title: "Outside the free zone", price: fee ? usd(fee) : "Flat fee", text: "Any hotel or villa on the island — charged per leg, so you only pay for the leg outside the zone." },
+    { icon: Plane, title: t("booking.airport"), price: t("booking.free"), text: t("home.airportText") },
+    { icon: MapPin, title: t("booking.town"), price: t("booking.free"), text: t("home.townText") },
+    { icon: CarFront, title: t("booking.locations.OUTSIDE_ZONE"), price: fee ? usd(fee) : t("home.flatFee"), text: t("home.outsideText") },
   ];
   return (
     <section id="zones" className="scroll-mt-24 bg-sand-50 py-24 sm:py-32">
       <div className="container-x grid gap-14 lg:grid-cols-[1fr_1fr] lg:items-center">
         <div data-reveal>
-          <p className="eyebrow">Delivery &amp; collection</p>
-          <h2 className="display-lg mt-4">We bring the car <span className="serif-accent text-orange-600">to you.</span></h2>
-          <p className="lead mt-4 max-w-lg">Choose where to collect and where to return — independently. Tap a place on the map to see whether it's inside the free zone.</p>
+          <p className="eyebrow">{t("home.deliveryEyebrow")}</p>
+          <h2 className="display-lg mt-4">{t("home.deliveryTitle")}</h2>
+          <p className="lead mt-4 max-w-lg">{t("home.deliveryLead")}</p>
           <ul className="mt-10 space-y-3">
             {tiers.map((t) => (
               <li key={t.title} className="card flex items-start gap-4 p-5">
@@ -254,12 +257,13 @@ function Zones({ options }) {
 }
 
 function Bento({ options }) {
+  const { t } = useTranslation();
   return (
     <section className="py-24 sm:py-32">
       <div className="container-x">
         <div className="max-w-2xl" data-reveal>
-          <p className="eyebrow">Why Rafiki</p>
-          <h2 className="display-lg mt-4"><span className="serif-accent">Rafiki</span> means friend. That's the standard.</h2>
+          <p className="eyebrow">{t("home.why")}</p>
+          <h2 className="display-lg mt-4">{t("home.whyTitle")}</h2>
         </div>
         <div className="mt-12 grid auto-rows-[minmax(200px,auto)] gap-4 md:grid-cols-6">
           <div className="relative overflow-hidden rounded-[var(--radius-panel)] bg-navy-950 p-7 text-white md:col-span-4 md:row-span-2 sm:p-9" data-reveal>
@@ -267,8 +271,8 @@ function Bento({ options }) {
             <div className="relative grid h-full gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
               <div>
                 <FileText className="size-8 text-orange-400" />
-                <h3 className="mt-6 text-3xl font-bold text-white">Paperwork done properly.</h3>
-                <p className="mt-3 max-w-md leading-relaxed text-white/70">An itemised PDF invoice lands in your inbox the second you book. Every payment gets its own receipt. Change your dates and you get a revised invoice — never a quiet edit.</p>
+              <h3 className="mt-6 text-3xl font-bold text-white">{t("home.paperwork")}</h3>
+                <p className="mt-3 max-w-md leading-relaxed text-white/70">{t("home.paperworkText")}</p>
               </div>
               {/* Invoice motif */}
               <div className="animate-float w-full max-w-[230px] rotate-2 rounded-2xl bg-white p-4 text-ink shadow-2xl sm:w-[230px]" aria-hidden>
@@ -284,23 +288,23 @@ function Bento({ options }) {
           </div>
           <div className="card p-7 md:col-span-2" data-reveal="80">
             <Lock className="size-7 text-orange-600" />
-            <h3 className="mt-5 text-xl font-semibold">Documents kept private</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted">Passport and licence copies for permits are stored privately, seen only by authorised staff and deleted after your trip.</p>
+            <h3 className="mt-5 text-xl font-semibold">{t("home.privateDocs")}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted">{t("home.privateDocsText")}</p>
           </div>
           <div className="card p-7 md:col-span-2" data-reveal="160">
             <MessageCircle className="size-7 text-orange-600" />
-            <h3 className="mt-5 text-xl font-semibold">Real people on WhatsApp</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted">Routes, fuel, the ferry, checkpoints — ask us anything, before and during your trip.</p>
+            <h3 className="mt-5 text-xl font-semibold">{t("home.realPeople")}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted">{t("home.realPeopleText")}</p>
           </div>
           <div className="card p-7 md:col-span-3" data-reveal>
             <ShieldCheck className="size-7 text-orange-600" />
-            <h3 className="mt-5 text-xl font-semibold">Driving permit, arranged</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted">Visitors need a local permit. Add it to your booking{priceOf(options, "driving_permit") ? ` for ${usd(priceOf(options, "driving_permit"))}` : ""} and upload your documents securely — we handle the application.</p>
+            <h3 className="mt-5 text-xl font-semibold">{t("home.permit")}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted">{t("home.permitText", { price: priceOf(options, "driving_permit") ? usd(priceOf(options, "driving_permit")) : "" })}</p>
           </div>
           <div className="card p-7 md:col-span-3" data-reveal="80">
             <Baby className="size-7 text-orange-600" />
-            <h3 className="mt-5 text-xl font-semibold">Travelling with little ones</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted">Child seats are {babySeatText(options)}, for your whole rental — not per day. Fitted before handover.</p>
+            <h3 className="mt-5 text-xl font-semibold">{t("home.children")}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted">{t("home.childrenText", { price: babySeatText(options) })}</p>
           </div>
         </div>
       </div>
@@ -309,24 +313,25 @@ function Bento({ options }) {
 }
 
 function HowItWorks() {
+  const { t } = useTranslation();
   return (
     <section id="how-it-works" className="relative scroll-mt-20 overflow-hidden bg-navy-950 py-24 text-white sm:py-32">
       <div className="pointer-events-none absolute -right-40 top-0 size-[36rem] rounded-full bg-orange-500/15 blur-3xl" aria-hidden />
       <div className="container-x relative">
         <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end" data-reveal>
           <div>
-            <p className="eyebrow eyebrow-light">How it works</p>
-            <h2 className="display-lg mt-4 text-white">From booking to beach <span className="serif-accent text-orange-400">in four steps.</span></h2>
+            <p className="eyebrow eyebrow-light">{t("home.how")}</p>
+            <h2 className="display-lg mt-4 text-white">{t("home.howTitle")}</h2>
           </div>
-          <Button to="/book" arrow>Start booking</Button>
+          <Button to="/book" arrow>{t("home.start")}</Button>
         </div>
         <ol className="relative mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           <div className="absolute left-0 right-0 top-6 hidden h-px bg-gradient-to-r from-orange-500/0 via-orange-500/50 to-orange-500/0 lg:block" aria-hidden />
           {HOW_IT_WORKS.map((s, i) => (
             <li key={s.title} className="relative" data-reveal={i * 100}>
               <span className="relative grid size-12 place-items-center rounded-full border border-orange-500/40 bg-navy-900 font-display text-lg font-bold text-orange-400">{i + 1}</span>
-              <h3 className="mt-6 text-xl font-semibold text-white">{s.title}</h3>
-              <p className="mt-2 leading-relaxed text-white/65">{s.text}</p>
+              <h3 className="mt-6 text-xl font-semibold text-white">{t(`home.steps.${i}.title`)}</h3>
+              <p className="mt-2 leading-relaxed text-white/65">{t(`home.steps.${i}.text`)}</p>
             </li>
           ))}
         </ol>
@@ -336,40 +341,42 @@ function HowItWorks() {
 }
 
 function Destinations() {
+  const { t } = useTranslation();
   return (
     <section className="py-24 sm:py-32">
       <div className="container-x">
         <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-end" data-reveal>
           <div>
-            <p className="eyebrow">Driving in Zanzibar</p>
-            <h2 className="display-lg mt-4">The whole island, <span className="serif-accent text-orange-600">on your schedule.</span></h2>
+            <p className="eyebrow">{t("home.driving")}</p>
+            <h2 className="display-lg mt-4">{t("home.drivingTitle")}</h2>
           </div>
-          <p className="lead">Unguja is about 85 km from tip to tail and drives on the left. With your own car, every coast is an easy day out.</p>
+          <p className="lead">{t("home.drivingLead")}</p>
         </div>
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {DESTINATIONS.map((d, i) => (
             <article key={d.name} className="card card-hover group relative overflow-hidden p-6" data-reveal={i * 80}>
               <span className="absolute -right-6 -top-6 size-24 rounded-full bg-orange-100 transition-transform duration-700 group-hover:scale-[2.2]" aria-hidden />
-              <p className="relative text-xs font-semibold uppercase tracking-wider text-orange-600">{d.time}</p>
+              <p className="relative text-xs font-semibold uppercase tracking-wider text-orange-600">{t(`home.destinations.${i}.time`)}</p>
               <h3 className="relative mt-3 text-2xl font-semibold">{d.name}</h3>
-              <p className="relative mt-2 text-sm leading-relaxed text-muted">{d.text}</p>
+              <p className="relative mt-2 text-sm leading-relaxed text-muted">{t(`home.destinations.${i}.text`)}</p>
             </article>
           ))}
         </div>
-        <Link to="/before-you-rent" className="link-u mt-8 inline-flex items-center gap-1.5">Read our driving tips <ArrowRight className="arrow size-4" /></Link>
+        <Link to="/before-you-rent" className="link-u mt-8 inline-flex items-center gap-1.5">{t("home.tips")} <ArrowRight className="arrow size-4" /></Link>
       </div>
     </section>
   );
 }
 
 function Testimonials({ items }) {
+  const { t } = useTranslation();
   if (!items?.length) return null;
   return (
     <section className="bg-sand-50 py-24 sm:py-32">
       <div className="container-x">
         <div className="max-w-2xl" data-reveal>
-          <p className="eyebrow">Guest stories</p>
-          <h2 className="display-lg mt-4">In our guests' words</h2>
+          <p className="eyebrow">{t("home.stories")}</p>
+          <h2 className="display-lg mt-4">{t("home.storiesTitle")}</h2>
         </div>
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {items.slice(0, 6).map((t, i) => (
@@ -391,14 +398,15 @@ function Testimonials({ items }) {
 }
 
 function Faq({ list }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(0);
   return (
     <section id="faq" className="scroll-mt-24 py-24 sm:py-32">
       <div className="container-x grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
         <div data-reveal>
-          <p className="eyebrow">Questions</p>
-          <h2 className="display-lg mt-4">Good to know</h2>
-          <p className="lead mt-4">Can't find your answer? <Link to="/contact" className="link-u">Ask us directly</Link>.</p>
+          <p className="eyebrow">{t("home.questions")}</p>
+          <h2 className="display-lg mt-4">{t("home.goodToKnow")}</h2>
+          <p className="lead mt-4">{t("home.faqLead")} <Link to="/contact" className="link-u">{t("home.askDirect")}</Link>.</p>
         </div>
         <div className="divide-y divide-line border-y border-line" data-reveal>
           {list.map((f, i) => (
@@ -449,6 +457,7 @@ function FinalCta({ wa }) {
 }
 
 export default function Home() {
+  const { t } = useTranslation();
   const { data: site } = useSite();
   const { data: options } = useBookingOptions();
   const vehicles = useVehicles({});
@@ -460,8 +469,8 @@ export default function Home() {
 
   return (
     <div ref={ref}>
-      <Seo title="Car Hire Zanzibar — Self-Drive Car Rental" path="/"
-        description="Self-drive car hire in Zanzibar with free airport and Stone Town handover. Clear USD prices, well-kept SUVs and 4x4s, instant invoices and friendly local support."
+      <Seo title={t("seo.home")} path="/"
+        description={t("home.lead")}
         jsonLd={[businessJsonLd(site), { "@context": "https://schema.org", "@type": "FAQPage",
           mainEntity: faqList.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) }]} />
       <Hero site={site} fromPrice={fromPrice} />

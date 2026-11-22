@@ -97,7 +97,7 @@ const FIELD_STEP = (k) => k.startsWith("customer") ? 0
 function toPayload(s, vehicle, totalAmount, options) {
   const flight = Object.fromEntries(Object.entries(s.flight).map(([k, v]) => [k, v || (k.includes("date") || k.includes("time") ? null : "")]));
   return {
-    customer: s.customer, vehicle: s.vehicle, vehicle_id: vehicle.id,
+    customer: s.customer, vehicle: s.vehicle, vehicle_id: vehicle.id, language: document.documentElement.lang || "en",
     vehicle_snapshot: vehicleSnapshot(vehicle), daily_rate: vehicle.price_per_day,
     ...(totalAmount ? { total_amount: totalAmount } : {}),
     pickup_date: s.pickup_date, pickup_time: s.pickup_time, return_date: s.return_date, return_time: s.return_time,
@@ -106,6 +106,12 @@ function toPayload(s, vehicle, totalAmount, options) {
     flight, extras: Object.fromEntries(Object.entries(options.isFallback ? {} : s.extras).filter(([, q]) => q > 0)),
     payment_method: s.payment_method, accept_terms: s.accept_terms,
   };
+}
+
+function extraLabel(extra, t) {
+  if (!extra) return "";
+  const key = { baby_seat: "booking.babySeats", driving_permit: "booking.permit", outside_zone_delivery: "booking.deliveryFee" }[extra.code];
+  return key ? t(key) : extra.name;
 }
 
 function useQuote(s, vehicle) {
@@ -144,7 +150,7 @@ function LocationPicker({ prefix, leg, onChange, options, errors, isReturn }) {
                 <Icon className={cx("size-6", active ? "text-orange-600" : "text-navy-600")} aria-hidden />
                 <span className="mt-3 font-semibold text-navy-900">{t(`booking.locations.${l.code}`, { defaultValue: l.label })}</span>
                 <span className={cx("mt-1 text-sm font-semibold", options.isFallback && l.code === "OUTSIDE_ZONE" ? "text-muted" : Number(l.fee) ? "text-orange-600" : "text-emerald-700")}>
-                  {options.isFallback && l.code === "OUTSIDE_ZONE" ? "Confirm fee" : Number(l.fee) ? usd(l.fee) : "FREE"}
+                  {options.isFallback && l.code === "OUTSIDE_ZONE" ? t("booking.confirmFee") : Number(l.fee) ? usd(l.fee) : t("booking.free").toUpperCase()}
                 </span>
               </button>
             );
@@ -155,21 +161,21 @@ function LocationPicker({ prefix, leg, onChange, options, errors, isReturn }) {
 
       {leg.type === "AIRPORT" && (
         <Alert tone="info">
-          We'll meet you at {options.default_arrival_airport}.{!isReturn && " Add your flight on the next steps so we can track delays."}
+          {t("booking.meetAtAirport", { airport: options.default_arrival_airport })}{!isReturn && ` ${t("booking.addFlightForDelays")}`}
         </Alert>
       )}
       {leg.type === "OUTSIDE_ZONE" && (
-        <Field label="Area or destination" required error={errors[`${prefix}_area`]} hint="e.g. Nungwi, Paje, Matemwe, Michamvi">
+      <Field label={t("booking.location")} required error={errors[`${prefix}_area`]} hint={t("booking.destinationHint")}>
           {(a) => <input {...a} className="input" value={leg.area} maxLength={160} onChange={(e) => onChange({ ...leg, area: e.target.value })} />}
         </Field>
       )}
       {(leg.type === "TOWN" || leg.type === "OUTSIDE_ZONE") && (
-        <Field label="Exact address" required error={errors[`${prefix}_address`]} hint="Hotel, resort, street, building or property name">
+      <Field label={t("booking.exactAddress")} required error={errors[`${prefix}_address`]} hint={t("booking.addressHint")}>
           {(a) => <input {...a} className="input" value={leg.address} maxLength={255} onChange={(e) => onChange({ ...leg, address: e.target.value })} />}
         </Field>
       )}
       {leg.type && (
-        <Field label="Instructions (optional)" hint={leg.type === "AIRPORT" ? "Anything we should know — e.g. travelling with infants" : "Gate codes, landmarks, reception details…"}>
+      <Field label={t("booking.instructions")} hint={leg.type === "AIRPORT" ? t("booking.airportInstructions") : t("booking.addressInstructions")}>
           {(a) => <textarea {...a} rows={3} className="input" value={leg.instructions} maxLength={1000} onChange={(e) => onChange({ ...leg, instructions: e.target.value })} />}
         </Field>
       )}
@@ -234,7 +240,7 @@ function Summary({ s, quote, vehicle, compact }) {
               <div className="flex justify-between"><dt className="text-muted">Pickup fee</dt><dd className="tabular-nums">{Number(q.pickup_fee) ? usd(q.pickup_fee) : "Free"}</dd></div>
               <div className="flex justify-between"><dt className="text-muted">Return fee</dt><dd className="tabular-nums">{Number(q.return_fee) ? usd(q.return_fee) : "Free"}</dd></div>
               {q.lines.filter((l) => l.kind === "extra").map((l) => (
-                <div key={l.code} className="flex justify-between"><dt className="text-muted">{l.description}{l.quantity > 1 ? ` × ${l.quantity}` : ""}</dt><dd className="tabular-nums">{usd(l.total)}</dd></div>
+                <div key={l.code} className="flex justify-between"><dt className="text-muted">{extraLabel({ code: l.code, name: l.description }, t)}{l.quantity > 1 ? ` × ${l.quantity}` : ""}</dt><dd className="tabular-nums">{usd(l.total)}</dd></div>
               ))}
               {Number(q.tax_amount) > 0 && <div className="flex justify-between"><dt className="text-muted">{q.tax_label} ({q.tax_rate}%)</dt><dd className="tabular-nums">{usd(q.tax_amount)}</dd></div>}
               <div className="flex items-baseline justify-between border-t border-line pt-3">
@@ -360,7 +366,7 @@ export default function Booking() {
 
       <div className="container-x grid gap-10 py-10 lg:grid-cols-[1fr_380px]">
         <form noValidate onSubmit={(e) => { e.preventDefault(); step === STEPS.length - 1 ? submit() : next(); }} className="min-w-0">
-          {options.isFallback && <Alert tone="info" className="mb-6">Some booking extras or location fees are temporarily unavailable. The booking service will validate the total before confirming your request.</Alert>}
+              {options.isFallback && <Alert tone="info" className="mb-6">{t("booking.optionsFallback")}</Alert>}
           {step < STEPS.length - 1 && (
             <details className="group mb-8 rounded-2xl border border-line bg-sand-50 lg:hidden">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 font-semibold text-navy-900 [&::-webkit-details-marker]:hidden">
@@ -396,8 +402,8 @@ export default function Booking() {
               <Field label={t("booking.vehicle")} required error={errors.vehicle}>
                 {(a) => (
                   <select {...a} className="input" value={s.vehicle} onChange={(e) => up({ vehicle: e.target.value })}>
-                    <option value="">Choose a vehicle…</option>
-                    {bookable.map((v) => <option key={v.slug} value={v.slug}>{v.name} — {v.transmission_display}, {v.passenger_capacity} seats — {usd(v.price_per_day)}/day</option>)}
+                    <option value="">{t("booking.chooseVehicle")}</option>
+                    {bookable.map((v) => <option key={v.slug} value={v.slug}>{v.name} — {v.transmission_display}, {v.passenger_capacity} {t("vehicle.seats", { defaultValue: "seats" })} — {usd(v.price_per_day)}/{t("vehicle.perDay")}</option>)}
                   </select>
                 )}
               </Field>
@@ -417,7 +423,7 @@ export default function Booking() {
               </div>
               {rentalDays(s.pickup_date, s.pickup_time, s.return_date, s.return_time) > 0 && (
                 <p className="rounded-xl bg-navy-50 px-4 py-3 text-sm text-navy-900">
-                  Rental duration: <strong>{rentalDays(s.pickup_date, s.pickup_time, s.return_date, s.return_time)} day(s)</strong> — each started 24 hours counts as a day.
+                  {t("booking.duration")}: <strong>{t("booking.durationDays", { count: rentalDays(s.pickup_date, s.pickup_time, s.return_date, s.return_time), defaultValue: `${rentalDays(s.pickup_date, s.pickup_time, s.return_date, s.return_time)} days` })}</strong> — {t("booking.durationRule")}
                 </p>
               )}
             </div>
@@ -428,7 +434,7 @@ export default function Booking() {
             <div className="space-y-4">
               {s.pickup.type && !s.ret.type && (
                 <button type="button" className="text-sm font-semibold text-navy-700 underline underline-offset-4" onClick={() => up({ ret: { ...s.pickup } })}>
-                  Return to the same place as pickup
+                  {t("booking.samePickup")}
                 </button>
               )}
               <LocationPicker prefix="return" isReturn leg={s.ret} options={options} errors={errors} onChange={(ret) => up({ ret })} />
@@ -437,21 +443,21 @@ export default function Booking() {
 
           {step === 4 && (
             <div className="space-y-5">
-              <Alert tone="info">Optional — but if you're arriving by air, your flight details help us meet you even if you're delayed.</Alert>
+              <Alert tone="info">{t("booking.flightOptional")}</Alert>
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Airline">{(a) => <input {...a} className="input" value={s.flight.airline_name} maxLength={80} onChange={(e) => upFlight("airline_name", e.target.value)} />}</Field>
-                <Field label="Flight number" error={errors["flight.flight_number"]}>{(a) => <input {...a} className="input uppercase" placeholder="e.g. KQ 484" value={s.flight.flight_number} maxLength={20} onChange={(e) => upFlight("flight_number", e.target.value)} />}</Field>
-                <Field label="Arrival date">{(a) => <input {...a} type="date" className="input" value={s.flight.arrival_date} onChange={(e) => upFlight("arrival_date", e.target.value)} />}</Field>
-                <Field label="Arrival time">{(a) => <input {...a} type="time" className="input" value={s.flight.arrival_time} onChange={(e) => upFlight("arrival_time", e.target.value)} />}</Field>
-                <Field label="Arrival airport" className="sm:col-span-2">{(a) => <input {...a} className="input" placeholder={options.default_arrival_airport} value={s.flight.arrival_airport} maxLength={160} onChange={(e) => upFlight("arrival_airport", e.target.value)} />}</Field>
-                <Field label="Flight notes" className="sm:col-span-2">{(a) => <textarea {...a} rows={2} className="input" value={s.flight.notes} maxLength={1000} onChange={(e) => upFlight("notes", e.target.value)} />}</Field>
+                <Field label={t("booking.airline")}>{(a) => <input {...a} className="input" value={s.flight.airline_name} maxLength={80} onChange={(e) => upFlight("airline_name", e.target.value)} />}</Field>
+                <Field label={t("booking.flightNumber")} error={errors["flight.flight_number"]}>{(a) => <input {...a} className="input uppercase" placeholder={t("booking.flightExample")} value={s.flight.flight_number} maxLength={20} onChange={(e) => upFlight("flight_number", e.target.value)} />}</Field>
+                <Field label={t("booking.arrivalDate")}>{(a) => <input {...a} type="date" className="input" value={s.flight.arrival_date} onChange={(e) => upFlight("arrival_date", e.target.value)} />}</Field>
+                <Field label={t("booking.arrivalTime")}>{(a) => <input {...a} type="time" className="input" value={s.flight.arrival_time} onChange={(e) => upFlight("arrival_time", e.target.value)} />}</Field>
+                <Field label={t("booking.arrivalAirport")} className="sm:col-span-2">{(a) => <input {...a} className="input" placeholder={options.default_arrival_airport} value={s.flight.arrival_airport} maxLength={160} onChange={(e) => upFlight("arrival_airport", e.target.value)} />}</Field>
+                <Field label={t("booking.flightNotes")} className="sm:col-span-2">{(a) => <textarea {...a} rows={2} className="input" value={s.flight.notes} maxLength={1000} onChange={(e) => upFlight("notes", e.target.value)} />}</Field>
               </div>
             </div>
           )}
 
           {step === 5 && (
             <div className="space-y-5">
-              {options.isFallback && <Alert tone="info">Tell us about any extras you need in the final notes; our team will confirm availability and pricing.</Alert>}
+              {options.isFallback && <Alert tone="info">{t("booking.extrasFallback")}</Alert>}
               {babySeat && (
                 <div className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex gap-4">
@@ -473,18 +479,18 @@ export default function Booking() {
                     <span>
                       <span className="block font-semibold text-navy-900">{permit.name} — {usd(permit.price)}</span>
                       <span className="mt-1 block text-sm leading-relaxed text-muted">
-                        We'll help you apply for the Zanzibar driving permit you need as a visitor. We arrange the application on your behalf; <strong>approval is decided by the issuing authority and payment does not guarantee it.</strong>
+                        {t("booking.permitDescription")}
                       </span>
                     </span>
                   </label>
                   {!!s.extras.driving_permit && (
                     <div className="mt-5 space-y-4 border-t border-line pt-5">
                       <p className="flex items-start gap-2 text-sm text-navy-900"><Lock className="mt-0.5 size-4 shrink-0 text-emerald-700" />
-                        Your documents are uploaded over an encrypted connection, stored privately, seen only by authorised staff and deleted after your rental. Please don't send them by email or WhatsApp.</p>
+                        {t("booking.documentPrivacy")}</p>
                       <div className="grid gap-4 sm:grid-cols-2">
-                        <FileDrop id="passport" label="Valid passport" file={files.passport} error={errors.passport} maxMb={options.max_upload_mb}
+                        <FileDrop id="passport" label={t("booking.passport")} file={files.passport} error={errors.passport} maxMb={options.max_upload_mb}
                           onFile={(f) => setFiles((x) => ({ ...x, passport: f }))} />
-                        <FileDrop id="licence" label="Valid driving licence" file={files.driving_licence} error={errors.driving_licence} maxMb={options.max_upload_mb}
+                        <FileDrop id="licence" label={t("booking.licence")} file={files.driving_licence} error={errors.driving_licence} maxMb={options.max_upload_mb}
                           onFile={(f) => setFiles((x) => ({ ...x, driving_licence: f }))} />
                       </div>
                       {errors.documents && <p className="text-sm text-red-600" role="alert">{errors.documents}</p>}
@@ -510,13 +516,13 @@ export default function Booking() {
           {step === 6 && (
             <div className="space-y-6">
               <fieldset>
-                <legend className="sr-only">Payment method</legend>
+                <legend className="sr-only">{t("booking.payment")}</legend>
                 <div className={`grid gap-4 ${options.payment_methods.online.available ? "sm:grid-cols-2" : "sm:grid-cols-1"}`} role="radiogroup">
                   {[
                     ...(options.payment_methods.online.available ? [
-                      { code: "ONLINE", icon: CreditCard, title: "Pay online", text: "Secure card or mobile-money checkout through our payment partner." },
+                      { code: "ONLINE", icon: CreditCard, title: t("booking.onlinePay"), text: t("booking.onlineDescription") },
                     ] : []),
-                    { code: "MANUAL", icon: Landmark, title: "Manual payment", text: "Bank transfer, mobile money or other methods we accept. We verify your payment before marking it paid." },
+                    { code: "MANUAL", icon: Landmark, title: t("booking.manualPay"), text: t("booking.manualDescription") },
                   ].map((m) => (
                     <button key={m.code} type="button" role="radio" aria-checked={s.payment_method === m.code}
                       onClick={() => up({ payment_method: m.code })}
@@ -532,13 +538,13 @@ export default function Booking() {
               </fieldset>
               {s.payment_method === "MANUAL" && options.payment_methods.manual.instructions && (
                 <div className="rounded-2xl bg-sand-50 p-5">
-                  <h3 className="font-semibold">How to pay</h3>
+                  <h3 className="font-semibold">{t("booking.paymentHow")}</h3>
                   <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">{options.payment_methods.manual.instructions}</p>
-                  <p className="mt-3 text-sm text-muted">Payment instructions will be provided with your booking invoice.</p>
+                  <p className="mt-3 text-sm text-muted">{t("booking.paymentInstructions")}</p>
                 </div>
               )}
               {s.payment_method === "ONLINE" && (
-                <Alert tone="info">After you submit, you'll get your invoice and can pay securely from the confirmation page. Your booking is only marked paid once the payment provider confirms it to us.</Alert>
+                <Alert tone="info">{t("booking.onlineInfo")}</Alert>
               )}
             </div>
           )}
@@ -547,18 +553,18 @@ export default function Booking() {
             <div className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 {[
-                  ["Guest", <>{s.customer.full_name}<br />{s.customer.email}<br />{s.customer.phone}</>, 0],
-                  ["Car & dates", <>{vehicle?.name}<br />{fmtDate(s.pickup_date)} {s.pickup_time}<br />→ {fmtDate(s.return_date)} {s.return_time}</>, 1],
-                  ["Pickup", <>{options.locations.find((l) => l.code === s.pickup.type)?.label}{s.pickup.area && ` — ${s.pickup.area}`}<br />{s.pickup.address}</>, 2],
-                  ["Return", <>{options.locations.find((l) => l.code === s.ret.type)?.label}{s.ret.area && ` — ${s.ret.area}`}<br />{s.ret.address}</>, 3],
-                  ["Flight", s.flight.flight_number || s.flight.airline_name ? `${s.flight.airline_name} ${s.flight.flight_number}` : "Not provided", 4],
-                  ["Extras", Object.entries(s.extras).filter(([, q]) => q > 0).map(([c, q]) => `${options.extras.find((e) => e.code === c)?.name} × ${q}`).join(", ") || "None", 5],
-                  ["Payment", s.payment_method === "ONLINE" ? "Pay online (secure checkout)" : s.payment_method === "MANUAL" ? "Manual payment" : "Not chosen", 6],
+                  [t("booking.review.guest"), <>{s.customer.full_name}<br />{s.customer.email}<br />{s.customer.phone}</>, 0],
+                  [t("booking.review.carDates"), <>{vehicle?.name}<br />{fmtDate(s.pickup_date)} {s.pickup_time}<br />? {fmtDate(s.return_date)} {s.return_time}</>, 1],
+                  [t("booking.review.pickup"), <>{t(`booking.locations.${s.pickup.type}`, { defaultValue: options.locations.find((l) => l.code === s.pickup.type)?.label })}{s.pickup.area && ` — ${s.pickup.area}`}<br />{s.pickup.address}</>, 2],
+                  [t("booking.review.return"), <>{t(`booking.locations.${s.ret.type}`, { defaultValue: options.locations.find((l) => l.code === s.ret.type)?.label })}{s.ret.area && ` — ${s.ret.area}`}<br />{s.ret.address}</>, 3],
+                  [t("booking.review.flight"), s.flight.flight_number || s.flight.airline_name ? `${s.flight.airline_name} ${s.flight.flight_number}` : t("booking.review.notProvided"), 4],
+                  [t("booking.review.extras"), Object.entries(s.extras).filter(([, q]) => q > 0).map(([c, q]) => `${extraLabel(options.extras.find((e) => e.code === c), t)} × ${q}`).join(", ") || t("booking.review.none"), 5],
+                  [t("booking.review.payment"), s.payment_method === "ONLINE" ? t("booking.onlinePay") : s.payment_method === "MANUAL" ? t("booking.manualPay") : t("booking.review.notChosen"), 6],
                 ].map(([title, body, st]) => (
                   <div key={title} className="rounded-2xl border border-line p-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-semibold uppercase tracking-wider text-muted">{title}</h3>
-                      <button type="button" onClick={() => go(st)} className="text-sm font-semibold text-navy-700 underline underline-offset-4">Edit</button>
+                      <button type="button" onClick={() => go(st)} className="text-sm font-semibold text-navy-700 underline underline-offset-4">{t("booking.review.edit")}</button>
                     </div>
                     <p className="mt-2 text-[15px] leading-relaxed text-navy-900">{body}</p>
                   </div>
@@ -568,21 +574,21 @@ export default function Booking() {
               <label className="flex gap-3 text-sm leading-relaxed">
                 <input type="checkbox" className="mt-0.5 size-5 accent-navy-900" checked={s.accept_terms} onChange={(e) => up({ accept_terms: e.target.checked })}
                   aria-invalid={!!errors.accept_terms} />
-                <span>I agree to the <a href="/terms" target="_blank" className="font-semibold text-navy-700 underline">rental terms</a> and <a href="/privacy" target="_blank" className="font-semibold text-navy-700 underline">privacy policy</a>, and confirm that my details are correct.</span>
+                <span>{t("booking.termsIntro")} <a href="/terms" target="_blank" className="font-semibold text-navy-700 underline">{t("footer.terms")}</a> {t("booking.and")} <a href="/privacy" target="_blank" className="font-semibold text-navy-700 underline">{t("footer.privacy")}</a>, {t("booking.termsConfirm")}</span>
               </label>
               {errors.accept_terms && <p className="text-sm text-red-600" role="alert">{errors.accept_terms}</p>}
               <p className="flex items-center gap-2 text-sm text-muted"><ShieldCheck className="size-4 text-emerald-700" />
-                Submitting reserves the car for {options.hold_hours} hours while we confirm. You'll receive your invoice by email straight away.</p>
+                {t("booking.holdNotice", { hours: options.hold_hours })}</p>
             </div>
           )}
 
           {submitError && <Alert tone="error" className="mt-6">{submitError}</Alert>}
 
           <div className="mt-10 flex items-center justify-between gap-3 border-t border-line pt-6">
-            {step > 0 ? <Button type="button" variant="ghost" icon={ArrowLeft} onClick={() => go(step - 1)}>Back</Button> : <span />}
+            {step > 0 ? <Button type="button" variant="ghost" icon={ArrowLeft} onClick={() => go(step - 1)}>{t("actions.back")}</Button> : <span />}
             {step < STEPS.length - 1
-              ? <Button type="submit" size="lg">{step === 4 && !s.flight.flight_number && !s.flight.airline_name ? "Skip" : "Continue"} <ArrowRight className="size-4" /></Button>
-              : <Button type="submit" size="lg" loading={submitting} icon={Check}>Submit booking</Button>}
+              ? <Button type="submit" size="lg">{step === 4 && !s.flight.flight_number && !s.flight.airline_name ? t("booking.skip") : t("actions.continue")} <ArrowRight className="size-4" /></Button>
+              : <Button type="submit" size="lg" loading={submitting} icon={Check}>{t("actions.submitBooking")}</Button>}
           </div>
         </form>
 

@@ -196,7 +196,8 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
                 pickup_address=data.get("pickup_address", ""), pickup_instructions=data.get("pickup_instructions", ""),
                 return_type=data["return_type"], return_area=data.get("return_area", ""),
                 return_address=data.get("return_address", ""), return_instructions=data.get("return_instructions", ""),
-                payment_method=data["payment_method"], customer_notes=c.get("additional_info", ""),
+                payment_method=data["payment_method"], language=data.get("language", "en"),
+                customer_notes=c.get("additional_info", ""),
                 hold_expires_at=timezone.now() + timedelta(hours=settings.BOOKING_HOLD_HOURS),
             )
             _apply_quote(booking, quote)

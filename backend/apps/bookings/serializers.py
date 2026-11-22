@@ -8,7 +8,7 @@ from apps.vehicles.models import Vehicle
 
 from .models import (
     Booking, BookingDocument, BookingExtra, BookingFlight, BookingNote, BookingStatusHistory, ExtraService,
-    LocationType, PaymentMethodChoice,
+    CustomerLanguage, LocationType, PaymentMethodChoice,
 )
 from .vehicle_data import STATIC_VEHICLE_RATES, model_vehicle_snapshot
 
@@ -134,6 +134,7 @@ class BookingCreateSerializer(TripSerializer):
     return_instructions = serializers.CharField(max_length=1000, required=False, allow_blank=True, default="")
     flight = FlightInputSerializer(required=False, default=dict)
     payment_method = serializers.ChoiceField(choices=PaymentMethodChoice.choices)
+    language = serializers.ChoiceField(choices=CustomerLanguage.choices, default=CustomerLanguage.ENGLISH)
     accept_terms = serializers.BooleanField()
 
     def validate_accept_terms(self, value):
@@ -235,7 +236,7 @@ GUEST_FIELDS = [
     "return_type", "return_type_display", "return_area", "return_address", "return_instructions",
     "daily_rate", "rental_total", "pickup_fee", "return_fee", "extras_total", "tax_amount", "grand_total",
     "amount_paid", "balance_due", "currency", "extras", "booking_status", "booking_status_display",
-    "payment_status", "payment_status_display", "payment_method", "payment_method_display", "created_at",
+    "payment_status", "payment_status_display", "payment_method", "payment_method_display", "language", "created_at",
     "hold_expires_at",
 ]
 
@@ -295,7 +296,7 @@ class AdminBookingListSerializer(_BookingCommon):
                   "pickup_date", "pickup_time", "return_date", "return_time", "rental_days", "pickup_type",
                   "pickup_type_display", "return_type", "return_type_display", "grand_total", "amount_paid",
                   "balance_due", "booking_status", "booking_status_display", "payment_status",
-                  "payment_status_display", "payment_method", "payment_method_display", "hold_expires_at",
+                  "payment_status_display", "payment_method", "payment_method_display", "language", "hold_expires_at",
                   "created_at", "extras"]
 
 
