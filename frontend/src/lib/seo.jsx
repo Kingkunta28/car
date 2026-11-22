@@ -1,5 +1,5 @@
 // React 19 hoists <title>, <meta> and <link> rendered anywhere into <head>.
-const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://www.rafikicarhire.com").replace(/\/$/, "");
+const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://car-lovat-two.vercel.app").replace(/\/$/, "");
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 export function Seo({ title, description, path = "", image, noindex = false, jsonLd }) {

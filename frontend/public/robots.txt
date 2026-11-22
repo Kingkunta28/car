@@ -4,4 +4,4 @@ Disallow: /admin
 Disallow: /booking/
 Disallow: /payment/
 
-Sitemap: https://www.rafikicarhire.com/sitemap.xml
+Sitemap: https://car-lovat-two.vercel.app/sitemap.xml

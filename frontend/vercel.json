@@ -1,8 +1,8 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://api.rafikicarhire.com/api/:path*" },
-    { "source": "/media/:path*", "destination": "https://api.rafikicarhire.com/media/:path*" },
-    { "source": "/sitemap.xml", "destination": "https://api.rafikicarhire.com/sitemap.xml" },
+    { "source": "/api/:path*", "destination": "https://rafiki-api-lg8w.onrender.com/api/:path*" },
+    { "source": "/media/:path*", "destination": "https://rafiki-api-lg8w.onrender.com/media/:path*" },
+    { "source": "/sitemap.xml", "destination": "https://rafiki-api-lg8w.onrender.com/sitemap.xml" },
     { "source": "/((?!assets/|media/).*)", "destination": "/index.html" }
   ],
   "headers": [
