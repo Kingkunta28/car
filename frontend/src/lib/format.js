@@ -1,11 +1,11 @@
-const usdFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+const locale = () => ({ en: "en-US", it: "it-IT", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-PT" }[document.documentElement.lang] || "en-US");
 
-export const usd = (v) => usdFmt.format(Number(v || 0));
+export const usd = (v) => new Intl.NumberFormat(locale(), { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(Number(v || 0));
 
 export function fmtDate(d, opts = { weekday: "short", day: "numeric", month: "short", year: "numeric" }) {
   if (!d) return "—";
   const date = typeof d === "string" && d.length === 10 ? new Date(`${d}T12:00:00`) : new Date(d);
-  return new Intl.DateTimeFormat("en-GB", opts).format(date);
+  return new Intl.DateTimeFormat(locale(), opts).format(date);
 }
 
 export const fmtDateTime = (d) =>

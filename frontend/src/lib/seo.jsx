@@ -1,3 +1,4 @@
+import { LANGUAGES } from "../i18n";
 // React 19 hoists <title>, <meta> and <link> rendered anywhere into <head>.
 const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://car-lovat-two.vercel.app").replace(/\/$/, "");
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
@@ -10,6 +11,7 @@ export function Seo({ title, description, path = "", image, noindex = false, jso
       <title>{fullTitle}</title>
       {description && <meta name="description" content={description} />}
       <link rel="canonical" href={url} />
+      {LANGUAGES.map(({ code }) => <link key={code} rel="alternate" hrefLang={code} href={`${url}${url.includes("?") ? "&" : "?"}lang=${code}`} />)}
       {noindex && <meta name="robots" content="noindex, nofollow" />}
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Rafiki Car Hire" />

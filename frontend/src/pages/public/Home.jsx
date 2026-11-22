@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight, BadgeCheck, Baby, CalendarDays, CarFront, Check, ChevronDown, FileText, Lock, MapPin, MessageCircle,
@@ -25,6 +26,7 @@ const TRUST = [
 ];
 
 function HeroVisual({ photo, fromPrice }) {
+  const { t } = useTranslation();
   return (
     <div className="relative mx-auto w-full max-w-[560px] lg:max-w-none">
       {/* Orange offset frame accent */}
@@ -52,15 +54,15 @@ function HeroVisual({ photo, fromPrice }) {
         <div className="animate-float flex items-center gap-3 rounded-2xl bg-white p-3.5 pr-5 text-navy-900 shadow-[var(--shadow-lift)]">
           <span className="grid size-10 place-items-center rounded-xl bg-orange-500 text-navy-950"><Plane className="size-5" aria-hidden /></span>
           <span>
-            <span className="block text-sm font-semibold">Free airport handover</span>
-            <span className="block text-xs text-muted">We meet you at arrivals</span>
+            <span className="block text-sm font-semibold">{t("home.freeAirport")}</span>
+            <span className="block text-xs text-muted">{t("home.arrivals")}</span>
           </span>
         </div>
       </div>
       {fromPrice != null && (
         <div className="absolute -right-2 top-[42%] hidden animate-[fade-up_0.9s_var(--ease-out-soft)_1.05s_both] sm:block lg:-right-6">
           <div className="animate-float rounded-2xl bg-navy-950 px-4 py-3 text-white shadow-[var(--shadow-lift)] [animation-delay:-3s]">
-            <span className="block text-xs text-white/60">Cars from</span>
+            <span className="block text-xs text-white/60">{t("home.carsFrom")}</span>
             <span className="font-display text-xl font-bold">{usd(fromPrice)}<span className="text-sm font-normal text-white/60"> / day</span></span>
           </div>
         </div>
@@ -70,6 +72,7 @@ function HeroVisual({ photo, fromPrice }) {
 }
 
 function Hero({ site, fromPrice }) {
+  const { t } = useTranslation();
   const photo = site?.hero_image_url || heroBeach;
   return (
     <section className="relative isolate overflow-hidden bg-navy-950 pb-16 pt-28 text-white sm:pt-32 lg:pb-20 lg:pt-36" aria-labelledby="hero-title">
@@ -77,16 +80,16 @@ function Hero({ site, fromPrice }) {
       <div className="container-x">
         <div className="grid items-center gap-16 lg:grid-cols-12 lg:gap-10">
           <div className="stagger lg:col-span-6">
-            <p className="eyebrow eyebrow-light">Your Zanzibar journey starts here</p>
+            <p className="eyebrow eyebrow-light">{t("home.eyebrow")}</p>
             <h1 id="hero-title" className="display-xl mt-6 text-white">
-              Explore Zanzibar. <span className="serif-accent block text-orange-400">Your journey, your freedom.</span>
+              {t("home.title")} <span className="serif-accent block text-orange-400">{t("home.accent")}</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/75">
               Pick up a reliable car at the airport, in Stone Town or at your hotel, and see the island on your own schedule — with clear US-dollar prices, an instant invoice and friendly local support whenever you need it.
             </p>
             <div className="mt-9 grid gap-3 sm:flex sm:flex-wrap">
-              <Button to="/fleet" size="lg" arrow className="w-full sm:w-auto">Explore our fleet</Button>
-              <Button to="/book" size="lg" variant="outlineLight" className="w-full sm:w-auto">Book your car</Button>
+              <Button to="/fleet" size="lg" arrow className="w-full sm:w-auto">{t("home.explore")}</Button>
+              <Button to="/book" size="lg" variant="outlineLight" className="w-full sm:w-auto">{t("home.book")}</Button>
             </div>
             <ul className="mt-10 grid gap-5 border-t border-white/10 pt-8 sm:grid-cols-3">
               {TRUST.map((t) => (
@@ -110,32 +113,33 @@ function Hero({ site, fromPrice }) {
 }
 
 function QuickSearch() {
+  const { t } = useTranslation();
   const nav = useNavigate();
   const [f, setF] = useState({ pickup_type: "AIRPORT", pickup_date: todayISO(3), return_date: todayISO(7) });
   const days = Math.max(0, Math.round((new Date(f.return_date) - new Date(f.pickup_date)) / 86_400_000));
   const submit = (e) => { e.preventDefault(); nav(`/book?${new URLSearchParams(f)}`); };
   return (
-    <form onSubmit={submit} aria-label="Search available cars"
+    <form onSubmit={submit} aria-label={t("home.quickSearch")}
       className="grid gap-4 rounded-[var(--radius-panel)] bg-white p-4 text-ink shadow-[var(--shadow-lift)] sm:p-5 md:grid-cols-[1.3fr_1fr_1fr_auto] md:items-end">
       <label className="block">
-        <span className="label flex items-center gap-1.5"><MapPin className="size-4 text-orange-600" aria-hidden /> Pickup location</span>
+        <span className="label flex items-center gap-1.5"><MapPin className="size-4 text-orange-600" aria-hidden /> {t("home.pickup")}</span>
         <select className="input" value={f.pickup_type} onChange={(e) => setF({ ...f, pickup_type: e.target.value })}>
-          <option value="AIRPORT">Zanzibar Airport — free</option>
-          <option value="TOWN">Zanzibar Town — free</option>
-          <option value="OUTSIDE_ZONE">My hotel, outside the free zone</option>
+          <option value="AIRPORT">{t("home.airportFree")}</option>
+          <option value="TOWN">{t("home.townFree")}</option>
+          <option value="OUTSIDE_ZONE">{t("home.outsideZone")}</option>
         </select>
       </label>
       <label className="block">
-        <span className="label flex items-center gap-1.5"><CalendarDays className="size-4 text-orange-600" aria-hidden /> Pickup date</span>
+        <span className="label flex items-center gap-1.5"><CalendarDays className="size-4 text-orange-600" aria-hidden /> {t("home.pickupDate")}</span>
         <input type="date" className="input" min={todayISO()} value={f.pickup_date} required
           onChange={(e) => setF({ ...f, pickup_date: e.target.value, return_date: e.target.value >= f.return_date ? e.target.value : f.return_date })} />
       </label>
       <label className="block">
-        <span className="label flex items-center justify-between"><span className="flex items-center gap-1.5"><CalendarDays className="size-4 text-orange-600" aria-hidden /> Return date</span>
+        <span className="label flex items-center justify-between"><span className="flex items-center gap-1.5"><CalendarDays className="size-4 text-orange-600" aria-hidden /> {t("home.returnDate")}</span>
           {days > 0 && <span className="text-xs font-normal text-muted">{days} day{days > 1 ? "s" : ""}</span>}</span>
         <input type="date" className="input" min={f.pickup_date} value={f.return_date} required onChange={(e) => setF({ ...f, return_date: e.target.value })} />
       </label>
-      <Button type="submit" size="lg" className="h-[46px] w-full md:w-auto" arrow>Check availability</Button>
+      <Button type="submit" size="lg" className="h-[46px] w-full md:w-auto" arrow>{t("home.checkAvailability")}</Button>
     </form>
   );
 }

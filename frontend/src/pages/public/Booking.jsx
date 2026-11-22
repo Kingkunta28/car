@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -15,7 +16,7 @@ import { Seo } from "../../lib/seo";
 import { Alert, Button, ErrorState, Field, PageLoader, Spinner } from "../../components/ui";
 import { VehicleImage } from "../../components/VehicleCard";
 
-const STEPS = ["Your details", "Car & dates", "Pickup", "Return", "Flight", "Extras", "Payment", "Review & submit"];
+const STEPS = Array.from({ length: 8 }, (_, index) => `booking.steps.${index}`);
 const DRAFT_KEY = "rafiki.booking-draft";
 
 const emptyLeg = { type: "", area: "", address: "", instructions: "" };
@@ -126,6 +127,7 @@ function useQuote(s, vehicle) {
 }
 
 function LocationPicker({ prefix, leg, onChange, options, errors, isReturn }) {
+  const { t } = useTranslation();
   const icons = { AIRPORT: Plane, TOWN: Building2, OUTSIDE_ZONE: MapPin };
   return (
     <div className="space-y-6">
@@ -140,7 +142,7 @@ function LocationPicker({ prefix, leg, onChange, options, errors, isReturn }) {
                 className={cx("flex flex-col items-start rounded-2xl border-2 p-4 text-left transition",
                   active ? "border-navy-900 bg-navy-50" : "border-line hover:border-navy-600")}>
                 <Icon className={cx("size-6", active ? "text-orange-600" : "text-navy-600")} aria-hidden />
-                <span className="mt-3 font-semibold text-navy-900">{l.label}</span>
+                <span className="mt-3 font-semibold text-navy-900">{t(`booking.locations.${l.code}`, { defaultValue: l.label })}</span>
                 <span className={cx("mt-1 text-sm font-semibold", options.isFallback && l.code === "OUTSIDE_ZONE" ? "text-muted" : Number(l.fee) ? "text-orange-600" : "text-emerald-700")}>
                   {options.isFallback && l.code === "OUTSIDE_ZONE" ? "Confirm fee" : Number(l.fee) ? usd(l.fee) : "FREE"}
                 </span>
@@ -209,6 +211,7 @@ function FileDrop({ id, label, file, onFile, error, maxMb }) {
 }
 
 function Summary({ s, quote, vehicle, compact }) {
+  const { t } = useTranslation();
   const q = quote.data;
   return (
     <div className="card overflow-hidden">
@@ -220,7 +223,7 @@ function Summary({ s, quote, vehicle, compact }) {
         {s.pickup_date && s.return_date && (
           <p className="mt-1 text-sm text-muted">{fmtDate(s.pickup_date)} {s.pickup_time} → {fmtDate(s.return_date)} {s.return_time}</p>
         )}
-        {!q && !quote.isFetching && <p className="mt-4 text-sm text-muted">Choose a car and dates to see your price.</p>}
+        {!q && !quote.isFetching && <p className="mt-4 text-sm text-muted">{t("booking.quoteHelp")}</p>}
         {quote.isFetching && !q && <div className="mt-4"><Spinner /></div>}
         {quote.error && <p className="mt-4 text-sm text-red-600" role="alert">{quote.error.message}</p>}
         {q && (
@@ -248,6 +251,7 @@ function Summary({ s, quote, vehicle, compact }) {
 }
 
 export default function Booking() {
+  const { t } = useTranslation();
   const [sp] = useSearchParams();
   const nav = useNavigate();
   const bookingOptions = useBookingOptions();
@@ -335,22 +339,22 @@ export default function Booking() {
 
   return (
     <>
-      <Seo title="Book a Car" path="/book" description="Book your Zanzibar rental car online in minutes. Free airport handover, instant invoice, and secure payment." />
+      <Seo title={t("booking.title")} path="/book" description={t("seo.book")} />
       <div ref={topRef} className="scroll-mt-24 border-b border-line bg-sand-50">
         <div className="container-x py-8">
-          <p className="eyebrow">Book your car</p>
-          <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{STEPS[step]}</h1>
-          <ol className="mt-6 flex gap-1.5" aria-label="Booking progress">
+          <p className="eyebrow">{t("booking.title")}</p>
+          <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{t(STEPS[step])}</h1>
+          <ol className="mt-6 flex gap-1.5" aria-label={t("booking.progress", "Booking progress")}>
             {STEPS.map((label, i) => (
               <li key={label} className="flex-1">
                 <button type="button" onClick={() => i < step && go(i)} disabled={i > step}
-                  aria-current={i === step ? "step" : undefined} aria-label={`Step ${i + 1}: ${label}`}
+                  aria-current={i === step ? "step" : undefined} aria-label={t("booking.stepLabel", { number: i + 1, label: t(label), defaultValue: `Step ${i + 1}: ${t(label)}` })}
                   className={cx("h-1.5 w-full rounded-full transition", i < step ? "bg-navy-900" : i === step ? "bg-orange-500" : "bg-slate-200")} />
-                <span className="mt-2 hidden text-xs font-medium text-muted lg:block">{label}</span>
+                <span className="mt-2 hidden text-xs font-medium text-muted lg:block">{t(label)}</span>
               </li>
             ))}
           </ol>
-          <p className="mt-3 text-sm text-muted lg:hidden">Step {step + 1} of {STEPS.length}</p>
+          <p className="mt-3 text-sm text-muted lg:hidden">{t("booking.stepOf", { current: step + 1, total: STEPS.length, defaultValue: `Step ${step + 1} of ${STEPS.length}` })}</p>
         </div>
       </div>
 
@@ -360,7 +364,7 @@ export default function Booking() {
           {step < STEPS.length - 1 && (
             <details className="group mb-8 rounded-2xl border border-line bg-sand-50 lg:hidden">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 font-semibold text-navy-900 [&::-webkit-details-marker]:hidden">
-                <span>Price summary</span>
+                <span>{t("booking.priceSummary")}</span>
                 <span className="flex items-center gap-2 font-display text-lg">{quote.data ? usd(quote.data.grand_total) : "—"}
                   <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden /></span>
               </summary>
@@ -369,19 +373,19 @@ export default function Booking() {
           )}
           {step === 0 && (
             <div className="grid gap-5 sm:grid-cols-2">
-              <Field label="Full name" required error={errors["customer.full_name"]} className="sm:col-span-2">
+              <Field label={t("booking.fullName")} required error={errors["customer.full_name"]} className="sm:col-span-2">
                 {(a) => <input {...a} className="input" autoComplete="name" value={s.customer.full_name} onChange={(e) => upCustomer("full_name", e.target.value)} />}
               </Field>
-              <Field label="Email address" required error={errors["customer.email"]} hint="Your invoice and booking link are sent here.">
+              <Field label={t("booking.email")} required error={errors["customer.email"]} hint={t("booking.emailHint", "Your invoice and booking link will be sent here.")}>
                 {(a) => <input {...a} type="email" className="input" autoComplete="email" value={s.customer.email} onChange={(e) => upCustomer("email", e.target.value)} />}
               </Field>
-              <Field label="Phone / WhatsApp" required error={errors["customer.phone"]}>
+              <Field label={t("booking.phone")} required error={errors["customer.phone"]}>
                 {(a) => <input {...a} type="tel" className="input" autoComplete="tel" placeholder="+44 7700 900123" value={s.customer.phone} onChange={(e) => upCustomer("phone", e.target.value)} />}
               </Field>
-              <Field label="Nationality" error={errors["customer.nationality"]}>
+              <Field label={t("booking.nationality")} error={errors["customer.nationality"]}>
                 {(a) => <input {...a} className="input" autoComplete="country-name" value={s.customer.nationality} onChange={(e) => upCustomer("nationality", e.target.value)} />}
               </Field>
-              <Field label="Anything else we should know? (optional)" className="sm:col-span-2">
+              <Field label={t("booking.additionalInfo", "Anything else we should know? (optional)")} className="sm:col-span-2">
                 {(a) => <textarea {...a} rows={3} maxLength={2000} className="input" value={s.customer.additional_info} onChange={(e) => upCustomer("additional_info", e.target.value)} />}
               </Field>
             </div>
@@ -389,7 +393,7 @@ export default function Booking() {
 
           {step === 1 && (
             <div className="space-y-6">
-              <Field label="Vehicle" required error={errors.vehicle}>
+              <Field label={t("booking.vehicle")} required error={errors.vehicle}>
                 {(a) => (
                   <select {...a} className="input" value={s.vehicle} onChange={(e) => up({ vehicle: e.target.value })}>
                     <option value="">Choose a vehicle…</option>
@@ -398,16 +402,16 @@ export default function Booking() {
                 )}
               </Field>
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Pickup date" required error={errors.pickup_date}>
+                <Field label={t("booking.pickupDate")} required error={errors.pickup_date}>
                   {(a) => <input {...a} type="date" min={todayISO()} className="input" value={s.pickup_date} onChange={(e) => up({ pickup_date: e.target.value, ...(s.return_date && e.target.value > s.return_date ? { return_date: e.target.value } : {}) })} />}
                 </Field>
-                <Field label="Pickup time" required>
+                <Field label={t("booking.pickupTime")} required>
                   {(a) => <input {...a} type="time" step="900" className="input" value={s.pickup_time} onChange={(e) => up({ pickup_time: e.target.value })} />}
                 </Field>
-                <Field label="Return date" required error={errors.return_date}>
+                <Field label={t("booking.returnDate")} required error={errors.return_date}>
                   {(a) => <input {...a} type="date" min={s.pickup_date || todayISO()} className="input" value={s.return_date} onChange={(e) => up({ return_date: e.target.value })} />}
                 </Field>
-                <Field label="Return time" required error={errors.return_time}>
+                <Field label={t("booking.returnTime")} required error={errors.return_time}>
                   {(a) => <input {...a} type="time" step="900" className="input" value={s.return_time} onChange={(e) => up({ return_time: e.target.value })} />}
                 </Field>
               </div>
