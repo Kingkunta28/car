@@ -313,6 +313,14 @@ export default function Booking() {
 
   if (optLoading || vehicles.isLoading) return <PageLoader />;
   if (optError || vehicles.error) return <div className="container-x py-16"><ErrorState error={optError || vehicles.error} onRetry={refetch} /></div>;
+  if (!options || !Array.isArray(options.extras) || !Array.isArray(options.locations)
+    || !options.payment_methods?.online || !options.payment_methods?.manual) {
+    return <div className="container-x py-16"><ErrorState
+      title="Booking options are unavailable"
+      error={{ message: "The booking service returned incomplete setup data. Please try again in a moment." }}
+      onRetry={refetch}
+    /></div>;
+  }
 
   const babySeat = options.extras.find((x) => x.code === "baby_seat");
   const permit = options.extras.find((x) => x.code === "driving_permit");
