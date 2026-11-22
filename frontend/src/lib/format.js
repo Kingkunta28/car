@@ -1,6 +1,23 @@
 const locale = () => ({ en: "en-US", it: "it-IT", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-PT" }[document.documentElement.lang] || "en-US");
 
-export const usd = (v) => new Intl.NumberFormat(locale(), { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(Number(v || 0));
+const USD_PRICE_FORMATTER = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  currencyDisplay: "symbol",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** Display USD in the site's fixed business format, regardless of selected language. */
+export function formatPrice(amount) {
+  if (amount == null || (typeof amount === "string" && !amount.trim())) return "—";
+  if (typeof amount !== "number" && typeof amount !== "string") return "—";
+  const value = Number(amount);
+  return Number.isFinite(value) ? USD_PRICE_FORMATTER.format(value) : "—";
+}
+
+// Keep existing imports consistent while migrating callers to the named API.
+export const usd = formatPrice;
 
 export function fmtDate(d, opts = { weekday: "short", day: "numeric", month: "short", year: "numeric" }) {
   if (!d) return "—";
