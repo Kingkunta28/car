@@ -47,7 +47,7 @@ services:
       - key: OWNER_NOTIFICATION_EMAIL
         sync: false
       - key: PAYMENT_GATEWAYS_ENABLED
-        value: pesapal
+        value: disabled
       - key: PESAPAL_ENV
         sync: false # Choose sandbox or live to match the credentials provided.
       - key: PESAPAL_CONSUMER_KEY

@@ -491,18 +491,20 @@ export default function Booking() {
             <div className="space-y-6">
               <fieldset>
                 <legend className="sr-only">Payment method</legend>
-                <div className="grid gap-4 sm:grid-cols-2" role="radiogroup">
+                <div className={`grid gap-4 ${options.payment_methods.online.available ? "sm:grid-cols-2" : "sm:grid-cols-1"}`} role="radiogroup">
                   {[
-                    { code: "ONLINE", icon: CreditCard, title: "Pay online", text: "Secure card or mobile-money checkout through our payment partner.", disabled: !options.payment_methods.online.available },
+                    ...(options.payment_methods.online.available ? [
+                      { code: "ONLINE", icon: CreditCard, title: "Pay online", text: "Secure card or mobile-money checkout through our payment partner." },
+                    ] : []),
                     { code: "MANUAL", icon: Landmark, title: "Manual payment", text: "Bank transfer, mobile money or other methods we accept. We verify your payment before marking it paid." },
                   ].map((m) => (
-                    <button key={m.code} type="button" role="radio" aria-checked={s.payment_method === m.code} disabled={m.disabled}
+                    <button key={m.code} type="button" role="radio" aria-checked={s.payment_method === m.code}
                       onClick={() => up({ payment_method: m.code })}
                       className={cx("flex flex-col items-start rounded-2xl border-2 p-5 text-left transition disabled:cursor-not-allowed disabled:opacity-50",
                         s.payment_method === m.code ? "border-navy-900 bg-navy-50" : "border-line hover:border-navy-600")}>
                       <m.icon className="size-6 text-navy-700" />
                       <span className="mt-3 font-semibold text-navy-900">{m.title}</span>
-                      <span className="mt-1 text-sm text-muted">{m.disabled ? "Online payment is temporarily unavailable." : m.text}</span>
+                      <span className="mt-1 text-sm text-muted">{m.text}</span>
                     </button>
                   ))}
                 </div>

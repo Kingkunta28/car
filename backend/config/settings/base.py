@@ -262,7 +262,11 @@ CURRENCY = "USD"
 # --------------------------------------------------------------------------
 # Payment gateways (credentials only ever from the environment)
 # --------------------------------------------------------------------------
-PAYMENT_GATEWAYS_ENABLED = env.list("PAYMENT_GATEWAYS_ENABLED", default=["pesapal"])
+PAYMENT_GATEWAYS_ENABLED = [
+    gateway.strip()
+    for gateway in env.list("PAYMENT_GATEWAYS_ENABLED", default=["pesapal"])
+    if gateway.strip().lower() not in {"", "none", "disabled"}
+]
 PESAPAL_ENV = env("PESAPAL_ENV", default="sandbox")
 PESAPAL_CONSUMER_KEY = env("PESAPAL_CONSUMER_KEY", default="")
 PESAPAL_CONSUMER_SECRET = env("PESAPAL_CONSUMER_SECRET", default="")

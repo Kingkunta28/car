@@ -66,6 +66,16 @@ class BookingCreateSerializer(TripSerializer):
             raise serializers.ValidationError("You must accept the rental terms and privacy policy.")
         return value
 
+    def validate_payment_method(self, value):
+        if value == PaymentMethodChoice.ONLINE:
+            from apps.payments.gateways import available_gateways
+
+            if not available_gateways():
+                raise serializers.ValidationError(
+                    "Online payment is temporarily unavailable. Please choose manual payment."
+                )
+        return value
+
     @classmethod
     def from_request(cls, request):
         """Accept JSON bodies, or multipart with a JSON ``payload`` field plus files."""

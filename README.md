@@ -16,7 +16,7 @@ This is the car rental and booking management platform for Rafiki Car Hire in Za
 | Background jobs | Celery and Redis (emails, retries, hold expiry, document purge, payment reconciliation) |
 | Frontend | React 19, Vite 7, Tailwind CSS 4, TanStack Query |
 | PDFs | ReportLab (server-side) |
-| Payments | Manual payments verified by staff, plus Pesapal API 3.0 (pluggable gateway layer) |
+| Payments | Manual payments verified by staff; online payments are disabled by default and can be re-enabled with Pesapal |
 | Storage | Local disk in development; S3-compatible public and **private** buckets in production |
 
 ---
@@ -110,7 +110,8 @@ All secrets are read from environment variables. `backend/.env.example` document
 | `FRONTEND_URL`, `BACKEND_URL` | Used in email links, payment callbacks and the webhook URL |
 | `EMAIL_*`, `DEFAULT_FROM_EMAIL` | SMTP relay (Brevo, Resend, Postmark and others) |
 | `OWNER_NOTIFICATION_EMAIL` | Fallback address for owner alerts. Can also be set in the dashboard. |
-| `PESAPAL_*` | Gateway credentials (§7) |
+| `PAYMENT_GATEWAYS_ENABLED` | Set to `pesapal` to enable online payments; use `disabled` to turn them off (default in Render) |
+| `PESAPAL_*` | Pesapal credentials, only needed when online payments are enabled |
 | `USE_S3`, `AWS_*` | Public and private buckets. **Required in production.** |
 | `BOOKING_HOLD_HOURS` | How long a pending booking blocks the car (default 24) |
 | `BOOKING_TURNAROUND_HOURS` | Cleaning buffer between rentals (default 2) |
@@ -209,10 +210,10 @@ The free Render setup is **frontend on Vercel** and one free Render web service 
 1. **Object storage.** Create two buckets (Cloudflare R2, S3, Backblaze B2 or similar):
    - `rafiki-public` for vehicle photos and the logo, with public read access;
    - `rafiki-private` for documents, invoices and receipts. **Block all public access** on this one.
-2. **Render.** Choose New → Blueprint and select this repository and its production branch. The Blueprint uses the existing Neon database and Render Key Value instance; it creates neither datastore. During first setup, provide `DATABASE_URL` (Neon's direct URL), `DATABASE_URL_POOLED` (Neon's pooled URL), and `REDIS_URL` (the existing Key Value connection URL). Both database URLs must have TLS enabled. Also provide the AWS-compatible storage credentials/endpoint and SMTP, owner email, and Pesapal settings when prompted. If the Blueprint already exists, Render ignores newly added `sync: false` entries during later syncs, so add those values manually under the service's Environment settings. On free Render, migrations run at service startup; the API and Celery processes share one web service.
+2. **Render.** Choose New → Blueprint and select this repository and its production branch. The Blueprint uses the existing Neon database and Render Key Value instance; it creates neither datastore. During first setup, provide `DATABASE_URL` (Neon's direct URL), `DATABASE_URL_POOLED` (Neon's pooled URL), and `REDIS_URL` (the existing Key Value connection URL). Both database URLs must have TLS enabled. Also provide the AWS-compatible storage credentials/endpoint and SMTP and owner email when prompted. Online payments are disabled by default; set `PAYMENT_GATEWAYS_ENABLED=pesapal` and provide Pesapal settings to enable them. If the Blueprint already exists, Render ignores newly added `sync: false` entries during later syncs, so add those values manually under the service's Environment settings. On free Render, migrations run at service startup; the API and Celery processes share one web service.
 3. **Frontend.** Import the `frontend/` folder into Vercel, set the root directory to `frontend`, build command to `npm run build`, output directory to `dist`, and set `VITE_SITE_URL=https://www.rafikicarhire.com`. Leave `VITE_API_BASE` empty: the existing rewrite sends `/api` to `https://api.rafikicarhire.com`, preserving same-origin session and CSRF behavior. Do not put database or backend secrets in any `VITE_*` variable.
 4. **DNS and HTTPS.** Add `api.rafikicarhire.com` to the Render web service and point its DNS record to Render. Point the `www` and apex site domains to Vercel. Both providers issue TLS certificates automatically. Django enforces HTTPS, HSTS and secure cookies in production.
-5. **Admin and Pesapal setup.** Free Render does not provide shell access. Create the Django admin user from a trusted local environment using the Neon `DATABASE_URL`, or temporarily upgrade the service to run the management command. After the API domain is live, run `python manage.py register_pesapal_ipn`, set the resulting value as `PESAPAL_IPN_ID`, and redeploy the API.
+5. **Admin setup.** Free Render does not provide shell access. Create the Django admin user from a trusted local environment using the Neon `DATABASE_URL`, or temporarily upgrade the service to run the management command.
 6. **Backups.** Configure Neon backups/restore for the production branch and turn on versioning for the private object-storage bucket. The old Render database, if one was created by an earlier Blueprint, is no longer used and is left untouched by this configuration.
 7. **Monitoring.** Set `SENTRY_DSN`. The health check is at `/api/v1/health/`.
 

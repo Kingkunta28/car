@@ -155,7 +155,7 @@ export function BeforeYouRent() {
     ] },
     { id: "booking", icon: ShieldCheck, t: "Payments & paperwork", items: [
       "Prices are per day in US dollars. Fuel is not included. You receive an itemised invoice immediately after booking.",
-      "Pay online or manually (bank transfer, mobile money). Manual payments are verified by our team before they count.",
+      "Pay manually by bank transfer, mobile money or another accepted method. Payments are verified by our team before they count.",
       "A receipt is issued for every verified payment. An invoice on its own is not proof of payment.",
     ] },
   ];
@@ -242,7 +242,7 @@ export function Terms() {
     <Legal title="Terms & Conditions" path="/terms" updated="November 2026" description="Rental terms and conditions for Rafiki Car Hire, Zanzibar.">
       <section><h2>1. Bookings</h2><p>A booking request reserves the selected vehicle for {o?.hold_hours ?? 24} hours while we review it. A booking is confirmed only when we confirm it in writing. We may decline a request, in which case any payment you have made is refunded.</p></section>
       <section><h2>2. Prices &amp; invoices</h2><p>All prices are in US dollars and are calculated by our booking system at the time of booking. Your invoice is issued immediately. If your booking is changed, we issue a revised invoice; the original remains on record. An invoice is not a receipt — a receipt is issued for each verified payment.</p></section>
-      <section><h2>3. Payments</h2><p>You may pay online through our payment provider or manually by the methods we accept. Manual payments count towards your booking only after we have verified them. Online payments count only after the provider confirms them to us.</p></section>
+      <section><h2>3. Payments</h2><p>Payment is currently made manually using the methods we accept. A manual payment counts towards your booking only after we have verified it.</p></section>
       <section><h2>4. Rental period</h2><p>Each started 24-hour period is charged as one rental day. Please return the vehicle at the agreed time and place; late returns may be charged as additional days.</p></section>
       <section><h2>5. Pickup &amp; return locations</h2><p>Handover at Zanzibar Airport and in Zanzibar Town is free. Locations outside the free zone carry a delivery fee{o ? ` of ${usd(o.locations.find((l) => l.code === "OUTSIDE_ZONE")?.fee)}` : ""} for each leg.</p></section>
       <section><h2>6. Drivers &amp; documents</h2><p>Every driver must hold a valid driving licence and carry it, together with any required Zanzibar driving permit, while driving. Our permit arrangement service helps you apply; approval is decided by the issuing authority and is not guaranteed by payment of the arrangement fee.</p></section>
