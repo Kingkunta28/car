@@ -359,7 +359,7 @@
     "holdNotice": "Your car is held for {{hours}} hours while we confirm. Your invoice will arrive by email.",
     "skip": "Skip",
     "confirmFee": "Confirm fee",
-    "meetAtAirport": "We?ll meet you at {{airport}}.",
+    "meetAtAirport": "We'll meet you at {{airport}}.",
     "addFlightForDelays": "Add your flight details next so we can track delays.",
     "deliveryFee": "Delivery fee",
     "permit": "Driving permit",
@@ -440,7 +440,7 @@
     "lostEmail": "Lost the email? Contact us with your booking reference and we?ll resend it.",
     "expired": "This booking link has expired",
     "expiredText": "For your security, booking links stop working after a while. Message us with your booking reference and we?ll send you a fresh link.",
-    "openError": "We couldn?t open this booking",
+    "openError": "We couldn't open this booking",
     "newLink": "Request a new link",
     "manual": "Enter details manually",
     "yourBooking": "Your booking",
@@ -535,7 +535,7 @@
     "confirmedText": "Thank you ? {{amount}} was received for booking {{reference}}. Your receipt is on its way by email.",
     "failed": "Payment failed",
     "failedText": "The payment did not go through and no money was taken. Try again or choose manual payment.",
-    "checkError": "We couldn?t check your payment",
+    "checkError": "We couldn't check your payment",
     "checkErrorText": "If payment succeeded, it will still be confirmed automatically. Check your booking page shortly.",
     "checking": "Checking your payment?",
     "status": "Payment status:",
@@ -545,13 +545,13 @@
     "booking": "Go to my booking"
   },
   "contact": {
-    "title": "Let?s plan your drive.",
+    "title": "Let's plan your drive.",
     "lead": "The quickest way to reach us is WhatsApp. Our local team is available day and night.",
     "whatsapp": "WhatsApp ? 24/7",
     "find": "Find us",
     "openMap": "Open in Google Maps",
     "sent": "Message sent",
-    "thanks": "Thank you, {{name}}. We?ll reply to {{email}} soon.",
+    "thanks": "Thank you, {{name}}. We'll reply to {{email}} soon.",
     "heading": "Send us a message",
     "name": "Name",
     "subject": "Subject",
@@ -563,7 +563,7 @@
   "info": {
     "notFound": {
       "title": "Page not found",
-      "heading": "This road doesn?t go anywhere.",
+      "heading": "This road doesn't go anywhere.",
       "text": "The page may have moved or may no longer exist.",
       "home": "Go home",
       "fleet": "See the fleet"

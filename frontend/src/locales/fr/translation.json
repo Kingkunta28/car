@@ -79,8 +79,8 @@
     "noMatchHelp": "Modifiez vos dates ou effacez certains filtres.",
     "closeFilters": "Fermer les filtres",
     "vehicles": "véhicules",
-    "vehicleCount_one": "v?hicule",
-    "vehicleCount_other": "v?hicules"
+    "vehicleCount_one": "véhicule",
+    "vehicleCount_other": "véhicules"
   },
   "vehicle": {
     "photoSoon": "Photo bientôt disponible",

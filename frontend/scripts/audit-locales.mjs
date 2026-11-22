@@ -7,9 +7,15 @@ const languages = ["en", "it", "es", "fr", "de", "pt"];
 const files = languages.map((language) => path.join(root, "locales", language, "translation.json"));
 const errors = [];
 const empty = [];
+const encodingIssues = [];
+const usedKeys = new Set();
 const flatten = (value, prefix = "") => Object.entries(value).flatMap(([key, child]) => {
   const name = prefix ? `${prefix}.${key}` : key;
   if (child && typeof child === "object") return flatten(child, name);
+  if (typeof child === "string" && [...child].some((char, index, chars) => char === "?"
+    && /\p{L}/u.test(chars[index - 1] || "") && /\p{L}/u.test(chars[index + 1] || ""))) {
+    encodingIssues.push(`${name}: ${child}`);
+  }
   if (typeof child !== "string" || !child.trim()) empty.push(name);
   return [name];
 });
@@ -42,6 +48,11 @@ const visit = (directory) => {
       catch (error) { errors.push(`${path.relative(root, file)}: parse error (${error.message})`); continue; }
       const scan = (node) => {
         if (!node || typeof node !== "object") return;
+        if (node.type === "CallExpression"
+          && (node.callee?.name === "t" || node.callee?.property?.name === "t")
+          && node.arguments?.[0]?.type === "StringLiteral") {
+          usedKeys.add(node.arguments[0].value);
+        }
         if (node.type === "JSXText") {
           const text = node.value.replace(/\s+/g, " ").trim();
           if (/[A-Za-zÀ-ÿ]{3}/.test(text)) hardcoded.push(`${path.relative(root, file)}:${node.loc.start.line}: ${text.slice(0, 100)}`);
@@ -62,12 +73,21 @@ const visit = (directory) => {
 };
 visit(path.join(root, "pages", "public"));
 visit(path.join(root, "components"));
+const englishKeys = new Set(keysets[0].keys);
+const missingUsedKeys = [...usedKeys].filter((key) => !englishKeys.has(key)
+  && !englishKeys.has(`${key}_one`) && !englishKeys.has(`${key}_other`));
+if (missingUsedKeys.length) errors.push(`${missingUsedKeys.length} used translation keys are missing from English: ${missingUsedKeys.join(", ")}`);
 
 console.log(`Translation keys in English: ${keysets[0].keys.length}`);
+console.log(`Static translation keys referenced in public UI: ${usedKeys.size}`);
+console.log(`Referenced keys missing from English (excluding dynamic keys): ${missingUsedKeys.length}`);
 for (const { language, keys } of keysets) console.log(`${language}: ${keys.length} keys`);
 console.log(`Missing or empty values: ${empty.length}`);
+console.log(`Possible lost accented characters (letter?letter): ${encodingIssues.length}`);
 console.log(`Invalid JSON or key parity errors: ${errors.length}`);
 console.log(`Hardcoded customer-facing JSX text candidates: ${hardcoded.length}`);
 for (const issue of errors) console.log(`ERROR ${issue}`);
+for (const issue of encodingIssues.slice(0, 12)) console.log(`ENCODING ${issue}`);
+if (encodingIssues.length > 12) console.log(`ENCODING ... ${encodingIssues.length - 12} more`);
 for (const candidate of hardcoded) console.log(`STRING ${candidate}`);
-if (empty.length || errors.length || hardcoded.length) process.exitCode = 1;
+if (empty.length || errors.length || encodingIssues.length || hardcoded.length) process.exitCode = 1;
