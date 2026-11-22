@@ -7,15 +7,16 @@ from reportlab.platypus import Table, TableStyle
 from apps.core.pdf import CONTENT_W, LIGHT, BORDER, brand_header, build_pdf, chips_row, esc, info_grid, line_items, logo_path, p, section
 from apps.core.models import SiteSettings
 from apps.core.pdf import site_dict
+from .vehicle_data import booking_vehicle_snapshot
 
 
 def render_confirmation_pdf(booking) -> bytes:
     """Generate a guest booking confirmation from the saved booking record."""
     site_settings = SiteSettings.load()
     site = site_dict(site_settings)
-    vehicle = booking.vehicle
+    vehicle = booking_vehicle_snapshot(booking)
     trip = {
-        "vehicle": f"{vehicle.name} ({vehicle.brand} {vehicle.model}{', ' + str(vehicle.year) if vehicle.year else ''})",
+        "vehicle": f"{vehicle.get('name', 'Vehicle')} ({vehicle.get('brand', '')} {vehicle.get('model', '')}{', ' + str(vehicle['year']) if vehicle.get('year') else ''})",
         "pickup": f"{booking.pickup_date:%a %d %b %Y} at {booking.pickup_time:%H:%M}",
         "return": f"{booking.return_date:%a %d %b %Y} at {booking.return_time:%H:%M}",
     }
@@ -29,7 +30,8 @@ def render_confirmation_pdf(booking) -> bytes:
              ])]
     story += [section("Vehicle & rental"), info_grid([
         ("Vehicle", trip["vehicle"]), ("Duration", f"{booking.rental_days} day(s)"),
-        ("Daily rate", f"${booking.daily_rate:,.2f}"), ("Transmission", vehicle.get_transmission_display()),
+        ("Daily rate", f"${booking.daily_rate:,.2f}"),
+        ("Transmission", vehicle.get("transmission_display") or vehicle.get("transmission") or "—"),
     ])]
     def location_card(title, color, location, area, address, when, instructions):
         rows = [p(f'<font color="{color}"><b>{title}</b></font>', "label"),

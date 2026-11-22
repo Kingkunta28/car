@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "./api";
+import { filterVehicles, findDefaultVehicle } from "../data/vehicles";
 
 export const useSite = () =>
   useQuery({ queryKey: ["site"], queryFn: () => api.get("/site/"), staleTime: 10 * 60_000 });
@@ -9,7 +10,19 @@ export const useBookingOptions = () =>
   useQuery({ queryKey: ["booking-options"], queryFn: () => api.get("/booking-options/"), staleTime: 5 * 60_000 });
 
 export const useVehicles = (params = {}) =>
-  useQuery({ queryKey: ["vehicles", params], queryFn: () => api.get("/vehicles/", { params }), staleTime: 60_000 });
+  useQuery({
+    queryKey: ["vehicles", params],
+    queryFn: () => filterVehicles(params),
+    initialData: () => filterVehicles(params),
+    staleTime: Infinity,
+  });
+
+export const useVehicle = (slug) => useQuery({
+  queryKey: ["vehicle", slug],
+  queryFn: () => findDefaultVehicle(slug) || Promise.reject(new Error("This vehicle could not be found.")),
+  initialData: () => findDefaultVehicle(slug),
+  staleTime: Infinity,
+});
 
 /** Adds a restrained fade-up to children with [data-reveal] as they scroll into view. */
 export function useReveal(deps = []) {

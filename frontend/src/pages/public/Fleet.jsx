@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CarFront, SlidersHorizontal, X } from "lucide-react";
+import { CarFront, Search, SlidersHorizontal, X } from "lucide-react";
 import { useVehicles } from "../../lib/hooks";
 import { cx, todayISO } from "../../lib/format";
 import { Seo } from "../../lib/seo";
@@ -86,7 +86,7 @@ export default function Fleet() {
   const [showFilters, setShowFilters] = useState(false);
   const query = useMemo(() => {
     const q = {};
-    for (const k of ["transmission", "min_price", "max_price", "min_passengers", "available", "ordering"]) if (params.get(k)) q[k] = params.get(k);
+    for (const k of ["search", "transmission", "min_price", "max_price", "min_passengers", "available", "ordering"]) if (params.get(k)) q[k] = params.get(k);
     const cats = params.getAll("category");
     if (cats.length === 1) q.category = cats[0]; // several types are filtered client-side below
     const from = params.get("from"), to = params.get("to");
@@ -123,7 +123,13 @@ export default function Fleet() {
         <div>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-muted" aria-live="polite"><span className="font-semibold text-navy-900">{list.length}</span> vehicle{list.length === 1 ? "" : "s"}</p>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="relative">
+                <span className="sr-only">Search vehicles</span>
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
+                <input type="search" className="input h-10 w-full py-0 pl-9 pr-3 text-sm sm:w-52" placeholder="Search vehicles"
+                  value={params.get("search") || ""} onChange={(e) => set({ search: e.target.value })} />
+              </label>
               <label className="flex items-center gap-2 text-sm text-muted">
                 <span className="hidden sm:inline">Sort by</span>
                 <select className="input h-10 w-auto py-0 pr-9 text-sm" aria-label="Sort vehicles" value={params.get("ordering") || ""} onChange={(e) => set({ ordering: e.target.value })}>

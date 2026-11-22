@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Briefcase, Check, ChevronLeft, ChevronRight, DoorOpen, Expand, Fuel, Info, Plane, Settings2, Users, X } from "lucide-react";
-import { api } from "../../lib/api";
-import { useBookingOptions, useVehicles } from "../../lib/hooks";
-import { babySeatText, priceOf, zoneFee } from "../../lib/content";
-import { cx, fmtDate, usd } from "../../lib/format";
+import { useVehicle, useVehicles } from "../../lib/hooks";
+import { cx, usd } from "../../lib/format";
 import { Seo, SITE_URL } from "../../lib/seo";
-import { Badge, Button, ErrorState, PageLoader } from "../../components/ui";
+import { Alert, Badge, Button, ErrorState, PageLoader } from "../../components/ui";
 import VehicleCard, { VehicleImage } from "../../components/VehicleCard";
 
 function Lightbox({ images, index, setIndex, onClose }) {
@@ -74,9 +71,7 @@ function Gallery({ vehicle }) {
 
 export default function VehicleDetail() {
   const { slug } = useParams();
-  const { data: v, isLoading, error, refetch } = useQuery({ queryKey: ["vehicle", slug], queryFn: () => api.get(`/vehicles/${slug}/`) });
-  const avail = useQuery({ queryKey: ["vehicle-avail", slug], queryFn: () => api.get(`/vehicles/${slug}/availability/`), enabled: !!v });
-  const { data: options } = useBookingOptions();
+  const { data: v, isLoading, error, refetch } = useVehicle(slug);
   const fleet = useVehicles({});
 
   if (isLoading) return <PageLoader />;
@@ -86,7 +81,6 @@ export default function VehicleDetail() {
     [Settings2, "Transmission", v.transmission_display], [Users, "Passengers", `${v.passenger_capacity} seats`],
     [Fuel, "Fuel", v.fuel_type_display], [Briefcase, "Luggage", `${v.luggage_capacity} bags`], [DoorOpen, "Doors", v.doors],
   ];
-  const busy = (avail.data?.busy || []).filter((b) => new Date(b.end) > new Date()).slice(0, 6);
   const bookable = v.availability_status === "AVAILABLE";
 
   return (
@@ -132,9 +126,9 @@ export default function VehicleDetail() {
             <div className="mt-10 rounded-2xl border border-line p-6">
               <h2 className="flex items-center gap-2 text-xl font-bold"><Info className="size-5 text-orange-600" /> Rental conditions</h2>
               <ul className="mt-4 space-y-2.5 text-[15px] leading-relaxed text-muted">
-                <li>• Bring your passport and a valid driving licence. Visitors also need a Zanzibar driving permit — we can arrange it for {priceOf(options, "driving_permit") ? usd(priceOf(options, "driving_permit")) : "a small fee"}.</li>
-                <li>• Delivery to Zanzibar Airport and Zanzibar Town is free; other locations cost {zoneFee(options) ? usd(zoneFee(options)) : "a flat fee"} each way.</li>
-                <li>• Child seats are {babySeatText(options)}, for the whole rental.</li>
+                <li>• Bring your passport and a valid driving licence. Visitors also need a Zanzibar driving permit; ask us for the current fee.</li>
+                <li>• Delivery to Zanzibar Airport and Zanzibar Town is free; other locations may incur a fee confirmed in your booking quote.</li>
+                <li>• Ask us about child-seat availability and pricing when booking.</li>
                 <li>• Prices are per day. Fuel is not included.</li>
                 <li>• Each started 24-hour period counts as one rental day.</li>
               </ul>
@@ -151,20 +145,13 @@ export default function VehicleDetail() {
                 <span className="font-display text-4xl font-bold text-navy-900">{usd(v.price_per_day)}</span>
                 <span className="text-muted"> per day</span>
               </p>
+              <Alert tone="info" className="mt-4">Choose your rental dates when booking to check availability. The team confirms every reservation.</Alert>
               <ul className="mt-4 space-y-2 text-sm text-muted">
                 <li className="flex items-center gap-2"><Plane className="size-4 text-orange-600" /> Free airport &amp; town handover</li>
                 <li className="flex items-center gap-2"><Check className="size-4 text-orange-600" /> Full price shown before you book</li>
               </ul>
               <Button to={`/book?vehicle=${v.slug}`} size="lg" className="mt-6 w-full" disabled={!bookable}
                 aria-disabled={!bookable}>{bookable ? "Book this car" : "Not available to book"}</Button>
-              {busy.length > 0 && (
-                <div className="mt-6 border-t border-line pt-5">
-                  <p className="text-sm font-semibold text-navy-900">Already reserved</p>
-                  <ul className="mt-2 space-y-1 text-sm text-muted">
-                    {busy.map((b) => <li key={b.start}>{fmtDate(b.start, { day: "numeric", month: "short" })} – {fmtDate(b.end, { day: "numeric", month: "short", year: "numeric" })}</li>)}
-                  </ul>
-                </div>
-              )}
             </div>
           </aside>
         </div>

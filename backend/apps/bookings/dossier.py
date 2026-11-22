@@ -11,6 +11,7 @@ from apps.core.utils import audit
 
 from .dossier_pdf import render_booking_dossier
 from .models import BookingDossier
+from .vehicle_data import booking_vehicle_snapshot
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def _source_digest(booking):
         )},
         "customer": {field: str(getattr(booking.customer, field)) for field in
                      ("full_name", "email", "phone", "nationality")},
-        "vehicle": {field: str(getattr(booking.vehicle, field)) for field in ("name", "brand", "model", "year")},
+        "vehicle": booking_vehicle_snapshot(booking),
         "flight": ({field: str(getattr(flight, field)) for field in
                     ("airline_name", "flight_number", "arrival_date", "arrival_time", "arrival_airport", "notes")}
                    if flight else None),

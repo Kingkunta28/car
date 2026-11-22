@@ -22,6 +22,7 @@ from .models import (
 )
 from .pricing import Quote, build_quote
 from .tokens import issue_access_token
+from .vehicle_data import model_vehicle_snapshot, quote_vehicle
 
 logger = logging.getLogger(__name__)
 MAX_IDENTITY_PDF_PAGES = 12
@@ -156,14 +157,23 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
     try:
         with transaction.atomic():
             availability.release_expired_holds()
-            vehicle = Vehicle.objects.select_for_update().get(pk=data["vehicle"].pk)
-            if not vehicle.is_bookable:
-                raise BusinessRuleError("This vehicle is not currently available for booking.")
-            if availability.conflicting_bookings(vehicle, pickup_at, return_at).exists():
+            vehicle_model = data.get("vehicle_model")
+            if vehicle_model is not None:
+                vehicle = Vehicle.objects.select_for_update().get(pk=vehicle_model.pk)
+                if not vehicle.is_bookable:
+                    raise BusinessRuleError("This vehicle is not currently available for booking.")
+                vehicle_snapshot = model_vehicle_snapshot(vehicle)
+            else:
+                vehicle = None
+                vehicle_snapshot = data["vehicle_snapshot"]
+            vehicle_slug = data["vehicle_slug"]
+            if availability.conflicting_bookings(vehicle_slug, pickup_at, return_at).exists():
                 raise ConflictError(OVERLAP_MESSAGE)
 
-            quote = build_quote(vehicle=vehicle, pickup_at=pickup_at, return_at=return_at,
+            quote = build_quote(vehicle=quote_vehicle(vehicle_snapshot), pickup_at=pickup_at, return_at=return_at,
                                 pickup_type=data["pickup_type"], return_type=data["return_type"], extras=extras)
+            if data.get("total_amount") is not None and data["total_amount"] != quote.grand_total:
+                raise ValidationError({"total_amount": "The booking total changed. Review the updated quote before submitting."})
 
             c = data["customer"]
             customer, created = Customer.objects.get_or_create(
@@ -178,6 +188,7 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
 
             booking = Booking(
                 booking_reference=_unique_reference(), customer=customer, vehicle=vehicle,
+                vehicle_slug=vehicle_slug, vehicle_snapshot=vehicle_snapshot,
                 pickup_date=data["pickup_date"], pickup_time=data["pickup_time"],
                 return_date=data["return_date"], return_time=data["return_time"],
                 pickup_at=pickup_at, return_at=return_at, blocked_until=return_at + availability.turnaround(),
@@ -267,7 +278,7 @@ def change_status(booking: Booking, new_status: str, *, actor=None, notes: str =
             b.status_reason = notes[:255]
             if new_status == BookingStatus.CONFIRMED:
                 if previous == BookingStatus.EXPIRED:
-                    if availability.conflicting_bookings(b.vehicle, b.pickup_at, b.return_at, exclude_pk=b.pk).exists():
+                    if availability.conflicting_bookings(b.vehicle_slug, b.pickup_at, b.return_at, exclude_pk=b.pk).exists():
                         raise ConflictError("The vehicle has since been reserved by another booking for these dates.")
                 b.blocks_inventory, b.hold_expires_at, b.confirmed_at = True, None, now
             elif new_status in (BookingStatus.REJECTED, BookingStatus.CANCELLED):
@@ -322,6 +333,7 @@ def modify_booking(booking: Booking, changes: dict, *, actor, reason: str, reque
     try:
         with transaction.atomic():
             b = Booking.objects.select_for_update().select_related("vehicle").get(pk=booking.pk)
+            original_vehicle_slug = b.vehicle_slug
             if not b.is_open:
                 raise BusinessRuleError("Only pending or confirmed bookings can be modified.")
             data = {f: getattr(b, f) for f in EDITABLE_FIELDS - {"extras"}}
@@ -335,11 +347,27 @@ def modify_booking(booking: Booking, changes: dict, *, actor, reason: str, reque
                 raise BusinessRuleError("Nothing was changed.")
             data.update(changes)
             validate_locations(data)
-            vehicle = Vehicle.objects.select_for_update().get(pk=data["vehicle"].pk)
+            vehicle_ref = data["vehicle"]
+            if vehicle_ref is not None:
+                if isinstance(vehicle_ref, Vehicle):
+                    vehicle = Vehicle.objects.select_for_update().get(pk=vehicle_ref.pk)
+                    vehicle_slug = vehicle.slug
+                    vehicle_snapshot = b.vehicle_snapshot if vehicle_slug == original_vehicle_slug and b.vehicle_snapshot \
+                        else model_vehicle_snapshot(vehicle, agreed_rate=b.daily_rate if vehicle_slug == original_vehicle_slug else None)
+                elif vehicle_ref == original_vehicle_slug:
+                    vehicle = None
+                    vehicle_slug = b.vehicle_slug
+                    vehicle_snapshot = b.vehicle_snapshot
+                else:
+                    raise BusinessRuleError("A static-catalogue booking can keep its selected car or switch to a saved vehicle.")
+            else:
+                vehicle = None
+                vehicle_slug = b.vehicle_slug
+                vehicle_snapshot = b.vehicle_snapshot
             pickup_at = combine(data["pickup_date"], data["pickup_time"])
             return_at = combine(data["return_date"], data["return_time"])
             validate_rental_window(pickup_at, return_at, enforce_lead=False)
-            if b.blocks_inventory and availability.conflicting_bookings(vehicle, pickup_at, return_at,
+            if b.blocks_inventory and availability.conflicting_bookings(vehicle_slug, pickup_at, return_at,
                                                                         exclude_pk=b.pk).exists():
                 raise ConflictError(OVERLAP_MESSAGE)
             if ExtraService.DRIVING_PERMIT in data["extras"] and not b.documents.exclude(
@@ -347,15 +375,18 @@ def modify_booking(booking: Booking, changes: dict, *, actor, reason: str, reque
                 raise BusinessRuleError("Driving permit arrangement needs the guest's uploaded documents.")
 
             financial_change = bool(FINANCIAL_FIELDS & set(changes))
-            for f in EDITABLE_FIELDS - {"extras"}:
+            for f in EDITABLE_FIELDS - {"extras", "vehicle"}:
                 setattr(b, f, data[f])
+            b.vehicle = vehicle
+            b.vehicle_slug = vehicle_slug
+            b.vehicle_snapshot = vehicle_snapshot
             b.pickup_at, b.return_at = pickup_at, return_at
             b.blocked_until = return_at + availability.turnaround()
             invoice = None
             if financial_change:
                 # Keep the originally agreed daily rate unless the vehicle changed.
-                same_vehicle = vehicle.pk == b.vehicle_id
-                quote = build_quote(vehicle=vehicle, pickup_at=pickup_at, return_at=return_at,
+                same_vehicle = vehicle_slug == original_vehicle_slug
+                quote = build_quote(vehicle=quote_vehicle(vehicle_snapshot), pickup_at=pickup_at, return_at=return_at,
                                     pickup_type=data["pickup_type"], return_type=data["return_type"],
                                     extras=data["extras"], daily_rate=b.daily_rate if same_vehicle else None)
                 _apply_quote(b, quote)

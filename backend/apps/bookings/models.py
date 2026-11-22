@@ -84,7 +84,13 @@ class ExtraService(UUIDModel, TimeStampedModel):
 class Booking(UUIDModel, TimeStampedModel):
     booking_reference = models.CharField(max_length=20, unique=True)
     customer = models.ForeignKey("customers.Customer", on_delete=models.PROTECT, related_name="bookings")
-    vehicle = models.ForeignKey("vehicles.Vehicle", on_delete=models.PROTECT, related_name="bookings")
+    # ``vehicle`` is retained only to keep older bookings linked to their
+    # original inventory rows. New frontend-catalogue bookings use the slug and
+    # immutable snapshot below, with no Vehicle row or foreign key.
+    vehicle = models.ForeignKey("vehicles.Vehicle", null=True, blank=True, on_delete=models.PROTECT,
+                                related_name="bookings")
+    vehicle_slug = models.SlugField(max_length=140, db_index=True)
+    vehicle_snapshot = models.JSONField(default=dict)
 
     pickup_date = models.DateField(db_index=True)
     pickup_time = models.TimeField()
@@ -145,6 +151,7 @@ class Booking(UUIDModel, TimeStampedModel):
         ]
         indexes = [
             models.Index(fields=["vehicle", "blocks_inventory", "pickup_at"]),
+            models.Index(fields=["vehicle_slug", "blocks_inventory", "pickup_at"], name="booking_slug_busy_idx"),
             models.Index(fields=["booking_status", "hold_expires_at"]),
         ]
 
@@ -154,6 +161,12 @@ class Booking(UUIDModel, TimeStampedModel):
     @property
     def balance_due(self) -> Decimal:
         return max(self.grand_total - self.amount_paid, Decimal("0.00"))
+
+    @property
+    def vehicle_name(self) -> str:
+        if self.vehicle_snapshot:
+            return self.vehicle_snapshot.get("name") or self.vehicle_slug
+        return self.vehicle.name if self.vehicle_id else self.vehicle_slug
 
     @property
     def is_open(self) -> bool:

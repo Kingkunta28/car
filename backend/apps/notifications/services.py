@@ -119,7 +119,8 @@ def _render(log: NotificationLog):
         "frontend_url": settings.FRONTEND_URL, "currency": "USD",
     }
     if b is not None:
-        ctx.update(customer=b.customer, vehicle=b.vehicle, extras=list(b.extras.all()),
+        from apps.bookings.vehicle_data import booking_vehicle_object
+        ctx.update(customer=b.customer, vehicle=booking_vehicle_object(b), extras=list(b.extras.all()),
                    admin_url=f"{settings.FRONTEND_URL}/admin/bookings/{b.pk}")
         try:
             ctx["flight"] = b.flight

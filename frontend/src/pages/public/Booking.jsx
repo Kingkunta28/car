@@ -9,6 +9,7 @@ import { api, ApiError } from "../../lib/api";
 import { useBookingOptions, useVehicles } from "../../lib/hooks";
 import { cx, fmtDate, rentalDays, todayISO, usd } from "../../lib/format";
 import { babySeatText, unitPrice } from "../../lib/content";
+import { DEFAULT_BOOKING_OPTIONS, vehicleSnapshot } from "../../data/vehicles";
 import { saveGuest } from "../../lib/guest";
 import { Seo } from "../../lib/seo";
 import { Alert, Button, ErrorState, Field, PageLoader, Spinner } from "../../components/ui";
@@ -37,6 +38,11 @@ function loadDraft(sp) {
     const d = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "null");
     if (!d) return base;
     const merged = { ...base, ...d, accept_terms: false };
+    merged.customer = { ...base.customer, ...(d.customer || {}) };
+    merged.pickup = { ...base.pickup, ...(d.pickup || {}) };
+    merged.ret = { ...base.ret, ...(d.ret || {}) };
+    merged.flight = { ...base.flight, ...(d.flight || {}) };
+    merged.extras = d.extras && typeof d.extras === "object" && !Array.isArray(d.extras) ? d.extras : {};
     for (const k of ["vehicle", "pickup_date", "return_date"]) if (sp.get(k)) merged[k] = sp.get(k);
     if (sp.get("pickup_type")) merged.pickup = { ...merged.pickup, type: sp.get("pickup_type") };
     return merged;
@@ -69,7 +75,7 @@ function validateStep(step, s, files, options) {
   };
   if (step === 2) leg("pickup", "pickup");
   if (step === 3) leg("ret", "return");
-  if (step === 5 && s.extras.driving_permit) {
+  if (step === 5 && s.extras.driving_permit && !options?.isFallback) {
     const max = (options?.max_upload_mb || 8) * 1024 * 1024;
     for (const [k, label] of [["passport", "passport"], ["driving_licence", "driving licence"]]) {
       if (!files[k]) e[k] = `Please upload a copy of your ${label}.`;
@@ -87,23 +93,26 @@ const FIELD_STEP = (k) => k.startsWith("customer") ? 0
   : k.startsWith("pickup_") ? 2 : k.startsWith("return_") ? 3 : k.startsWith("flight") ? 4
   : /^(extras|documents|passport|driving_licence)/.test(k) ? 5 : k.startsWith("payment") ? 6 : 7;
 
-function toPayload(s) {
+function toPayload(s, vehicle, totalAmount, options) {
   const flight = Object.fromEntries(Object.entries(s.flight).map(([k, v]) => [k, v || (k.includes("date") || k.includes("time") ? null : "")]));
   return {
-    customer: s.customer, vehicle: s.vehicle,
+    customer: s.customer, vehicle: s.vehicle, vehicle_id: vehicle.id,
+    vehicle_snapshot: vehicleSnapshot(vehicle), daily_rate: vehicle.price_per_day,
+    ...(totalAmount ? { total_amount: totalAmount } : {}),
     pickup_date: s.pickup_date, pickup_time: s.pickup_time, return_date: s.return_date, return_time: s.return_time,
     pickup_type: s.pickup.type, pickup_area: s.pickup.area, pickup_address: s.pickup.address, pickup_instructions: s.pickup.instructions,
     return_type: s.ret.type, return_area: s.ret.area, return_address: s.ret.address, return_instructions: s.ret.instructions,
-    flight, extras: Object.fromEntries(Object.entries(s.extras).filter(([, q]) => q > 0)),
+    flight, extras: Object.fromEntries(Object.entries(options.isFallback ? {} : s.extras).filter(([, q]) => q > 0)),
     payment_method: s.payment_method, accept_terms: s.accept_terms,
   };
 }
 
-function useQuote(s) {
+function useQuote(s, vehicle) {
   const ready = s.vehicle && s.pickup_date && s.return_date && s.pickup_time && s.return_time
-    && rentalDays(s.pickup_date, s.pickup_time, s.return_date, s.return_time) > 0;
+    && vehicle && rentalDays(s.pickup_date, s.pickup_time, s.return_date, s.return_time) > 0;
   const body = {
-    vehicle: s.vehicle, pickup_date: s.pickup_date, pickup_time: s.pickup_time, return_date: s.return_date,
+    vehicle: s.vehicle, vehicle_id: vehicle?.id, vehicle_snapshot: vehicleSnapshot(vehicle), daily_rate: vehicle?.price_per_day,
+    pickup_date: s.pickup_date, pickup_time: s.pickup_time, return_date: s.return_date,
     return_time: s.return_time, pickup_type: s.pickup.type || "AIRPORT", return_type: s.ret.type || "AIRPORT",
     extras: Object.fromEntries(Object.entries(s.extras).filter(([, q]) => q > 0)),
   };
@@ -132,8 +141,8 @@ function LocationPicker({ prefix, leg, onChange, options, errors, isReturn }) {
                   active ? "border-navy-900 bg-navy-50" : "border-line hover:border-navy-600")}>
                 <Icon className={cx("size-6", active ? "text-orange-600" : "text-navy-600")} aria-hidden />
                 <span className="mt-3 font-semibold text-navy-900">{l.label}</span>
-                <span className={cx("mt-1 text-sm font-semibold", Number(l.fee) ? "text-orange-600" : "text-emerald-700")}>
-                  {Number(l.fee) ? usd(l.fee) : "FREE"}
+                <span className={cx("mt-1 text-sm font-semibold", options.isFallback && l.code === "OUTSIDE_ZONE" ? "text-muted" : Number(l.fee) ? "text-orange-600" : "text-emerald-700")}>
+                  {options.isFallback && l.code === "OUTSIDE_ZONE" ? "Confirm fee" : Number(l.fee) ? usd(l.fee) : "FREE"}
                 </span>
               </button>
             );
@@ -241,7 +250,11 @@ function Summary({ s, quote, vehicle, compact }) {
 export default function Booking() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
-  const { data: options, isLoading: optLoading, error: optError, refetch } = useBookingOptions();
+  const bookingOptions = useBookingOptions();
+  const liveOptions = bookingOptions.data;
+  const hasLiveOptions = Array.isArray(liveOptions?.extras) && Array.isArray(liveOptions?.locations)
+    && !!liveOptions.payment_methods?.online && !!liveOptions.payment_methods?.manual;
+  const options = hasLiveOptions ? liveOptions : DEFAULT_BOOKING_OPTIONS;
   const vehicles = useVehicles({});
   const [s, setS] = useState(() => loadDraft(sp));
   const [step, setStep] = useState(0);
@@ -250,8 +263,8 @@ export default function Booking() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const topRef = useRef(null);
-  const quote = useQuote(s);
   const vehicle = useMemo(() => vehicles.data?.find((v) => v.slug === s.vehicle), [vehicles.data, s.vehicle]);
+  const quote = useQuote(s, vehicle);
 
   useEffect(() => {
     const { accept_terms, ...draft } = s; // eslint-disable-line no-unused-vars
@@ -284,7 +297,8 @@ export default function Booking() {
     setSubmitError("");
     try {
       const form = new FormData();
-      form.append("payload", JSON.stringify(toPayload(s)));
+      const totalAmount = quote.data && !quote.isFetching && !quote.isPlaceholderData ? quote.data.grand_total : null;
+      form.append("payload", JSON.stringify(toPayload(s, vehicle, totalAmount, options)));
       if (s.extras.driving_permit) {
         form.append("passport", files.passport);
         form.append("driving_licence", files.driving_licence);
@@ -311,16 +325,8 @@ export default function Booking() {
     }
   };
 
-  if (optLoading || vehicles.isLoading) return <PageLoader />;
-  if (optError || vehicles.error) return <div className="container-x py-16"><ErrorState error={optError || vehicles.error} onRetry={refetch} /></div>;
-  if (!options || !Array.isArray(options.extras) || !Array.isArray(options.locations)
-    || !options.payment_methods?.online || !options.payment_methods?.manual) {
-    return <div className="container-x py-16"><ErrorState
-      title="Booking options are unavailable"
-      error={{ message: "The booking service returned incomplete setup data. Please try again in a moment." }}
-      onRetry={refetch}
-    /></div>;
-  }
+  if (vehicles.isLoading) return <PageLoader />;
+  if (vehicles.error) return <div className="container-x py-16"><ErrorState error={vehicles.error} onRetry={vehicles.refetch} /></div>;
 
   const babySeat = options.extras.find((x) => x.code === "baby_seat");
   const permit = options.extras.find((x) => x.code === "driving_permit");
@@ -350,6 +356,7 @@ export default function Booking() {
 
       <div className="container-x grid gap-10 py-10 lg:grid-cols-[1fr_380px]">
         <form noValidate onSubmit={(e) => { e.preventDefault(); step === STEPS.length - 1 ? submit() : next(); }} className="min-w-0">
+          {options.isFallback && <Alert tone="info" className="mb-6">Some booking extras or location fees are temporarily unavailable. The booking service will validate the total before confirming your request.</Alert>}
           {step < STEPS.length - 1 && (
             <details className="group mb-8 rounded-2xl border border-line bg-sand-50 lg:hidden">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 font-semibold text-navy-900 [&::-webkit-details-marker]:hidden">
@@ -440,6 +447,7 @@ export default function Booking() {
 
           {step === 5 && (
             <div className="space-y-5">
+              {options.isFallback && <Alert tone="info">Tell us about any extras you need in the final notes; our team will confirm availability and pricing.</Alert>}
               {babySeat && (
                 <div className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex gap-4">
@@ -522,7 +530,7 @@ export default function Booking() {
                 <div className="rounded-2xl bg-sand-50 p-5">
                   <h3 className="font-semibold">How to pay</h3>
                   <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">{options.payment_methods.manual.instructions}</p>
-                  <p className="mt-3 text-sm text-muted">After booking you can submit your payment reference or proof from your booking page.</p>
+                  <p className="mt-3 text-sm text-muted">Payment instructions will be provided with your booking invoice.</p>
                 </div>
               )}
               {s.payment_method === "ONLINE" && (

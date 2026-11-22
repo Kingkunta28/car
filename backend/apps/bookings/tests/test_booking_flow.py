@@ -80,6 +80,43 @@ class BookingFlowTests(TestCase):
         self.assertEqual(res.status_code, 201)
         self.assertEqual(res.data["grand_total"], "225.00")
 
+    def test_static_catalogue_booking_needs_no_vehicle_row_and_saves_snapshot(self):
+        slug = "toyota-rav4-2018"
+        snapshot = {
+            "id": slug, "slug": slug, "name": "Toyota RAV4", "brand": "Toyota", "model": "RAV4",
+            "year": 2018, "category": "SUV", "category_display": "SUV", "description": "Island rental",
+            "price_per_day": "35.00", "transmission": "AUTOMATIC", "transmission_display": "Automatic",
+            "fuel_type": "PETROL", "fuel_type_display": "Petrol", "passenger_capacity": 5,
+            "luggage_capacity": 3, "doors": 5, "features": ["Air conditioning"],
+            "availability_status": "AVAILABLE", "availability_display": "Available",
+            "main_image": "/images/cars/toyota-rav4-2018.jpeg", "gallery_images": [],
+        }
+        payload = f.booking_payload(self.v)
+        payload.update(vehicle=slug, vehicle_id=slug, vehicle_snapshot=snapshot, daily_rate="35.00")
+        self.v.delete()
+
+        res = self.create(payload)
+        self.assertEqual(res.status_code, 201, res.data)
+        booking = Booking.objects.get(booking_reference=res.data["booking_reference"])
+        self.assertIsNone(booking.vehicle_id)
+        self.assertEqual(booking.vehicle_slug, slug)
+        self.assertEqual(booking.vehicle_snapshot["name"], "Toyota RAV4")
+        self.assertEqual(booking.daily_rate, Decimal("35.00"))
+        invoice = Invoice.objects.get(booking=booking)
+        self.assertTrue(invoice.pdf_file)
+
+    def test_static_catalogue_booking_rejects_unapproved_price(self):
+        slug = "toyota-rav4-2018"
+        snapshot = {
+            "id": slug, "slug": slug, "name": "Toyota RAV4", "brand": "Toyota", "model": "RAV4",
+            "category": "SUV", "price_per_day": "1.00", "transmission": "AUTOMATIC", "fuel_type": "PETROL",
+            "passenger_capacity": 5, "luggage_capacity": 3,
+        }
+        payload = f.booking_payload(self.v)
+        payload.update(vehicle=slug, vehicle_id=slug, vehicle_snapshot=snapshot, daily_rate="1.00")
+        res = self.create(payload)
+        self.assertEqual(res.status_code, 400)
+
     def test_historical_price_unchanged_after_vehicle_price_update(self):
         res = self.create()
         self.v.price_per_day = Decimal("99.00")

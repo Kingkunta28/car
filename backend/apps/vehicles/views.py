@@ -79,7 +79,7 @@ class PublicVehicleViewSet(viewsets.ReadOnlyModelViewSet):
         qs = _vehicle_qs().filter(is_active=True)
         start, end = _parse_range(self.request.query_params)
         if start:
-            busy = Booking.objects.filter(vehicle=OuterRef("pk"), blocks_inventory=True,
+            busy = Booking.objects.filter(vehicle_slug=OuterRef("slug"), blocks_inventory=True,
                                           pickup_at__lt=end + turnaround(), blocked_until__gt=start)
             qs = qs.filter(availability_status=AvailabilityStatus.AVAILABLE).exclude(Exists(busy))
         return qs

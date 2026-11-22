@@ -83,7 +83,7 @@ def _issue_receipt(payment: Payment) -> Receipt:
         "booking_reference": b.booking_reference, "payment_reference": payment.payment_reference,
         "site": site_dict(site), "customer": {"full_name": b.customer.full_name, "email": b.customer.email,
                                                 "phone": b.customer.phone},
-        "vehicle": b.vehicle.name, "amount": str(payment.amount), "currency": payment.currency,
+        "vehicle": b.vehicle_name, "amount": str(payment.amount), "currency": payment.currency,
         "method": payment.get_payment_method_display(),
         "channel": payment.get_channel_display() if payment.channel else (payment.gateway or "").title(),
         "verification_source": payment.get_verification_source_display(),

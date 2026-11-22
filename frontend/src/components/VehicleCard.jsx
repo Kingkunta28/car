@@ -11,14 +11,16 @@ export function VehicleImage({ vehicle, image, className, eager = false, sizes =
   const [imageFailed, setImageFailed] = useState(false);
   const img = image || vehicle?.images?.[0];
   const bundledUrl = vehiclePhotos[vehicle?.slug];
-  const remoteUrl = img?.url && img.url !== bundledUrl ? img.url : null;
-  const imageUrl = useRemoteFallback ? remoteUrl : bundledUrl || remoteUrl;
+  const publicVehicleImage = img?.url?.startsWith("/images/cars/") ? img.url : null;
+  const preferredUrl = publicVehicleImage || bundledUrl || img?.url;
+  const remoteUrl = img?.url && img.url !== preferredUrl ? img.url : bundledUrl && bundledUrl !== preferredUrl ? bundledUrl : null;
+  const imageUrl = useRemoteFallback ? remoteUrl : preferredUrl;
   if (imageUrl && !imageFailed) {
     return (
       <img src={imageUrl} alt={img?.alt_text || `${vehicle.brand} ${vehicle.model} for hire in Zanzibar`}
         loading={eager ? "eager" : "lazy"} decoding="async" sizes={sizes}
         onError={() => {
-          if (!useRemoteFallback && bundledUrl && remoteUrl) setUseRemoteFallback(true);
+          if (!useRemoteFallback && remoteUrl) setUseRemoteFallback(true);
           else setImageFailed(true);
         }}
         className={cx("h-full w-full object-cover", className)} />

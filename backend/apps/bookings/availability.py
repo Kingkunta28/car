@@ -18,8 +18,9 @@ def conflicting_bookings(vehicle, pickup_at: datetime, return_at: datetime, excl
     its ``blocked_until``; the requested booking needs the car until its own
     return + turnaround.
     """
+    slug = vehicle if isinstance(vehicle, str) else vehicle.slug
     qs = Booking.objects.filter(
-        vehicle=vehicle, blocks_inventory=True,
+        vehicle_slug=slug, blocks_inventory=True,
         pickup_at__lt=return_at + turnaround(), blocked_until__gt=pickup_at,
     )
     if exclude_pk:
@@ -28,13 +29,15 @@ def conflicting_bookings(vehicle, pickup_at: datetime, return_at: datetime, excl
 
 
 def is_available(vehicle, pickup_at: datetime, return_at: datetime, exclude_pk=None) -> bool:
-    return vehicle.is_bookable and not conflicting_bookings(vehicle, pickup_at, return_at, exclude_pk).exists()
+    bookable = getattr(vehicle, "is_bookable", True)
+    return bookable and not conflicting_bookings(vehicle, pickup_at, return_at, exclude_pk).exists()
 
 
 def blocked_periods(vehicle, start: datetime, end: datetime) -> list[dict]:
     """Public, anonymised list of busy periods (no customer information)."""
+    slug = vehicle if isinstance(vehicle, str) else vehicle.slug
     rows = Booking.objects.filter(
-        vehicle=vehicle, blocks_inventory=True, pickup_at__lt=end, blocked_until__gt=start,
+        vehicle_slug=slug, blocks_inventory=True, pickup_at__lt=end, blocked_until__gt=start,
     ).order_by("pickup_at").values_list("pickup_at", "blocked_until")
     return [{"start": s.isoformat(), "end": e.isoformat()} for s, e in rows]
 

@@ -15,6 +15,7 @@ from apps.core.pdf import (
     line_items, logo_path, p, section, site_dict,
 )
 from apps.bookings.models import DocumentStatus, DocumentType
+from apps.bookings.vehicle_data import booking_vehicle_snapshot
 
 
 DOCUMENT_LABELS = {
@@ -120,11 +121,12 @@ def render_booking_dossier(booking) -> bytes:
                  ("Phone", booking.customer.phone), ("Nationality", booking.customer.nationality or "—"),
              ])]
 
-    vehicle = booking.vehicle
+    vehicle = booking_vehicle_snapshot(booking)
     story += [section("02 · Vehicle & rental"), info_grid([
-        ("Vehicle", f"{vehicle.name} · {vehicle.brand} {vehicle.model}{' · ' + str(vehicle.year) if vehicle.year else ''}"),
+        ("Vehicle", f"{vehicle.get('name', 'Vehicle')} · {vehicle.get('brand', '')} {vehicle.get('model', '')}{' · ' + str(vehicle['year']) if vehicle.get('year') else ''}"),
         ("Rental duration", f"{booking.rental_days} day(s)"),
-        ("Daily rate", _usd(booking.daily_rate)), ("Transmission", vehicle.get_transmission_display()),
+        ("Daily rate", _usd(booking.daily_rate)),
+        ("Transmission", vehicle.get("transmission_display") or vehicle.get("transmission") or "—"),
         ("Pickup", f"{booking.pickup_date:%d %b %Y} · {booking.pickup_time:%H:%M}"),
         ("Return", f"{booking.return_date:%d %b %Y} · {booking.return_time:%H:%M}"),
     ])]

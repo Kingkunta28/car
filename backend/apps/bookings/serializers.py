@@ -1,4 +1,5 @@
 import json
+from uuid import UUID
 
 from django.conf import settings
 from rest_framework import serializers
@@ -9,14 +10,55 @@ from .models import (
     Booking, BookingDocument, BookingExtra, BookingFlight, BookingNote, BookingStatusHistory, ExtraService,
     LocationType, PaymentMethodChoice,
 )
+from .vehicle_data import STATIC_VEHICLE_RATES, model_vehicle_snapshot
 
 
 class ExtrasField(serializers.DictField):
     child = serializers.IntegerField(min_value=0, max_value=20)
 
 
+class VehicleSnapshotInputSerializer(serializers.Serializer):
+    id = serializers.SlugField(max_length=140)
+    slug = serializers.SlugField(max_length=140)
+    name = serializers.CharField(max_length=160)
+    brand = serializers.CharField(max_length=80)
+    model = serializers.CharField(max_length=100)
+    year = serializers.IntegerField(required=False, allow_null=True)
+    category = serializers.CharField(max_length=30)
+    category_display = serializers.CharField(max_length=60, required=False, allow_blank=True, default="")
+    description = serializers.CharField(max_length=4000, required=False, allow_blank=True, default="")
+    price_per_day = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0)
+    transmission = serializers.CharField(max_length=20)
+    transmission_display = serializers.CharField(max_length=40, required=False, allow_blank=True, default="")
+    fuel_type = serializers.CharField(max_length=20)
+    fuel_type_display = serializers.CharField(max_length=40, required=False, allow_blank=True, default="")
+    passenger_capacity = serializers.IntegerField(min_value=1, max_value=30)
+    luggage_capacity = serializers.IntegerField(min_value=0, max_value=30)
+    doors = serializers.IntegerField(required=False, min_value=1, max_value=10, default=4)
+    features = serializers.ListField(child=serializers.CharField(max_length=120), required=False, default=list)
+    availability_status = serializers.CharField(max_length=20, required=False, default="AVAILABLE")
+    availability_display = serializers.CharField(max_length=40, required=False, default="Available")
+    main_image = serializers.CharField(max_length=500, required=False, allow_blank=True, default="")
+    gallery_images = serializers.ListField(child=serializers.CharField(max_length=500), required=False, default=list)
+
+
+class BookingVehicleReferenceField(serializers.CharField):
+    """Resolve legacy UUIDs to Vehicle rows and leave static booking slugs as strings."""
+    def to_internal_value(self, data):
+        value = super().to_internal_value(data)
+        try:
+            UUID(value)
+        except (ValueError, TypeError, AttributeError):
+            return value
+        return Vehicle.objects.filter(pk=value).first() or value
+
+
 class TripSerializer(serializers.Serializer):
-    vehicle = serializers.SlugRelatedField(slug_field="slug", queryset=Vehicle.objects.filter(is_active=True))
+    vehicle = serializers.SlugField(max_length=140)
+    vehicle_id = serializers.SlugField(max_length=140, required=False)
+    vehicle_snapshot = VehicleSnapshotInputSerializer(required=False)
+    daily_rate = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0, required=False)
+    total_amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0, required=False)
     pickup_date = serializers.DateField()
     pickup_time = serializers.TimeField()
     return_date = serializers.DateField()
@@ -24,6 +66,39 @@ class TripSerializer(serializers.Serializer):
     pickup_type = serializers.ChoiceField(choices=LocationType.choices)
     return_type = serializers.ChoiceField(choices=LocationType.choices)
     extras = ExtrasField(required=False, default=dict)
+
+    def validate(self, attrs):
+        slug = attrs["vehicle"]
+        submitted_snapshot = attrs.get("vehicle_snapshot")
+        submitted_id = attrs.get("vehicle_id")
+        daily_rate = attrs.get("daily_rate")
+        if submitted_snapshot is not None:
+            authoritative_rate = STATIC_VEHICLE_RATES.get(slug)
+            if authoritative_rate is None:
+                raise serializers.ValidationError({"vehicle": "This vehicle is not in the approved booking catalogue."})
+            if submitted_id != slug or submitted_snapshot["id"] != slug or submitted_snapshot["slug"] != slug:
+                raise serializers.ValidationError({"vehicle_id": "Vehicle ID and slug must match the selected catalogue vehicle."})
+            if submitted_snapshot["price_per_day"] != authoritative_rate or daily_rate != authoritative_rate:
+                raise serializers.ValidationError({"daily_rate": "The vehicle rate has changed. Refresh the fleet and try again."})
+            snapshot = dict(submitted_snapshot)
+            snapshot["price_per_day"] = str(authoritative_rate)
+            vehicle_model = None
+        else:
+            # Compatibility for existing clients and historical database vehicles.
+            vehicle_model = Vehicle.objects.filter(slug=slug, is_active=True).first()
+            if vehicle_model is None:
+                raise serializers.ValidationError({"vehicle_snapshot": "Vehicle details are required for this booking."})
+            if daily_rate is not None and daily_rate != vehicle_model.price_per_day:
+                raise serializers.ValidationError({"daily_rate": "The submitted rate does not match the vehicle's current rate."})
+            snapshot = model_vehicle_snapshot(vehicle_model)
+            snapshot["price_per_day"] = str(vehicle_model.price_per_day)
+            submitted_id = slug
+
+        attrs["vehicle_slug"] = slug
+        attrs["vehicle_id"] = submitted_id or slug
+        attrs["vehicle_model"] = vehicle_model
+        attrs["vehicle_snapshot"] = snapshot
+        return attrs
 
 
 class QuoteSerializer(TripSerializer):
@@ -132,11 +207,12 @@ class FlightSerializer(serializers.ModelSerializer):
         fields = ["airline_name", "flight_number", "arrival_date", "arrival_time", "arrival_airport", "notes"]
 
 
-def _vehicle_brief(v, request):
-    img = v.primary_image
-    url = img.image.url if img else None
-    return {"id": str(v.pk), "slug": v.slug, "name": v.name, "brand": v.brand, "model": v.model, "image": url,
-            "transmission": v.get_transmission_display(), "passenger_capacity": v.passenger_capacity}
+def _vehicle_brief(booking):
+    from .vehicle_data import booking_vehicle_snapshot
+
+    snapshot = booking_vehicle_snapshot(booking)
+    return {**snapshot, "image": snapshot.get("main_image") or snapshot.get("image") or None,
+            "transmission": snapshot.get("transmission_display") or snapshot.get("transmission", "")}
 
 
 class _BookingCommon(serializers.ModelSerializer):
@@ -150,7 +226,7 @@ class _BookingCommon(serializers.ModelSerializer):
     extras = BookingExtraSerializer(many=True, read_only=True)
 
     def get_vehicle(self, obj):
-        return _vehicle_brief(obj.vehicle, self.context.get("request"))
+        return _vehicle_brief(obj)
 
 
 GUEST_FIELDS = [
@@ -318,7 +394,7 @@ class StatusActionSerializer(serializers.Serializer):
 
 
 class ModifyBookingSerializer(serializers.Serializer):
-    vehicle = serializers.PrimaryKeyRelatedField(queryset=Vehicle.objects.all(), required=False)
+    vehicle = BookingVehicleReferenceField(max_length=140, required=False)
     pickup_date = serializers.DateField(required=False)
     pickup_time = serializers.TimeField(required=False)
     return_date = serializers.DateField(required=False)

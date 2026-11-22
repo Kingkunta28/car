@@ -14,7 +14,7 @@ def booking_summary_text(b) -> str:
     lines = [
         f"*Rafiki Car Hire booking {b.booking_reference}*",
         f"Name: {b.customer.full_name}",
-        f"Vehicle: {b.vehicle.name}",
+        f"Vehicle: {b.vehicle_name}",
         f"Pickup: {b.pickup_date:%d %b %Y} {b.pickup_time:%H:%M} — {b.location_label('pickup')}",
         f"Return: {b.return_date:%d %b %Y} {b.return_time:%H:%M} — {b.location_label('return')}",
         f"Additional services: {extras}",

@@ -27,6 +27,7 @@ from .serializers import (
 )
 from .tokens import resolve_booking
 from .whatsapp import guest_to_owner_url
+from .vehicle_data import quote_vehicle
 
 
 def guest_booking_or_404(request) -> Booking:
@@ -65,9 +66,9 @@ class QuoteView(APIView):
         pickup_at = services.combine(d["pickup_date"], d["pickup_time"])
         return_at = services.combine(d["return_date"], d["return_time"])
         services.validate_rental_window(pickup_at, return_at)
-        quote = build_quote(vehicle=d["vehicle"], pickup_at=pickup_at, return_at=return_at,
+        quote = build_quote(vehicle=quote_vehicle(d["vehicle_snapshot"]), pickup_at=pickup_at, return_at=return_at,
                             pickup_type=d["pickup_type"], return_type=d["return_type"], extras=d.get("extras"))
-        return Response({**quote.as_dict(), "available": availability.is_available(d["vehicle"], pickup_at, return_at)})
+        return Response({**quote.as_dict(), "available": availability.is_available(d["vehicle_slug"], pickup_at, return_at)})
 
 
 class BookingCreateView(APIView):

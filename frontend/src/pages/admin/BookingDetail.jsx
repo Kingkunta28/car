@@ -92,6 +92,7 @@ function ModifyDialog({ booking, onClose, onDone }) {
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <Field label="Vehicle" className="sm:col-span-2" error={err.vehicle}>{(p) => (
           <select {...p} className="input" value={f.vehicle} onChange={(e) => set("vehicle", e.target.value)}>
+            {!vehicles.data?.results?.some((v) => v.id === f.vehicle) && <option value={f.vehicle}>{booking.vehicle.name} (frontend catalogue)</option>}
             {(vehicles.data?.results || []).map((v) => <option key={v.id} value={v.id}>{v.name} — {usd(v.price_per_day)}/day</option>)}
           </select>)}</Field>
         <Field label="Pickup date" error={err.pickup_date}>{(p) => <input {...p} type="date" className="input" value={f.pickup_date} onChange={(e) => set("pickup_date", e.target.value)} />}</Field>

@@ -6,6 +6,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.bookings.models import BookingFlight
+from apps.bookings.vehicle_data import booking_vehicle_snapshot
 from apps.core.models import SiteSettings
 from apps.core.pdf import logo_path, site_dict
 from apps.core.utils import audit, next_sequence_value, sha256_hex
@@ -32,8 +33,8 @@ def build_snapshot(booking, *, invoice_number, issue_date, revision_number, supe
         items.append({"description": desc, "quantity": line["quantity"], "unit_price": line["unit_price"],
                       "total_price": line["total"], "sort_order": i})
     flight = BookingFlight.objects.filter(booking=booking).first()
-    v = booking.vehicle
-    vehicle_image = v.primary_image
+    vehicle = booking_vehicle_snapshot(booking)
+    vehicle_image = booking.vehicle.primary_image if booking.vehicle_id else None
     return {
         "invoice_number": invoice_number,
         "booking_reference": booking.booking_reference,
@@ -46,7 +47,7 @@ def build_snapshot(booking, *, invoice_number, issue_date, revision_number, supe
         "customer": {"full_name": booking.customer.full_name, "email": booking.customer.email,
                      "phone": booking.customer.phone, "nationality": booking.customer.nationality},
         "trip": {
-            "vehicle": f"{v.name} ({v.brand} {v.model}{', ' + str(v.year) if v.year else ''})",
+            "vehicle": f"{vehicle.get('name', 'Vehicle')} ({vehicle.get('brand', '')} {vehicle.get('model', '')}{', ' + str(vehicle['year']) if vehicle.get('year') else ''})",
             "vehicle_image": vehicle_image.image.name if vehicle_image else None,
             "daily_rate": str(booking.daily_rate),
             "rental_days": booking.rental_days,

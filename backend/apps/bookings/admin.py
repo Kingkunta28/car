@@ -31,10 +31,10 @@ class BookingAdmin(admin.ModelAdmin):
     """Read-only here: changes must go through the dashboard so prices,
     invoices and audit history stay consistent."""
 
-    list_display = ("booking_reference", "customer", "vehicle", "pickup_date", "return_date", "grand_total",
+    list_display = ("booking_reference", "customer", "vehicle_name", "pickup_date", "return_date", "grand_total",
                     "booking_status", "payment_status")
     list_filter = ("booking_status", "payment_status", "payment_method")
-    search_fields = ("booking_reference", "customer__full_name", "customer__email")
+    search_fields = ("booking_reference", "customer__full_name", "customer__email", "vehicle_slug")
     inlines = [ExtraInline, HistoryInline]
 
     def get_readonly_fields(self, request, obj=None):

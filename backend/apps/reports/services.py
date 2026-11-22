@@ -40,8 +40,13 @@ def dashboard() -> dict:
         due=Sum(F("grand_total") - F("amount_paid")), n=Count("id"))
     vehicles = Vehicle.objects.filter(is_active=True)
     now = timezone.now()
-    on_rent = b.filter(booking_status=BookingStatus.CONFIRMED, pickup_at__lte=now, return_at__gte=now) \
-        .values_list("vehicle_id", flat=True)
+    on_rent = set(b.filter(booking_status=BookingStatus.CONFIRMED, pickup_at__lte=now, return_at__gte=now)
+                  .values_list("vehicle_slug", flat=True))
+    upcoming = list(b.filter(booking_status=BookingStatus.CONFIRMED, pickup_date__gte=today,
+                             pickup_date__lte=today + timedelta(days=7)).select_related("customer")
+                    .order_by("pickup_at")[:10])
+    awaiting = list(b.filter(booking_status=BookingStatus.PENDING_CONFIRMATION).select_related("customer")
+                    .order_by("hold_expires_at")[:10])
     return {
         "bookings": counts,
         "revenue": {"total": str(_d(paid["gross"]) - _d(paid["refunded"])),
@@ -49,20 +54,19 @@ def dashboard() -> dict:
         "outstanding": {"amount": str(_d(outstanding["due"])), "bookings": outstanding["n"]},
         "vehicles": {
             "total": vehicles.count(),
-            "available": vehicles.filter(availability_status=AvailabilityStatus.AVAILABLE).exclude(id__in=on_rent).count(),
+            "available": vehicles.filter(availability_status=AvailabilityStatus.AVAILABLE).exclude(slug__in=on_rent).count(),
             "on_rent": len(set(on_rent)),
             "maintenance": vehicles.filter(availability_status=AvailabilityStatus.MAINTENANCE).count(),
         },
         "pending_payments": Payment.objects.filter(payment_status=Status.PENDING_VERIFICATION).count(),
-        "upcoming_pickups": list(
-            b.filter(booking_status=BookingStatus.CONFIRMED, pickup_date__gte=today,
-                     pickup_date__lte=today + timedelta(days=7))
-            .order_by("pickup_at").values("id", "booking_reference", "pickup_date", "pickup_time", "pickup_type",
-                                          "customer__full_name", "vehicle__name")[:10]),
-        "awaiting_confirmation": list(
-            b.filter(booking_status=BookingStatus.PENDING_CONFIRMATION).order_by("hold_expires_at")
-            .values("id", "booking_reference", "customer__full_name", "vehicle__name", "pickup_date", "grand_total",
-                    "hold_expires_at")[:10]),
+        "upcoming_pickups": [{"id": x.pk, "booking_reference": x.booking_reference, "pickup_date": x.pickup_date,
+                              "pickup_time": x.pickup_time, "pickup_type": x.pickup_type,
+                              "customer__full_name": x.customer.full_name, "vehicle__name": x.vehicle_name}
+                             for x in upcoming],
+        "awaiting_confirmation": [{"id": x.pk, "booking_reference": x.booking_reference,
+                                   "customer__full_name": x.customer.full_name, "vehicle__name": x.vehicle_name,
+                                   "pickup_date": x.pickup_date, "grand_total": x.grand_total,
+                                   "hold_expires_at": x.hold_expires_at} for x in awaiting],
     }
 
 
@@ -121,6 +125,18 @@ def monthly_revenue(year: int) -> dict:
             pickup_date__year=year,
         ).aggregate(bookings=Count("id"), days=Sum("rental_days"), value=Sum("grand_total"))
         vehicle_rows.append((metrics["value"] or ZERO, vehicle.name, metrics["bookings"], metrics["days"] or 0))
+    static_metrics = {}
+    for booking in Booking.objects.filter(vehicle__isnull=True, booking_status__in=[BookingStatus.CONFIRMED,
+                                                                                   BookingStatus.COMPLETED],
+                                          pickup_date__year=year).only("vehicle_slug", "vehicle_snapshot", "rental_days",
+                                                                         "grand_total"):
+        item = static_metrics.setdefault(booking.vehicle_slug, {"name": booking.vehicle_name, "count": 0,
+                                                                 "days": 0, "value": ZERO})
+        item["count"] += 1
+        item["days"] += booking.rental_days
+        item["value"] += booking.grand_total
+    vehicle_rows.extend((item["value"], item["name"], item["count"], item["days"])
+                        for item in static_metrics.values())
     vehicle_rows.sort(reverse=True)
     top_vehicles = "; ".join(f"{name} ({count} bookings, {days} rental days)"
                               for _, name, count, days in vehicle_rows[:5] if count)
@@ -146,6 +162,26 @@ def vehicle_performance(start: date, end: date) -> dict:
                      "utilisation": f"{min(100, round(days * 100 / period_days))}%",
                      "booked_value": str(_d(agg["value"])), "collected": str(_d(agg["paid"])),
                      "daily_rate": str(v.price_per_day), "active": "Yes" if v.is_active else "No"})
+    static_metrics = {}
+    for booking in Booking.objects.filter(vehicle__isnull=True, booking_status__in=[BookingStatus.CONFIRMED,
+                                                                                   BookingStatus.COMPLETED],
+                                          pickup_date__gte=start, pickup_date__lte=end).only(
+                                              "vehicle_slug", "vehicle_snapshot", "rental_days", "grand_total", "amount_paid"):
+        item = static_metrics.setdefault(booking.vehicle_slug, {
+            "label": booking.vehicle_name, "bookings": 0, "rental_days": 0, "booked_value": ZERO,
+            "collected": ZERO, "daily_rate": booking.vehicle_snapshot.get("price_per_day", booking.daily_rate),
+            "active": "Yes" if booking.vehicle_snapshot.get("availability_status", "AVAILABLE") == "AVAILABLE" else "No",
+        })
+        item["bookings"] += 1
+        item["rental_days"] += booking.rental_days
+        item["booked_value"] += booking.grand_total
+        item["collected"] += booking.amount_paid
+    for item in static_metrics.values():
+        item["utilisation"] = f"{min(100, round(item['rental_days'] * 100 / period_days))}%"
+        item["booked_value"] = str(_d(item["booked_value"]))
+        item["collected"] = str(_d(item["collected"]))
+        item["daily_rate"] = str(item["daily_rate"])
+        rows.append(item)
     rows.sort(key=lambda r: Decimal(r["booked_value"]), reverse=True)
     return {"title": f"Vehicle performance {start:%d %b %Y} – {end:%d %b %Y}",
             "columns": ["label", "bookings", "rental_days", "utilisation", "booked_value", "collected", "daily_rate",
@@ -178,7 +214,7 @@ def outstanding_report() -> dict:
     qs = Booking.objects.filter(booking_status__in=ACTIVE, amount_paid__lt=F("grand_total")) \
         .select_related("customer", "vehicle").order_by("pickup_date")
     rows = [{"label": b.booking_reference, "customer": b.customer.full_name, "phone": b.customer.phone,
-             "vehicle": b.vehicle.name, "pickup": f"{b.pickup_date:%Y-%m-%d}", "status": b.get_booking_status_display(),
+             "vehicle": b.vehicle_name, "pickup": f"{b.pickup_date:%Y-%m-%d}", "status": b.get_booking_status_display(),
              "total": str(b.grand_total), "paid": str(b.amount_paid), "balance": str(b.balance_due)} for b in qs]
     total = sum((Decimal(r["balance"]) for r in rows), ZERO)
     return {"title": f"Outstanding balances at {timezone.localdate():%d %b %Y}",
