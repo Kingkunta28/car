@@ -184,18 +184,20 @@ function LocationPicker({ prefix, leg, onChange, options, errors, isReturn }) {
 }
 
 function Qty({ value, max, onChange, label }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-1 rounded-xl border border-line bg-white p-1" role="group" aria-label={label}>
       <button type="button" className="grid size-10 place-items-center rounded-lg text-navy-900 hover:bg-navy-50 disabled:opacity-40"
-        onClick={() => onChange(Math.max(0, value - 1))} disabled={value <= 0} aria-label={`Fewer ${label}`}><Minus className="size-4" /></button>
+        onClick={() => onChange(Math.max(0, value - 1))} disabled={value <= 0} aria-label={t("booking.fewer", { label })}><Minus className="size-4" /></button>
       <output className="w-8 text-center font-semibold tabular-nums" aria-live="polite">{value}</output>
       <button type="button" className="grid size-10 place-items-center rounded-lg text-navy-900 hover:bg-navy-50 disabled:opacity-40"
-        onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max} aria-label={`More ${label}`}><Plus className="size-4" /></button>
+        onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max} aria-label={t("booking.more", { label })}><Plus className="size-4" /></button>
     </div>
   );
 }
 
 function FileDrop({ id, label, file, onFile, error, maxMb }) {
+  const { t } = useTranslation();
   const ref = useRef(null);
   return (
     <div>
@@ -205,8 +207,8 @@ function FileDrop({ id, label, file, onFile, error, maxMb }) {
           error ? "border-red-400 bg-red-50" : file ? "border-emerald-500 bg-emerald-50" : "border-line hover:border-navy-600")}>
         {file ? <FileCheck2 className="size-6 text-emerald-700" /> : <Upload className="size-6 text-navy-600" />}
         <span className="min-w-0">
-          <span className="block truncate font-medium text-navy-900">{file ? file.name : "Choose a file"}</span>
-          <span id={`${id}-h`} className="text-sm text-muted">PDF, JPG, PNG or WebP · max {maxMb} MB</span>
+          <span className="block truncate font-medium text-navy-900">{file ? file.name : t("booking.chooseFile")}</span>
+          <span id={`${id}-h`} className="text-sm text-muted">{t("booking.fileSize", { size: maxMb })}</span>
         </span>
       </button>
       <input ref={ref} id={id} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" className="sr-only"
@@ -225,7 +227,7 @@ function Summary({ s, quote, vehicle, compact }) {
         <div className="aspect-[16/9] bg-slate-100"><VehicleImage vehicle={vehicle} /></div>
       )}
       <div className="p-5">
-        <h2 className="text-lg font-semibold">{vehicle ? vehicle.name : "Your booking"}</h2>
+        <h2 className="text-lg font-semibold">{vehicle ? vehicle.name : t("booking.yourBooking")}</h2>
         {s.pickup_date && s.return_date && (
           <p className="mt-1 text-sm text-muted">{fmtDate(s.pickup_date)} {s.pickup_time} → {fmtDate(s.return_date)} {s.return_time}</p>
         )}
@@ -234,21 +236,21 @@ function Summary({ s, quote, vehicle, compact }) {
         {quote.error && <p className="mt-4 text-sm text-red-600" role="alert">{quote.error.message}</p>}
         {q && (
           <>
-            {!q.available && <Alert tone="error" className="mt-4">This car is already reserved for some of these dates. Please change dates or choose another car.</Alert>}
+            {!q.available && <Alert tone="error" className="mt-4">{t("booking.reservedConflict")}</Alert>}
             <dl className={cx("mt-4 space-y-2 text-sm", quote.isFetching && "opacity-60")}>
-              <div className="flex justify-between"><dt className="text-muted">Rental · {q.rental_days} day{q.rental_days > 1 ? "s" : ""} × {usd(q.daily_rate)}</dt><dd className="font-medium tabular-nums">{usd(q.rental_total)}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Pickup fee</dt><dd className="tabular-nums">{Number(q.pickup_fee) ? usd(q.pickup_fee) : "Free"}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Return fee</dt><dd className="tabular-nums">{Number(q.return_fee) ? usd(q.return_fee) : "Free"}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">{t("booking.rentalLine", { days: q.rental_days, rate: usd(q.daily_rate) })}</dt><dd className="font-medium tabular-nums">{usd(q.rental_total)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">{t("booking.pickupFee")}</dt><dd className="tabular-nums">{Number(q.pickup_fee) ? usd(q.pickup_fee) : t("booking.free")}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">{t("booking.returnFee")}</dt><dd className="tabular-nums">{Number(q.return_fee) ? usd(q.return_fee) : t("booking.free")}</dd></div>
               {q.lines.filter((l) => l.kind === "extra").map((l) => (
                 <div key={l.code} className="flex justify-between"><dt className="text-muted">{extraLabel({ code: l.code, name: l.description }, t)}{l.quantity > 1 ? ` × ${l.quantity}` : ""}</dt><dd className="tabular-nums">{usd(l.total)}</dd></div>
               ))}
-              {Number(q.tax_amount) > 0 && <div className="flex justify-between"><dt className="text-muted">{q.tax_label} ({q.tax_rate}%)</dt><dd className="tabular-nums">{usd(q.tax_amount)}</dd></div>}
+              {Number(q.tax_amount) > 0 && <div className="flex justify-between"><dt className="text-muted">{t("booking.tax")} ({q.tax_rate}%)</dt><dd className="tabular-nums">{usd(q.tax_amount)}</dd></div>}
               <div className="flex items-baseline justify-between border-t border-line pt-3">
-                <dt className="font-semibold text-navy-900">Total (USD)</dt>
+                <dt className="font-semibold text-navy-900">{t("booking.total")}</dt>
                 <dd className="font-display text-2xl font-bold text-navy-900 tabular-nums">{usd(q.grand_total)}</dd>
               </div>
             </dl>
-            <p className="mt-3 text-xs text-muted">Final price is confirmed by our system when you submit.</p>
+            <p className="mt-3 text-xs text-muted">{t("booking.finalPrice")}</p>
           </>
         )}
       </div>
@@ -463,12 +465,12 @@ export default function Booking() {
                   <div className="flex gap-4">
                     <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-orange-100 text-orange-600"><Baby className="size-6" /></span>
                     <div>
-                      <h3 className="font-semibold">{babySeat.name}</h3>
-                      <p className="text-sm text-muted">{babySeatText(options)} — for the whole booking, not per day.</p>
+                      <h3 className="font-semibold">{t("booking.babySeats")}</h3>
+                      <p className="text-sm text-muted">{babySeatText(options)} {t("booking.seatWhole")}</p>
                       {(s.extras.baby_seat || 0) > 0 && <p className="mt-1 text-sm font-semibold text-navy-900">{s.extras.baby_seat} × {usd(unitPrice(babySeat, s.extras.baby_seat))} = {usd(s.extras.baby_seat * unitPrice(babySeat, s.extras.baby_seat))}</p>}
                     </div>
                   </div>
-                  <Qty label="baby seats" value={s.extras.baby_seat || 0} max={babySeat.max_quantity} onChange={(q) => setExtra("baby_seat", q)} />
+                  <Qty label={t("booking.babySeats")} value={s.extras.baby_seat || 0} max={babySeat.max_quantity} onChange={(q) => setExtra("baby_seat", q)} />
                 </div>
               )}
               {permit && (
@@ -477,7 +479,7 @@ export default function Booking() {
                     <input type="checkbox" className="mt-1 size-5 accent-navy-900" checked={!!s.extras.driving_permit}
                       onChange={(e) => setExtra("driving_permit", e.target.checked ? 1 : 0)} />
                     <span>
-                      <span className="block font-semibold text-navy-900">{permit.name} — {usd(permit.price)}</span>
+                      <span className="block font-semibold text-navy-900">{t("booking.permit")} — {usd(permit.price)}</span>
                       <span className="mt-1 block text-sm leading-relaxed text-muted">
                         {t("booking.permitDescription")}
                       </span>
@@ -501,12 +503,12 @@ export default function Booking() {
               {others.map((x) => (
                 <div key={x.code} className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h3 className="font-semibold">{x.name} — {usd(x.price)} <span className="text-sm font-normal text-muted">{x.pricing_type_display.toLowerCase()}</span></h3>
+                    <h3 className="font-semibold">{extraLabel(x, t)} — {usd(x.price)} <span className="text-sm font-normal text-muted">{t(`booking.pricing.${x.pricing_type}`, { defaultValue: x.pricing_type_display })}</span></h3>
                     {x.description && <p className="text-sm text-muted">{x.description}</p>}
                   </div>
                   {x.max_quantity > 1
                     ? <Qty label={x.name} value={s.extras[x.code] || 0} max={x.max_quantity} onChange={(q) => setExtra(x.code, q)} />
-                    : <input type="checkbox" aria-label={`Add ${x.name}`} className="size-5 accent-navy-900" checked={!!s.extras[x.code]} onChange={(e) => setExtra(x.code, e.target.checked ? 1 : 0)} />}
+                    : <input type="checkbox" aria-label={t("booking.addExtra", { name: extraLabel(x, t) })} className="size-5 accent-navy-900" checked={!!s.extras[x.code]} onChange={(e) => setExtra(x.code, e.target.checked ? 1 : 0)} />}
                 </div>
               ))}
               {errors.extras && <p className="text-sm text-red-600" role="alert">{errors.extras}</p>}

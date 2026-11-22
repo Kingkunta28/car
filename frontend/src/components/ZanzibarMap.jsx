@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Clock, MapPin, Plane } from "lucide-react";
 import { cx, usd } from "../lib/format";
 
@@ -32,6 +33,7 @@ function route(to) {
  * `variant="hero"` is a compact dark version; `"full"` adds the place list.
  */
 export default function ZanzibarMap({ fee, variant = "full", className }) {
+  const { t } = useTranslation();
   const [active, setActive] = useState("nungwi");
   const place = PLACES.find((p) => p.id === active);
   const dark = variant === "hero";
@@ -40,7 +42,7 @@ export default function ZanzibarMap({ fee, variant = "full", className }) {
     <div className={className}>
      <div className={cx("relative", variant === "full" ? "mx-auto aspect-[320/620] max-h-[560px]" : "h-full")}>
       <svg viewBox="0 0 320 620" className={cx("h-full w-full", dark && "pb-40 pt-4")} role="img"
-        aria-label={`Stylised map of Zanzibar showing the free delivery zone around Stone Town and the airport. Selected: ${place.name}.`}>
+        aria-label={t("ui.mapLabel", { place: place.name })}>
         <defs>
           <radialGradient id="zm-sea" cx="50%" cy="45%" r="60%">
             <stop offset="0%" stopColor={dark ? "#12294B" : "#E6F4F6"} />
@@ -68,7 +70,7 @@ export default function ZanzibarMap({ fee, variant = "full", className }) {
           return (
             <g key={p.id} transform={`translate(${p.x} ${p.y})`} className="cursor-pointer" onClick={() => setActive(p.id)}
               onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setActive(p.id)} tabIndex={0} role="button"
-              aria-label={`${p.name}: ${p.free ? "free delivery" : "outside free zone"}`} aria-pressed={on}>
+              aria-label={`${p.name}: ${p.free ? t("ui.freePlace") : t("ui.outsidePlace")}`} aria-pressed={on}>
               {on && <circle r="9" fill="#F28C28" className="origin-center animate-pulse-ring" style={{ transformBox: "fill-box" }} />}
               <circle r={on ? 6.5 : 4.5} fill={p.free ? "#F28C28" : dark ? "#fff" : "#0B1F3A"} stroke={dark ? "#050E1C" : "#fff"} strokeWidth="2" />
               {(on || variant === "full") && (
@@ -79,7 +81,7 @@ export default function ZanzibarMap({ fee, variant = "full", className }) {
             </g>
           );
         })}
-        <text x="300" y="604" textAnchor="end" fontSize="9" fill={dark ? "#8DA2C0" : "#8A94A6"} fontFamily="Inter, sans-serif">Stylised map · not to scale</text>
+        <text x="300" y="604" textAnchor="end" fontSize="9" fill={dark ? "#8DA2C0" : "#8A94A6"} fontFamily="Inter, sans-serif">{t("ui.mapScale")}</text>
       </svg>
 
       {/* Info card */}
@@ -89,19 +91,19 @@ export default function ZanzibarMap({ fee, variant = "full", className }) {
           <p className={cx("font-display text-lg font-semibold", dark ? "text-white" : "text-navy-900")}>{place.name}</p>
           <span className={cx("rounded-full px-2.5 py-0.5 text-xs font-bold",
             place.free ? "bg-orange-500 text-navy-950" : dark ? "bg-white/15 text-white" : "bg-navy-50 text-navy-800")}>
-            {place.free ? "FREE" : fee != null ? `${usd(fee)} each way` : "Outside zone"}
+            {place.free ? t("booking.free").toUpperCase() : fee != null ? `${usd(fee)} ${t("ui.eachWay")}` : t("ui.outside")}
           </span>
         </div>
-        <p className={cx("mt-1.5 text-sm leading-relaxed", dark ? "text-white/70" : "text-muted")}>{place.note}</p>
+        <p className={cx("mt-1.5 text-sm leading-relaxed", dark ? "text-white/70" : "text-muted")}>{t(`map.notes.${PLACES.findIndex((p) => p.id === place.id)}`)}</p>
         <p className={cx("mt-2 flex items-center gap-1.5 text-xs font-medium", dark ? "text-white/60" : "text-muted")}>
           {place.id === "airport" ? <Plane className="size-3.5" /> : <Clock className="size-3.5" />}
-          {place.free ? place.time : `${place.time} drive from the airport (approx.)`}
+          {place.id === "airport" ? t("ui.meetArrivals") : place.free ? place.time : `${place.time} ${t("ui.driveFrom")}`}
         </p>
       </div>
      </div>
 
       {variant === "full" && (
-        <ul className="mt-4 flex flex-wrap gap-2" aria-label="Choose a destination">
+        <ul className="mt-4 flex flex-wrap gap-2" aria-label={t("ui.chooseDestination")}>
           {PLACES.map((p) => (
             <li key={p.id}>
               <button type="button" onClick={() => setActive(p.id)} aria-pressed={p.id === active}

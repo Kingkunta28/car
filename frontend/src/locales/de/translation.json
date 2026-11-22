@@ -78,7 +78,9 @@
     "noMatch": "Keine Fahrzeuge entsprechen diesen Filtern",
     "noMatchHelp": "Ändern Sie Ihre Daten oder löschen Sie einige Filter.",
     "closeFilters": "Filter schließen",
-    "vehicles": "Fahrzeuge"
+    "vehicles": "Fahrzeuge",
+    "vehicleCount_one": "Fahrzeug",
+    "vehicleCount_other": "Fahrzeuge"
   },
   "vehicle": {
     "photoSoon": "Foto folgt",
@@ -129,7 +131,12 @@
     "bags": "Gepäckstücke",
     "dayRule": "Jeder begonnene 24-Stunden-Zeitraum zählt als ein Miettag.",
     "seoTitle": "{{name}} mieten auf Sansibar",
-    "seoDescription": "Mieten Sie {{name}} auf Sansibar ab {{price}} pro Tag. {{transmission}}, {{seats}} Sitze und ?bergabe am Flughafen."
+    "seoDescription": "Mieten Sie {{name}} auf Sansibar ab {{price}} pro Tag. {{transmission}}, {{seats}} Sitze und ?bergabe am Flughafen.",
+    "availability": {
+      "AVAILABLE": "Verf?gbar",
+      "UNAVAILABLE": "Nicht verf?gbar",
+      "MAINTENANCE": "Wartung"
+    }
   },
   "home": {
     "eyebrow": "Ihre Sansibar-Reise beginnt hier",
@@ -292,7 +299,7 @@
     "licence": "Gültiger Führerschein",
     "payment": "Zahlungsart",
     "terms": "Ich stimme den Mietbedingungen und der Datenschutzerklärung zu.",
-    "free": "Kostenlos",
+    "free": "Kostenfrei",
     "total": "Gesamt (USD)",
     "pickupFee": "Abholgebühr",
     "returnFee": "Rückgabegebühr",
@@ -355,7 +362,26 @@
     "meetAtAirport": "Wir erwarten Sie am {{airport}}.",
     "addFlightForDelays": "Erg?nzen Sie im n?chsten Schritt Ihre Flugdaten, damit wir Versp?tungen verfolgen k?nnen.",
     "deliveryFee": "Liefergeb?hr",
-    "permit": "Fahrerlaubnis"
+    "permit": "Fahrerlaubnis",
+    "yourBooking": "Ihre Buchung",
+    "reservedConflict": "Dieses Fahrzeug ist an einigen dieser Tage bereits gebucht. ?ndern Sie die Daten oder w?hlen Sie ein anderes Fahrzeug.",
+    "rentalLine": "Miete ? {{days}} ? {{rate}}",
+    "tax": "Steuer",
+    "finalPrice": "Unser System best?tigt den Endpreis beim Absenden.",
+    "seatWhole": "f?r die gesamte Buchung, nicht pro Tag.",
+    "chooseFile": "Datei ausw?hlen",
+    "fileSize": "PDF, JPG, PNG oder WebP ? max. {{size}} MB",
+    "fewer": "Weniger {{label}}",
+    "more": "Mehr {{label}}",
+    "addExtra": "{{name}} hinzuf?gen",
+    "dayCount_one": "{{count}} Tag",
+    "dayCount_other": "{{count}} Tage",
+    "pricing": {
+      "PER_BOOKING": "pro Buchung",
+      "PER_UNIT": "pro Einheit und Buchung",
+      "PER_DAY": "pro Tag",
+      "PER_UNIT_PER_DAY": "pro Einheit und Tag"
+    }
   },
   "seo": {
     "home": "Mietwagen zur Selbstfahrt auf Sansibar",
@@ -459,5 +485,101 @@
     "paymentInstructions": "Zahlungsanweisungen",
     "thanks": "Vielen Dank. Wir pr?fen Ihre Zahlung und senden Ihnen einen Beleg.",
     "signInPrivate": "?ffnen Sie den privaten Link aus Ihrer Buchungs-E-Mail, um die Buchung zu verwalten."
+  },
+  "ui": {
+    "loading": "Wird geladen",
+    "errorTitle": "Ein Fehler ist aufgetreten",
+    "errorText": "Bitte pr?fen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "tryAgain": "Erneut versuchen",
+    "close": "Dialog schlie?en",
+    "vehicle": "Fahrzeug",
+    "photoSoon": "Foto folgt",
+    "free": "Kostenfreie ?bergabe",
+    "outside": "Au?erhalb der kostenfreien Zone",
+    "eachWay": "pro Strecke",
+    "approx": "Fahrt vom Flughafen (ca.)",
+    "chooseDestination": "Ziel ausw?hlen",
+    "mapScale": "Schematische Darstellung ? nicht ma?stabsgetreu",
+    "mapLabel": "Schematische Karte von Sansibar mit Lieferzonen. Auswahl: {{place}}.",
+    "freePlace": "kostenfreie ?bergabe",
+    "outsidePlace": "au?erhalb der kostenfreien Zone",
+    "refreshError": "Auf dieser Seite ist ein Fehler aufgetreten.",
+    "refreshText": "Bitte laden Sie die Seite neu. Falls der Fehler bleibt, helfen wir Ihnen ?ber WhatsApp bei der Buchung.",
+    "refresh": "Seite aktualisieren",
+    "driveFrom": "Fahrt vom Flughafen (ca.)",
+    "meetArrivals": "Treffpunkt Ankunftshalle"
+  },
+  "map": {
+    "notes": [
+      "Hotels, Altstadt und Hafen: kostenfreie ?bergabe.",
+      "Internationaler Flughafen Abeid Amani Karume. Wir erwarten Sie in der Ankunftshalle mit Namensschild.",
+      "Nordspitze mit Str?nden, Sonnenunterg?ngen und Dhau-Werften.",
+      "Ruhiges Wasser und lange Badestr?nde.",
+      "Ruhige Nordostk?ste gegen?ber dem Mnemba-Atoll.",
+      "Kleine, von Palmen ges?umte Buchten an der Ostk?ste.",
+      "Rote Stummelaffen und Mangrovenpfade.",
+      "Halbinsel mit Lagunenblick auf beiden Seiten.",
+      "Langer wei?er Strand zwischen Paje und Michamvi.",
+      "Kitesurf-Lagune an der S?dostk?ste.",
+      "Entspanntes Fischerdorf mit Seegrasfarmen.",
+      "S?dspitze mit Delfintouren und ruhigen Buchten."
+    ]
+  },
+  "paymentStatus": {
+    "title": "Zahlungsstatus",
+    "processing": "Zahlung wird verarbeitet",
+    "processingText": "Wir warten auf die Best?tigung des Zahlungsanbieters. Das kann eine Minute dauern; nach der Best?tigung senden wir den Beleg per E-Mail.",
+    "notCompleted": "Zahlung nicht abgeschlossen",
+    "notCompletedText": "Es wurde nichts abgebucht. Sie k?nnen es auf Ihrer Buchungsseite erneut versuchen.",
+    "confirmed": "Zahlung best?tigt",
+    "confirmedText": "Vielen Dank: {{amount}} f?r Buchung {{reference}} ist eingegangen. Der Beleg wird per E-Mail gesendet.",
+    "failed": "Zahlung fehlgeschlagen",
+    "failedText": "Die Zahlung war nicht erfolgreich und es wurde nichts abgebucht. Versuchen Sie es erneut oder w?hlen Sie manuelle Zahlung.",
+    "checkError": "Zahlung konnte nicht gepr?ft werden",
+    "checkErrorText": "Wenn die Zahlung erfolgreich war, wird sie automatisch best?tigt. Pr?fen Sie Ihre Buchung in K?rze.",
+    "checking": "Zahlung wird gepr?ft?",
+    "status": "Zahlungsstatus:",
+    "balance": "Offener Betrag",
+    "tryAgain": "Erneut versuchen",
+    "manual": "Manuell bezahlen",
+    "booking": "Meine Buchung ?ffnen"
+  },
+  "contact": {
+    "title": "Planen wir Ihre Fahrt.",
+    "lead": "Am schnellsten erreichen Sie uns ?ber WhatsApp. Unser lokales Team ist Tag und Nacht erreichbar.",
+    "whatsapp": "WhatsApp ? rund um die Uhr",
+    "find": "So finden Sie uns",
+    "openMap": "In Google Maps ?ffnen",
+    "sent": "Nachricht gesendet",
+    "thanks": "Vielen Dank, {{name}}. Wir antworten bald an {{email}}.",
+    "heading": "Schreiben Sie uns",
+    "name": "Name",
+    "subject": "Betreff",
+    "message": "Nachricht",
+    "phoneOptional": "Telefon (optional)",
+    "send": "Nachricht senden",
+    "map": "Karte"
+  },
+  "info": {
+    "notFound": {
+      "title": "Seite nicht gefunden",
+      "heading": "Diese Stra?e f?hrt nirgendwohin.",
+      "text": "Die Seite wurde m?glicherweise verschoben oder existiert nicht mehr.",
+      "home": "Zur Startseite",
+      "fleet": "Flotte ansehen"
+    },
+    "legal": {
+      "eyebrow": "Rechtliches",
+      "updated": "Zuletzt aktualisiert: {{date}}"
+    }
+  },
+  "errors": {
+    "api": {
+      "business_rule": "Die Anfrage konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+      "conflict": "Die Buchung ?berschneidet sich mit der Verf?gbarkeit. ?ndern Sie die Daten oder w?hlen Sie ein anderes Fahrzeug.",
+      "server_error": "Der Dienst ist vor?bergehend nicht verf?gbar. Bitte versuchen Sie es sp?ter erneut.",
+      "validation_error": "Einige Angaben m?ssen korrigiert werden. Pr?fen Sie das Formular und versuchen Sie es erneut.",
+      "not_found": "Der angeforderte Eintrag wurde nicht gefunden."
+    }
   }
 }

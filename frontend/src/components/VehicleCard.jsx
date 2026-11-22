@@ -29,7 +29,7 @@ export function VehicleImage({ vehicle, image, className, eager = false, sizes =
     );
   }
   return (
-    <div role="img" aria-label={`${vehicle?.name || "Vehicle"} — photo coming soon`}
+    <div role="img" aria-label={`${vehicle?.name || t("ui.vehicle")} — ${t("vehicle.photoSoon")}`}
       className={cx("relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-navy-900 text-white/70", className)}>
       <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_70%_20%,rgb(242_140_40/0.28),transparent_60%)]" aria-hidden />
       <div className="hairline-grid absolute inset-0" aria-hidden />

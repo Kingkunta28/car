@@ -78,7 +78,9 @@
     "noMatch": "No vehicles match these filters",
     "noMatchHelp": "Try changing your dates or clearing some filters.",
     "closeFilters": "Close filters",
-    "vehicles": "vehicles"
+    "vehicles": "vehicles",
+    "vehicleCount_one": "vehicle",
+    "vehicleCount_other": "vehicles"
   },
   "vehicle": {
     "photoSoon": "Photo coming soon",
@@ -129,7 +131,12 @@
     "bags": "bags",
     "dayRule": "Each started 24-hour period counts as one rental day.",
     "seoTitle": "{{name}} Car Hire in Zanzibar",
-    "seoDescription": "Hire {{name}} in Zanzibar from {{price}} per day. {{transmission}}, {{seats}} seats and airport delivery."
+    "seoDescription": "Hire {{name}} in Zanzibar from {{price}} per day. {{transmission}}, {{seats}} seats and airport delivery.",
+    "availability": {
+      "AVAILABLE": "Available",
+      "UNAVAILABLE": "Unavailable",
+      "MAINTENANCE": "Maintenance"
+    }
   },
   "home": {
     "eyebrow": "Your Zanzibar journey starts here",
@@ -355,7 +362,26 @@
     "meetAtAirport": "We?ll meet you at {{airport}}.",
     "addFlightForDelays": "Add your flight details next so we can track delays.",
     "deliveryFee": "Delivery fee",
-    "permit": "Driving permit"
+    "permit": "Driving permit",
+    "yourBooking": "Your booking",
+    "reservedConflict": "This car is already reserved for some of these dates. Please change the dates or choose another car.",
+    "rentalLine": "Rental ? {{days}} ? {{rate}}",
+    "tax": "Tax",
+    "finalPrice": "Our system confirms the final price when you submit.",
+    "seatWhole": "for your whole booking, not per day.",
+    "chooseFile": "Choose a file",
+    "fileSize": "PDF, JPG, PNG or WebP ? max {{size}} MB",
+    "fewer": "Fewer {{label}}",
+    "more": "More {{label}}",
+    "addExtra": "Add {{name}",
+    "dayCount_one": "{{count}} day",
+    "dayCount_other": "{{count}} days",
+    "pricing": {
+      "PER_BOOKING": "per booking",
+      "PER_UNIT": "per unit, per booking",
+      "PER_DAY": "per day",
+      "PER_UNIT_PER_DAY": "per unit, per day"
+    }
   },
   "seo": {
     "home": "Self-drive car rental in Zanzibar",
@@ -459,5 +485,101 @@
     "paymentInstructions": "Payment instructions",
     "thanks": "Thank you ? we?ll verify your payment and send a receipt.",
     "signInPrivate": "Open the private link from your booking email to manage this reservation."
+  },
+  "ui": {
+    "loading": "Loading",
+    "errorTitle": "Something went wrong",
+    "errorText": "Please check your connection and try again.",
+    "tryAgain": "Try again",
+    "close": "Close dialog",
+    "vehicle": "Vehicle",
+    "photoSoon": "Photo coming soon",
+    "free": "Free delivery",
+    "outside": "Outside the free zone",
+    "eachWay": "each way",
+    "approx": "drive from the airport (approx.)",
+    "chooseDestination": "Choose a destination",
+    "mapScale": "Illustration only ? not to scale",
+    "mapLabel": "Stylised map of Zanzibar showing delivery zones. Selected: {{place}}.",
+    "freePlace": "free delivery",
+    "outsidePlace": "outside the free zone",
+    "refreshError": "Something went wrong on this page.",
+    "refreshText": "Please refresh. If it keeps happening, contact us on WhatsApp and we?ll help you book.",
+    "refresh": "Refresh page",
+    "driveFrom": "drive from the airport (approx.)",
+    "meetArrivals": "Meet at arrivals"
+  },
+  "map": {
+    "notes": [
+      "Hotels, the old town and port ? free handover.",
+      "Abeid Amani Karume International. Meet us in arrivals with a name sign.",
+      "Northern tip with beaches, sunsets and dhow builders.",
+      "Calm water and long, swimmable beaches.",
+      "Quiet north-east coast facing Mnemba Atoll.",
+      "Small palm-fringed coves on the east coast.",
+      "Red colobus monkeys and mangrove boardwalks.",
+      "Peninsula with lagoon views on both sides.",
+      "Long white beach between Paje and Michamvi.",
+      "Kitesurfing lagoon on the south-east coast.",
+      "Laid-back fishing village with seaweed farms.",
+      "Southern tip with dolphin trips and quiet bays."
+    ]
+  },
+  "paymentStatus": {
+    "title": "Payment status",
+    "processing": "Payment processing",
+    "processingText": "We?re waiting for the payment provider to confirm. This may take a minute; we?ll email your receipt when confirmed.",
+    "notCompleted": "Payment not completed",
+    "notCompletedText": "No payment was taken. You can try again from your booking page.",
+    "confirmed": "Payment confirmed",
+    "confirmedText": "Thank you ? {{amount}} was received for booking {{reference}}. Your receipt is on its way by email.",
+    "failed": "Payment failed",
+    "failedText": "The payment did not go through and no money was taken. Try again or choose manual payment.",
+    "checkError": "We couldn?t check your payment",
+    "checkErrorText": "If payment succeeded, it will still be confirmed automatically. Check your booking page shortly.",
+    "checking": "Checking your payment?",
+    "status": "Payment status:",
+    "balance": "Balance due",
+    "tryAgain": "Try again",
+    "manual": "Pay manually instead",
+    "booking": "Go to my booking"
+  },
+  "contact": {
+    "title": "Let?s plan your drive.",
+    "lead": "The quickest way to reach us is WhatsApp. Our local team is available day and night.",
+    "whatsapp": "WhatsApp ? 24/7",
+    "find": "Find us",
+    "openMap": "Open in Google Maps",
+    "sent": "Message sent",
+    "thanks": "Thank you, {{name}}. We?ll reply to {{email}} soon.",
+    "heading": "Send us a message",
+    "name": "Name",
+    "subject": "Subject",
+    "message": "Message",
+    "phoneOptional": "Phone (optional)",
+    "send": "Send message",
+    "map": "Map"
+  },
+  "info": {
+    "notFound": {
+      "title": "Page not found",
+      "heading": "This road doesn?t go anywhere.",
+      "text": "The page may have moved or may no longer exist.",
+      "home": "Go home",
+      "fleet": "See the fleet"
+    },
+    "legal": {
+      "eyebrow": "Legal",
+      "updated": "Last updated: {{date}}"
+    }
+  },
+  "errors": {
+    "api": {
+      "business_rule": "This request could not be completed. Please try again.",
+      "conflict": "The booking conflicts with the current availability. Change the dates or choose another vehicle.",
+      "server_error": "The service is temporarily unavailable. Please try again shortly.",
+      "validation_error": "Some details need attention. Check the form and try again.",
+      "not_found": "The requested item could not be found."
+    }
   }
 }

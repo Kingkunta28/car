@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, ArrowRight, CheckCircle2, Info, Loader2, X, XCircle } from "lucide-react";
 import { cx, STATUS_TONES } from "../../lib/format";
 
@@ -73,12 +74,13 @@ export function Field({ label, error, hint, required, children, className }) {
   );
 }
 
-export const Spinner = ({ className, label = "Loading" }) => (
-  <span role="status" className={cx("inline-flex items-center gap-2 text-muted", className)}>
+export const Spinner = ({ className, label }) => {
+  const { t } = useTranslation();
+  return <span role="status" className={cx("inline-flex items-center gap-2 text-muted", className)}>
     <Loader2 className="size-5 animate-spin" aria-hidden />
-    <span className="sr-only">{label}</span>
-  </span>
-);
+    <span className="sr-only">{label || t("ui.loading")}</span>
+  </span>;
+};
 
 export function PageLoader() {
   return <div className="flex min-h-[40vh] items-center justify-center"><Spinner /></div>;
@@ -96,12 +98,13 @@ export function EmptyState({ icon: Icon = Info, title, children, action }) {
 }
 
 export function ErrorState({ error, onRetry, title = "Something went wrong" }) {
+  const { t } = useTranslation();
   return (
     <div role="alert" className="flex flex-col items-center rounded-2xl border border-red-200 bg-red-50 px-6 py-10 text-center">
       <AlertTriangle className="mb-3 size-8 text-red-600" aria-hidden />
-      <h3 className="text-lg font-semibold text-red-900">{title}</h3>
-      <p className="mt-1 max-w-md text-red-800">{error?.message || "Please check your connection and try again."}</p>
-      {onRetry && <Button variant="outline" className="mt-4" onClick={onRetry}>Try again</Button>}
+      <h3 className="text-lg font-semibold text-red-900">{title === "Something went wrong" ? t("ui.errorTitle") : title}</h3>
+      <p className="mt-1 max-w-md text-red-800">{error?.message || t("ui.errorText")}</p>
+      {onRetry && <Button variant="outline" className="mt-4" onClick={onRetry}>{t("ui.tryAgain")}</Button>}
     </div>
   );
 }
@@ -123,6 +126,7 @@ export function Alert({ tone = "info", title, children, className }) {
 }
 
 export function Modal({ open, onClose, title, children, footer, size = "md" }) {
+  const { t } = useTranslation();
   const ref = useRef(null);
   useEffect(() => {
     const d = ref.current;
@@ -142,7 +146,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md" }) {
         <div className="flex max-h-[85vh] flex-col">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <h2 className="text-lg font-semibold">{title}</h2>
-            <button onClick={onClose} className="grid size-9 place-items-center rounded-lg text-muted hover:bg-slate-100" aria-label="Close dialog">
+            <button onClick={onClose} className="grid size-9 place-items-center rounded-lg text-muted hover:bg-slate-100" aria-label={t("ui.close")}>
               <X className="size-5" />
             </button>
           </div>

@@ -37,7 +37,7 @@ function Filters({ params, set, clear, count }) {
       <fieldset>
         <legend className="label">{t("fleet.transmission")}</legend>
         <div className="grid grid-cols-3 gap-2">
-          {[["", "Any"], ["AUTOMATIC", "Auto"], ["MANUAL", "Manual"]].map(([v, l]) => (
+          {[["", t("fleet.any")], ["AUTOMATIC", t("vehicle.values.automatic")], ["MANUAL", t("vehicle.values.manual")]].map(([v, l]) => (
             <button key={l} type="button" onClick={() => set({ transmission: v })} aria-pressed={(params.get("transmission") || "") === v}
               className={cx("rounded-xl border py-2 text-sm font-medium", (params.get("transmission") || "") === v ? "border-navy-900 bg-navy-50" : "border-line hover:border-navy-600")}>
               {l}
@@ -48,9 +48,9 @@ function Filters({ params, set, clear, count }) {
       <div>
         <span className="label">{t("fleet.price")}</span>
         <div className="grid grid-cols-2 gap-2">
-          <input aria-label="Minimum price per day" type="number" min="0" inputMode="numeric" placeholder="Min" className="input"
+          <input aria-label={t("fleet.minPrice")} type="number" min="0" inputMode="numeric" placeholder={t("fleet.min")} className="input"
             value={params.get("min_price") || ""} onChange={(e) => set({ min_price: e.target.value })} />
-          <input aria-label="Maximum price per day" type="number" min="0" inputMode="numeric" placeholder="Max" className="input"
+          <input aria-label={t("fleet.maxPrice")} type="number" min="0" inputMode="numeric" placeholder={t("fleet.max")} className="input"
             value={params.get("max_price") || ""} onChange={(e) => set({ max_price: e.target.value })} />
         </div>
       </div>
@@ -58,7 +58,7 @@ function Filters({ params, set, clear, count }) {
         <span className="label">{t("fleet.passengers")}</span>
         <select className="input" value={params.get("min_passengers") || ""} onChange={(e) => set({ min_passengers: e.target.value })}>
           <option value="">{t("fleet.any")}</option>
-          {[2, 4, 5, 7, 8].map((n) => <option key={n} value={n}>{n}+ seats</option>)}
+          {[2, 4, 5, 7, 8].map((n) => <option key={n} value={n}>{n}+ {t("vehicle.seats")}</option>)}
         </select>
       </label>
       <fieldset>
@@ -75,7 +75,7 @@ function Filters({ params, set, clear, count }) {
         </div>
       </fieldset>
       <div className="flex items-center justify-between border-t border-line pt-5">
-        <span className="text-sm text-muted">{count ?? "…"} vehicle{count === 1 ? "" : "s"}</span>
+        <span className="text-sm text-muted">{count ?? "…"} {t("fleet.vehicleCount", { count: count ?? 0 })}</span>
         <button type="button" onClick={clear} className="text-sm font-semibold text-navy-700 underline underline-offset-4">{t("actions.clear")}</button>
       </div>
     </div>
@@ -123,7 +123,7 @@ export default function Fleet() {
         </aside>
         <div>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-muted" aria-live="polite"><span className="font-semibold text-navy-900">{list.length}</span> vehicle{list.length === 1 ? "" : "s"}</p>
+            <p className="text-sm text-muted" aria-live="polite"><span className="font-semibold text-navy-900">{list.length}</span> {t("fleet.vehicleCount", { count: list.length })}</p>
             <div className="flex flex-wrap items-center gap-2">
               <label className="relative">
                 <span className="sr-only">{t("fleet.search")}</span>

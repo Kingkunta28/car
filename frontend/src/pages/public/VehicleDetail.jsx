@@ -143,15 +143,15 @@ export default function VehicleDetail() {
               <p className="text-muted">{v.brand} {v.model}{v.year ? ` · ${v.year}` : ""} · {v.category_display}</p>
               <p className="mt-6">
                 <span className="font-display text-4xl font-bold text-navy-900">{usd(v.price_per_day)}</span>
-                <span className="text-muted"> per day</span>
+                <span className="text-muted"> {t("vehicle.perDay")}</span>
               </p>
               <Alert tone="info" className="mt-4">{t("vehicle.chooseDates")}</Alert>
               <ul className="mt-4 space-y-2 text-sm text-muted">
-                <li className="flex items-center gap-2"><Plane className="size-4 text-orange-600" /> Free airport &amp; town handover</li>
-                <li className="flex items-center gap-2"><Check className="size-4 text-orange-600" /> Full price shown before you book</li>
+                <li className="flex items-center gap-2"><Plane className="size-4 text-orange-600" /> {t("vehicle.freeHandover")}</li>
+                <li className="flex items-center gap-2"><Check className="size-4 text-orange-600" /> {t("vehicle.priceShown")}</li>
               </ul>
               <Button to={`/book?vehicle=${v.slug}`} size="lg" className="mt-6 w-full" disabled={!bookable}
-                aria-disabled={!bookable}>{bookable ? "Book this car" : "Not available to book"}</Button>
+                aria-disabled={!bookable}>{bookable ? t("actions.book") : t("vehicle.notAvailable")}</Button>
             </div>
           </aside>
         </div>

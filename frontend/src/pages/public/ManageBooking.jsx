@@ -168,12 +168,12 @@ export default function ManageBooking() {
           </div>
 
           <div className="card p-5">
-            <h2 className="flex items-center gap-2 text-lg font-semibold"><FileText className="size-5 text-navy-600" /> Invoices</h2>
+            <h2 className="flex items-center gap-2 text-lg font-semibold"><FileText className="size-5 text-navy-600" /> {t("manage.invoices")}</h2>
             <ul className="mt-3 divide-y divide-line">
               {b.invoices.map((i) => (
                 <li key={i.invoice_number} className="flex items-center justify-between gap-3 py-3">
                   <div>
-                    <p className="font-medium">{i.invoice_number} {i.invoice_status === "SUPERSEDED" && <Badge status="SUPERSEDED">Replaced</Badge>}</p>
+                    <p className="font-medium">{i.invoice_number} {i.invoice_status === "SUPERSEDED" && <Badge status="SUPERSEDED">{t("manage.replaced")}</Badge>}</p>
                     <p className="text-sm text-muted">{fmtDate(i.issue_date)} · {usd(i.total_amount)}</p>
                   </div>
                   <Button size="sm" variant="outline" icon={Download} onClick={() => dl("/invoices/download/", { invoice: i.invoice_number }, `${i.invoice_number}.pdf`)}>PDF</Button>
@@ -184,7 +184,7 @@ export default function ManageBooking() {
 
           {(b.receipts.length > 0 || b.payments.length > 0) && (
             <div className="card p-5">
-              <h2 className="flex items-center gap-2 text-lg font-semibold"><Receipt className="size-5 text-navy-600" /> Payments &amp; receipts</h2>
+              <h2 className="flex items-center gap-2 text-lg font-semibold"><Receipt className="size-5 text-navy-600" /> {t("manage.payments")}</h2>
               <ul className="mt-3 divide-y divide-line">
                 {b.payments.map((p) => (
                   <li key={p.payment_reference} className="flex items-center justify-between gap-3 py-3 text-sm">
@@ -194,7 +194,7 @@ export default function ManageBooking() {
                 ))}
                 {b.receipts.map((r) => (
                   <li key={r.receipt_number} className="flex items-center justify-between gap-3 py-3">
-                    <span className="text-sm">Receipt <strong>{r.receipt_number}</strong> · {usd(r.amount)}</span>
+                    <span className="text-sm">{t("manage.receipt")} <strong>{r.receipt_number}</strong> · {usd(r.amount)}</span>
                     <Button size="sm" variant="outline" icon={Download} onClick={() => dl("/receipts/download/", { receipt: r.receipt_number }, `${r.receipt_number}.pdf`)}>PDF</Button>
                   </li>
                 ))}
@@ -205,36 +205,36 @@ export default function ManageBooking() {
 
         <aside className="space-y-6">
           <div className="card p-5">
-            <h2 className="text-lg font-semibold">Price summary</h2>
+            <h2 className="text-lg font-semibold">{t("manage.summary")}</h2>
             <dl className="mt-4 space-y-2 text-sm">
-              <div className="flex justify-between"><dt className="text-muted">Rental ({b.rental_days} days)</dt><dd>{usd(b.rental_total)}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Pickup fee</dt><dd>{Number(b.pickup_fee) ? usd(b.pickup_fee) : "Free"}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Return fee</dt><dd>{Number(b.return_fee) ? usd(b.return_fee) : "Free"}</dd></div>
-              {b.extras.map((e) => <div key={e.code} className="flex justify-between"><dt className="text-muted">{e.service_name} × {e.quantity}</dt><dd>{usd(e.total_price)}</dd></div>)}
-              {Number(b.tax_amount) > 0 && <div className="flex justify-between"><dt className="text-muted">Tax</dt><dd>{usd(b.tax_amount)}</dd></div>}
-              <div className="flex justify-between border-t border-line pt-3 font-semibold"><dt>Total</dt><dd>{usd(b.grand_total)}</dd></div>
-              <div className="flex justify-between text-emerald-700"><dt>Paid</dt><dd>{usd(b.amount_paid)}</dd></div>
-              <div className="flex justify-between font-display text-lg font-bold text-navy-900"><dt>Balance due</dt><dd>{usd(b.balance_due)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">{t("manage.rental", { days: b.rental_days })}</dt><dd>{usd(b.rental_total)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">{t("manage.pickupFee")}</dt><dd>{Number(b.pickup_fee) ? usd(b.pickup_fee) : t("manage.free")}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">{t("manage.returnFee")}</dt><dd>{Number(b.return_fee) ? usd(b.return_fee) : t("manage.free")}</dd></div>
+              {b.extras.map((e) => <div key={e.code} className="flex justify-between"><dt className="text-muted">{e.code === "baby_seat" ? t("booking.babySeats") : e.code === "driving_permit" ? t("booking.permit") : e.service_name} × {e.quantity}</dt><dd>{usd(e.total_price)}</dd></div>)}
+              {Number(b.tax_amount) > 0 && <div className="flex justify-between"><dt className="text-muted">{t("manage.tax")}</dt><dd>{usd(b.tax_amount)}</dd></div>}
+              <div className="flex justify-between border-t border-line pt-3 font-semibold"><dt>{t("manage.total")}</dt><dd>{usd(b.grand_total)}</dd></div>
+              <div className="flex justify-between text-emerald-700"><dt>{t("manage.paid")}</dt><dd>{usd(b.amount_paid)}</dd></div>
+              <div className="flex justify-between font-display text-lg font-bold text-navy-900"><dt>{t("manage.balance")}</dt><dd>{usd(b.balance_due)}</dd></div>
             </dl>
             {canPay && (
               <div className="mt-5 space-y-2.5">
-                {b.payment_options?.online?.available && <Button className="w-full" size="lg" icon={CreditCard} loading={paying} onClick={payOnline}>Pay {usd(b.balance_due)} online</Button>}
-                <Button className="w-full" variant="outline" icon={Landmark} onClick={() => setModal("manual")}>I've paid manually</Button>
+                {b.payment_options?.online?.available && <Button className="w-full" size="lg" icon={CreditCard} loading={paying} onClick={payOnline}>{t("manage.payOnline", { amount: usd(b.balance_due) })}</Button>}
+                <Button className="w-full" variant="outline" icon={Landmark} onClick={() => setModal("manual")}>{t("manage.manualPaid")}</Button>
               </div>
             )}
           </div>
           {b.documents.length > 0 && (
             <div className="card p-5 text-sm">
-              <h2 className="font-semibold">Permit documents</h2>
+              <h2 className="font-semibold">{t("manage.permitDocs")}</h2>
               <ul className="mt-2 space-y-1 text-muted">{b.documents.map((d) => <li key={d.document_type}>{d.document_type}: {d.status}</li>)}</ul>
-              <p className="mt-3 text-xs text-muted">Stored privately and deleted after your rental.</p>
+              <p className="mt-3 text-xs text-muted">{t("manage.storedDocs")}</p>
             </div>
           )}
-          <button className="text-sm text-muted underline underline-offset-4" onClick={() => { clearGuest(); setGuest(null); }}>Sign out of this booking</button>
+          <button className="text-sm text-muted underline underline-offset-4" onClick={() => { clearGuest(); setGuest(null); }}>{t("manage.signOut")}</button>
         </aside>
       </div>
 
-      <Modal open={modal === "manual"} onClose={() => setModal(null)} title="Submit a manual payment">
+      <Modal open={modal === "manual"} onClose={() => setModal(null)} title={t("manage.submitManual")}>
         <ManualPaymentForm guest={guest} booking={b} onDone={() => { setModal(null); refresh(); }} />
       </Modal>
     </>

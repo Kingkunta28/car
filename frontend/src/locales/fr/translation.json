@@ -78,7 +78,9 @@
     "noMatch": "Aucun véhicule ne correspond à ces filtres",
     "noMatchHelp": "Modifiez vos dates ou effacez certains filtres.",
     "closeFilters": "Fermer les filtres",
-    "vehicles": "véhicules"
+    "vehicles": "véhicules",
+    "vehicleCount_one": "v?hicule",
+    "vehicleCount_other": "v?hicules"
   },
   "vehicle": {
     "photoSoon": "Photo bientôt disponible",
@@ -129,7 +131,12 @@
     "bags": "bagages",
     "dayRule": "Toute période commencée de 24 heures compte comme une journée.",
     "seoTitle": "Location de {{name}} ? Zanzibar",
-    "seoDescription": "Louez {{name}} ? Zanzibar ? partir de {{price}} par jour. {{transmission}}, {{seats}} places et remise ? l?a?roport."
+    "seoDescription": "Louez {{name}} ? Zanzibar ? partir de {{price}} par jour. {{transmission}}, {{seats}} places et remise ? l?a?roport.",
+    "availability": {
+      "AVAILABLE": "Disponible",
+      "UNAVAILABLE": "Indisponible",
+      "MAINTENANCE": "Entretien"
+    }
   },
   "home": {
     "eyebrow": "Votre voyage à Zanzibar commence ici",
@@ -355,7 +362,26 @@
     "meetAtAirport": "Nous vous retrouverons ? {{airport}}.",
     "addFlightForDelays": "Ajoutez les informations du vol aux ?tapes suivantes pour que nous puissions suivre les retards.",
     "deliveryFee": "Frais de livraison",
-    "permit": "Permis de conduire"
+    "permit": "Permis de conduire",
+    "yourBooking": "Votre r?servation",
+    "reservedConflict": "Cette voiture est d?j? r?serv?e pour certaines dates. Modifiez les dates ou choisissez une autre voiture.",
+    "rentalLine": "Location ? {{days}} ? {{rate}}",
+    "tax": "Taxe",
+    "finalPrice": "Notre syst?me confirmera le prix final ? l?envoi.",
+    "seatWhole": "pour toute la r?servation, et non par jour.",
+    "chooseFile": "Choisir un fichier",
+    "fileSize": "PDF, JPG, PNG ou WebP ? max. {{size}} Mo",
+    "fewer": "Moins de {{label}}",
+    "more": "Plus de {{label}}",
+    "addExtra": "Ajouter {{name}}",
+    "dayCount_one": "{{count}} jour",
+    "dayCount_other": "{{count}} jours",
+    "pricing": {
+      "PER_BOOKING": "par r?servation",
+      "PER_UNIT": "par unit? et r?servation",
+      "PER_DAY": "par jour",
+      "PER_UNIT_PER_DAY": "par unit? et par jour"
+    }
   },
   "seo": {
     "home": "Location de voiture en autonomie à Zanzibar",
@@ -459,5 +485,101 @@
     "paymentInstructions": "Instructions de paiement",
     "thanks": "Merci. Nous v?rifierons votre paiement et vous enverrons un re?u.",
     "signInPrivate": "Ouvrez le lien priv? de votre e-mail de r?servation pour la g?rer."
+  },
+  "ui": {
+    "loading": "Chargement",
+    "errorTitle": "Une erreur est survenue",
+    "errorText": "V?rifiez votre connexion et r?essayez.",
+    "tryAgain": "R?essayer",
+    "close": "Fermer la fen?tre",
+    "vehicle": "V?hicule",
+    "photoSoon": "Photo ? venir",
+    "free": "Livraison gratuite",
+    "outside": "Hors zone gratuite",
+    "eachWay": "par trajet",
+    "approx": "de trajet depuis l?a?roport (env.)",
+    "chooseDestination": "Choisir une destination",
+    "mapScale": "Illustration ? ?chelle indicative",
+    "mapLabel": "Carte illustrative de Zanzibar et des zones de livraison. S?lection : {{place}}.",
+    "freePlace": "livraison gratuite",
+    "outsidePlace": "hors zone gratuite",
+    "refreshError": "Une erreur est survenue sur cette page.",
+    "refreshText": "Actualisez la page. Si le probl?me persiste, contactez-nous sur WhatsApp pour obtenir de l?aide.",
+    "refresh": "Actualiser la page",
+    "driveFrom": "de trajet depuis l?a?roport (env.)",
+    "meetArrivals": "Rendez-vous aux arriv?es"
+  },
+  "map": {
+    "notes": [
+      "H?tels, vieille ville et port : remise gratuite.",
+      "A?roport international Abeid Amani Karume. Nous vous attendons aux arriv?es avec une pancarte.",
+      "Pointe nord avec plages, couchers de soleil et chantiers de boutres.",
+      "Eaux calmes et longues plages o? se baigner.",
+      "C?te nord-est paisible face ? l?atoll de Mnemba.",
+      "Petites criques bord?es de palmiers sur la c?te est.",
+      "Colobes roux et passerelles dans la mangrove.",
+      "P?ninsule offrant des vues sur le lagon des deux c?t?s.",
+      "Longue plage blanche entre Paje et Michamvi.",
+      "Lagon de kitesurf sur la c?te sud-est.",
+      "Village de p?cheurs paisible avec cultures d?algues.",
+      "Pointe sud avec sorties pour voir les dauphins et baies tranquilles."
+    ]
+  },
+  "paymentStatus": {
+    "title": "?tat du paiement",
+    "processing": "Paiement en cours",
+    "processingText": "Nous attendons la confirmation du prestataire. Cela peut prendre une minute ; le re?u sera envoy? par e-mail d?s confirmation.",
+    "notCompleted": "Paiement non effectu?",
+    "notCompletedText": "Aucun montant n?a ?t? pr?lev?. Vous pouvez r?essayer depuis votre r?servation.",
+    "confirmed": "Paiement confirm?",
+    "confirmedText": "Merci : {{amount}} a ?t? re?u pour la r?servation {{reference}}. Votre re?u arrive par e-mail.",
+    "failed": "?chec du paiement",
+    "failedText": "Le paiement n?a pas abouti et aucun montant n?a ?t? pr?lev?. R?essayez ou choisissez le paiement manuel.",
+    "checkError": "Impossible de v?rifier le paiement",
+    "checkErrorText": "Si le paiement a abouti, il sera confirm? automatiquement. Consultez votre r?servation bient?t.",
+    "checking": "V?rification du paiement?",
+    "status": "?tat du paiement :",
+    "balance": "Solde d?",
+    "tryAgain": "R?essayer",
+    "manual": "Payer manuellement",
+    "booking": "Voir ma r?servation"
+  },
+  "contact": {
+    "title": "Organisons votre s?jour.",
+    "lead": "Le moyen le plus rapide de nous joindre est WhatsApp. Notre ?quipe locale est disponible jour et nuit.",
+    "whatsapp": "WhatsApp ? 24 h/24, 7 j/7",
+    "find": "Nous trouver",
+    "openMap": "Ouvrir dans Google Maps",
+    "sent": "Message envoy?",
+    "thanks": "Merci {{name}}. Nous vous r?pondrons bient?t ? {{email}}.",
+    "heading": "Envoyez-nous un message",
+    "name": "Nom",
+    "subject": "Objet",
+    "message": "Message",
+    "phoneOptional": "T?l?phone (facultatif)",
+    "send": "Envoyer le message",
+    "map": "Carte"
+  },
+  "info": {
+    "notFound": {
+      "title": "Page introuvable",
+      "heading": "Cette route ne m?ne nulle part.",
+      "text": "La page a peut-?tre ?t? d?plac?e ou n?existe plus.",
+      "home": "Retour ? l?accueil",
+      "fleet": "Voir la flotte"
+    },
+    "legal": {
+      "eyebrow": "Mentions l?gales",
+      "updated": "Derni?re mise ? jour : {{date}}"
+    }
+  },
+  "errors": {
+    "api": {
+      "business_rule": "La demande n?a pas pu aboutir. Veuillez r?essayer.",
+      "conflict": "La r?servation entre en conflit avec les disponibilit?s. Modifiez les dates ou choisissez un autre v?hicule.",
+      "server_error": "Le service est temporairement indisponible. Veuillez r?essayer bient?t.",
+      "validation_error": "Certaines informations sont ? corriger. V?rifiez le formulaire et r?essayez.",
+      "not_found": "L??l?ment demand? est introuvable."
+    }
   }
 }

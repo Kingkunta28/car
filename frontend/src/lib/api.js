@@ -1,14 +1,20 @@
 // Thin fetch wrapper. All requests go to same-origin /api (proxied in dev,
 // rewritten in production), so session cookies and CSRF behave normally.
+import i18n from "../i18n";
 const BASE = (import.meta.env.VITE_API_BASE || "") + "/api/v1";
 
 export class ApiError extends Error {
   constructor(status, body) {
     const err = body?.error || {};
-    super(err.message || `Request failed (${status})`);
+    super("");
     this.status = status;
     this.code = err.code;
+    this.originalMessage = err.message || `Request failed (${status})`;
     this.details = err.details || null;
+  }
+  get message() {
+    const key = `errors.api.${this.code}`;
+    return this.code && i18n.exists(key) ? i18n.t(key) : this.originalMessage;
   }
   fieldErrors() {
     const out = {};

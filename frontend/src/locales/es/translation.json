@@ -78,7 +78,9 @@
     "noMatch": "Ningún vehículo coincide con estos filtros",
     "noMatchHelp": "Cambia las fechas o elimina algunos filtros.",
     "closeFilters": "Cerrar filtros",
-    "vehicles": "vehículos"
+    "vehicles": "vehículos",
+    "vehicleCount_one": "veh?culo",
+    "vehicleCount_other": "veh?culos"
   },
   "vehicle": {
     "photoSoon": "Foto próximamente",
@@ -129,7 +131,12 @@
     "bags": "maletas",
     "dayRule": "Cada periodo iniciado de 24 horas cuenta como un día.",
     "seoTitle": "Alquiler de {{name}} en Zanz?bar",
-    "seoDescription": "Alquila {{name}} en Zanz?bar desde {{price}} al d?a. {{transmission}}, {{seats}} plazas y entrega en el aeropuerto."
+    "seoDescription": "Alquila {{name}} en Zanz?bar desde {{price}} al d?a. {{transmission}}, {{seats}} plazas y entrega en el aeropuerto.",
+    "availability": {
+      "AVAILABLE": "Disponible",
+      "UNAVAILABLE": "No disponible",
+      "MAINTENANCE": "Mantenimiento"
+    }
   },
   "home": {
     "eyebrow": "Tu viaje a Zanzíbar empieza aquí",
@@ -355,7 +362,26 @@
     "meetAtAirport": "Te esperamos en {{airport}}.",
     "addFlightForDelays": "A?ade los datos del vuelo en los siguientes pasos para poder seguir posibles retrasos.",
     "deliveryFee": "Cargo de entrega",
-    "permit": "Permiso de conducir"
+    "permit": "Permiso de conducir",
+    "yourBooking": "Tu reserva",
+    "reservedConflict": "Este coche ya est? reservado para algunas fechas. C?mbialas o elige otro coche.",
+    "rentalLine": "Alquiler ? {{days}} ? {{rate}}",
+    "tax": "Impuesto",
+    "finalPrice": "El sistema confirmar? el precio final al enviar la reserva.",
+    "seatWhole": "para toda la reserva, no por d?a.",
+    "chooseFile": "Elegir archivo",
+    "fileSize": "PDF, JPG, PNG o WebP ? m?x. {{size}} MB",
+    "fewer": "Menos {{label}}",
+    "more": "M?s {{label}}",
+    "addExtra": "A?adir {{name}}",
+    "dayCount_one": "{{count}} d?a",
+    "dayCount_other": "{{count}} d?as",
+    "pricing": {
+      "PER_BOOKING": "por reserva",
+      "PER_UNIT": "por unidad y reserva",
+      "PER_DAY": "por d?a",
+      "PER_UNIT_PER_DAY": "por unidad y d?a"
+    }
   },
   "seo": {
     "home": "Alquiler de coches sin conductor en Zanzíbar",
@@ -459,5 +485,101 @@
     "paymentInstructions": "Instrucciones de pago",
     "thanks": "Gracias. Verificaremos el pago y te enviaremos un recibo.",
     "signInPrivate": "Abre el enlace privado del correo de reserva para gestionar esta reserva."
+  },
+  "ui": {
+    "loading": "Cargando",
+    "errorTitle": "Se ha producido un error",
+    "errorText": "Comprueba la conexi?n e int?ntalo de nuevo.",
+    "tryAgain": "Intentar de nuevo",
+    "close": "Cerrar di?logo",
+    "vehicle": "Veh?culo",
+    "photoSoon": "Pr?ximamente habr? una foto",
+    "free": "Entrega gratuita",
+    "outside": "Fuera de la zona gratuita",
+    "eachWay": "por trayecto",
+    "approx": "de viaje desde el aeropuerto (aprox.)",
+    "chooseDestination": "Elige un destino",
+    "mapScale": "Ilustraci?n orientativa ? no est? a escala",
+    "mapLabel": "Mapa ilustrativo de Zanz?bar con las zonas de entrega. Selecci?n: {{place}}.",
+    "freePlace": "entrega gratuita",
+    "outsidePlace": "fuera de la zona gratuita",
+    "refreshError": "Se ha producido un error en esta p?gina.",
+    "refreshText": "Actualiza la p?gina. Si el problema contin?a, escr?benos por WhatsApp y te ayudaremos con la reserva.",
+    "refresh": "Actualizar p?gina",
+    "driveFrom": "de trayecto desde el aeropuerto (aprox.)",
+    "meetArrivals": "Encuentro en llegadas"
+  },
+  "map": {
+    "notes": [
+      "Hoteles, casco antiguo y puerto: entrega gratuita.",
+      "Aeropuerto Internacional Abeid Amani Karume. Te esperamos en llegadas con un cartel.",
+      "Extremo norte con playas, atardeceres y constructores de dhows.",
+      "Aguas tranquilas y largas playas para ba?arse.",
+      "Costa noreste tranquila frente al atol?n de Mnemba.",
+      "Peque?as calas bordeadas de palmeras en la costa este.",
+      "Colobos rojos y pasarelas entre manglares.",
+      "Pen?nsula con vistas a la laguna a ambos lados.",
+      "Larga playa blanca entre Paje y Michamvi.",
+      "Laguna para practicar kitesurf en la costa sureste.",
+      "Pueblo pesquero tranquilo con cultivos de algas.",
+      "Extremo sur con excursiones para ver delfines y calas tranquilas."
+    ]
+  },
+  "paymentStatus": {
+    "title": "Estado del pago",
+    "processing": "Pago en proceso",
+    "processingText": "Esperamos la confirmaci?n del proveedor. Puede tardar un minuto; enviaremos el recibo por correo cuando se confirme.",
+    "notCompleted": "Pago no completado",
+    "notCompletedText": "No se ha cobrado nada. Puedes volver a intentarlo desde tu reserva.",
+    "confirmed": "Pago confirmado",
+    "confirmedText": "Gracias: hemos recibido {{amount}} para la reserva {{reference}}. Te enviaremos el recibo por correo.",
+    "failed": "Pago fallido",
+    "failedText": "El pago no se complet? y no se cobr? nada. Int?ntalo de nuevo o elige el pago manual.",
+    "checkError": "No pudimos comprobar el pago",
+    "checkErrorText": "Si el pago se complet?, se confirmar? autom?ticamente. Consulta tu reserva dentro de poco.",
+    "checking": "Comprobando el pago?",
+    "status": "Estado del pago:",
+    "balance": "Importe pendiente",
+    "tryAgain": "Intentar de nuevo",
+    "manual": "Pagar manualmente",
+    "booking": "Ir a mi reserva"
+  },
+  "contact": {
+    "title": "Organicemos tu viaje.",
+    "lead": "La forma m?s r?pida de contactarnos es por WhatsApp. El equipo local est? disponible d?a y noche.",
+    "whatsapp": "WhatsApp ? 24/7",
+    "find": "D?nde estamos",
+    "openMap": "Abrir en Google Maps",
+    "sent": "Mensaje enviado",
+    "thanks": "Gracias, {{name}}. Te responderemos pronto a {{email}}.",
+    "heading": "Env?anos un mensaje",
+    "name": "Nombre",
+    "subject": "Asunto",
+    "message": "Mensaje",
+    "phoneOptional": "Tel?fono (opcional)",
+    "send": "Enviar mensaje",
+    "map": "Mapa"
+  },
+  "info": {
+    "notFound": {
+      "title": "P?gina no encontrada",
+      "heading": "Este camino no lleva a ninguna parte.",
+      "text": "Es posible que la p?gina se haya movido o ya no exista.",
+      "home": "Volver al inicio",
+      "fleet": "Ver la flota"
+    },
+    "legal": {
+      "eyebrow": "Aviso legal",
+      "updated": "?ltima actualizaci?n: {{date}}"
+    }
+  },
+  "errors": {
+    "api": {
+      "business_rule": "No se pudo completar la solicitud. Int?ntalo de nuevo.",
+      "conflict": "La reserva entra en conflicto con la disponibilidad. Cambia las fechas o elige otro coche.",
+      "server_error": "El servicio no est? disponible temporalmente. Int?ntalo de nuevo en breve.",
+      "validation_error": "Hay datos que debes corregir. Revisa el formulario e int?ntalo de nuevo.",
+      "not_found": "No se encontr? el elemento solicitado."
+    }
   }
 }

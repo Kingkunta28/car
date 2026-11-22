@@ -434,6 +434,7 @@ function Faq({ list }) {
 
 
 function FinalCta({ wa }) {
+  const { t } = useTranslation();
   return (
     <section className="pb-24 sm:pb-32" aria-labelledby="final-cta">
       <div className="container-x">
@@ -441,13 +442,13 @@ function FinalCta({ wa }) {
           <div className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-orange-500/20 blur-3xl" aria-hidden />
           <div className="relative grid gap-8 lg:grid-cols-[1.4fr_auto] lg:items-center">
             <div>
-              <p className="eyebrow eyebrow-light">Ready when you land</p>
-              <h2 id="final-cta" className="display-lg mt-4 text-white">Your car, waiting at <span className="serif-accent text-orange-400">arrivals.</span></h2>
-              <p className="mt-4 max-w-xl text-white/70">Book in a few minutes and receive your invoice instantly. We confirm every booking personally.</p>
+              <p className="eyebrow eyebrow-light">{t("home.ready")}</p>
+              <h2 id="final-cta" className="display-lg mt-4 text-white">{t("home.readyTitle")}</h2>
+              <p className="mt-4 max-w-xl text-white/70">{t("home.readyText")}</p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button to="/book" size="lg" arrow>Book your car</Button>
-              {wa && <Button href={wa} target="_blank" rel="noopener noreferrer" size="lg" variant="outlineLight" icon={MessageCircle}>WhatsApp us</Button>}
+              <Button to="/book" size="lg" arrow>{t("home.book")}</Button>
+              {wa && <Button href={wa} target="_blank" rel="noopener noreferrer" size="lg" variant="outlineLight" icon={MessageCircle}>{t("home.whatsapp")}</Button>}
             </div>
           </div>
         </div>
