@@ -5,6 +5,7 @@ import { Clock, CreditCard, Download, FileText, KeyRound, Landmark, MessageCircl
 import { api, download } from "../../lib/api";
 import { fmtDate, fmtDateTime, fmtTime, usd, whatsappLink } from "../../lib/format";
 import { useSite } from "../../lib/hooks";
+import { getBusinessInfo } from "../../data/businessInfo";
 import { clearGuest, loadGuest, saveGuest } from "../../lib/guest";
 import { Seo } from "../../lib/seo";
 import { Alert, Badge, Button, ErrorState, Field, Modal, PageLoader, useToast } from "../../components/ui";
@@ -80,7 +81,8 @@ export default function ManageBooking() {
   const [paying, setPaying] = useState(false);
   const [confirmationBusy, setConfirmationBusy] = useState(false);
   const { data: site } = useSite();
-  const wa = whatsappLink(site?.whatsapp_number, `Hello Rafiki Car Hire, I need a new link for my booking ${guest?.reference || ""}.`);
+  const business = getBusinessInfo(site);
+  const wa = whatsappLink(business.whatsappNumber, `Hello Rafiki Car Hire, I need a new link for my booking ${guest?.reference || ""}.`);
   const q = useQuery({
     queryKey: ["guest-booking", guest?.reference], enabled: !!guest, retry: false,
     queryFn: () => api.get("/bookings/track/", { guest }),

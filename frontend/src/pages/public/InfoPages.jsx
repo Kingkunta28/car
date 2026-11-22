@@ -9,6 +9,7 @@ import { api } from "../../lib/api";
 import { useBookingOptions, useReveal, useSite } from "../../lib/hooks";
 import { zoneFee } from "../../lib/content";
 import { fmtDate, usd, whatsappLink } from "../../lib/format";
+import { getBusinessInfo } from "../../data/businessInfo";
 import { Seo, businessJsonLd } from "../../lib/seo";
 import { Alert, Button, Field } from "../../components/ui";
 import PageHero from "../../components/PageHero";
@@ -58,9 +59,10 @@ export function About() {
 export function Contact() {
   const { t } = useTranslation();
   const { data: site } = useSite();
+  const business = getBusinessInfo(site);
   const [f, setF] = useState({ name: "", email: "", phone: "", subject: "", message: "", website: "" });
   const [state, setState] = useState({ busy: false, done: false, error: null, fields: {} });
-  const wa = whatsappLink(site?.whatsapp_number, "Hello Rafiki Car Hire!");
+  const wa = whatsappLink(business.whatsappNumber, "Hello Rafiki Car Hire!");
   const submit = async (e) => {
     e.preventDefault();
     setState({ busy: true, done: false, error: null, fields: {} });
@@ -81,10 +83,10 @@ export function Contact() {
           <h1 className="display-lg mt-4">{t("contact.title")}</h1>
           <p className="mt-4 max-w-md text-lg text-muted">{t("contact.lead")}</p>
           <ul className="mt-8 space-y-4">
-            {wa && <li><a href={wa} target="_blank" rel="noopener noreferrer" className="card flex items-center gap-4 p-4 transition hover:shadow-[var(--shadow-lift)]"><span className="grid size-11 place-items-center rounded-xl bg-[#1FAF38] text-white"><MessageCircle className="size-5" /></span><span><span className="block font-semibold">{t("contact.whatsapp")}</span><span className="text-sm text-muted">{site.business_phone || `+${site.whatsapp_number}`}</span></span></a></li>}
-            {site?.business_phone && <li><a href={`tel:${site.business_phone}`} className="card flex items-center gap-4 p-4"><span className="grid size-11 place-items-center rounded-xl bg-navy-50 text-navy-700"><Phone className="size-5" /></span><span><span className="block font-semibold">{t("footer.phone")}</span><span className="text-sm text-muted">{site.business_phone}</span></span></a></li>}
-            {site?.business_email && <li><a href={`mailto:${site.business_email}`} className="card flex items-center gap-4 p-4"><span className="grid size-11 place-items-center rounded-xl bg-navy-50 text-navy-700"><Mail className="size-5" /></span><span><span className="block font-semibold">{t("footer.email")}</span><span className="text-sm text-muted">{site.business_email}</span></span></a></li>}
-            <li><a href={`https://maps.google.com/?q=${encodeURIComponent(site?.business_address || "Zanzibar, Tanzania")}`} target="_blank" rel="noopener noreferrer" className="card card-hover flex items-center gap-4 p-4"><span className="grid size-11 place-items-center rounded-xl bg-navy-50 text-navy-700"><MapPin className="size-5" /></span><span><span className="block font-semibold">{t("contact.find")}</span><span className="text-sm text-muted">{site?.business_address || "Zanzibar, Tanzania"}</span><span className="block text-xs font-semibold text-orange-600">{t("contact.openMap")}</span></span></a></li>
+            {wa && <li><a href={wa} target="_blank" rel="noopener noreferrer" className="card flex items-center gap-4 p-4 transition hover:shadow-[var(--shadow-lift)]"><span className="grid size-11 place-items-center rounded-xl bg-[#1FAF38] text-white"><MessageCircle className="size-5" /></span><span><span className="block font-semibold">{t("contact.whatsapp")}</span><span className="text-sm text-muted">{business.whatsappDisplay}</span></span></a></li>}
+            {business.phone && <li><a href={business.phoneHref} className="card flex items-center gap-4 p-4"><span className="grid size-11 place-items-center rounded-xl bg-navy-50 text-navy-700"><Phone className="size-5" /></span><span><span className="block font-semibold">{t("footer.phone")}</span><span className="text-sm text-muted">{business.phone}</span></span></a></li>}
+            {business.email && <li><a href={`mailto:${business.email}`} className="card flex items-center gap-4 p-4"><span className="grid size-11 place-items-center rounded-xl bg-navy-50 text-navy-700"><Mail className="size-5" /></span><span><span className="block font-semibold">{t("footer.email")}</span><span className="text-sm text-muted">{business.email}</span></span></a></li>}
+            <li><a href={business.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="card card-hover flex items-center gap-4 p-4"><span className="grid size-11 place-items-center rounded-xl bg-navy-50 text-navy-700"><MapPin className="size-5" /></span><span><span className="block font-semibold">{t("contact.find")}</span><span className="text-sm text-muted">{business.address}</span><span className="block text-xs font-semibold text-orange-600">{t("contact.openMap")}</span></span></a></li>
           </ul>
         </div>
         <div className="card p-6 sm:p-8">
@@ -113,8 +115,8 @@ export function Contact() {
       </section>
       <section className="container-x pb-20" aria-label={t("contact.map")}>
         <div className="overflow-hidden rounded-[var(--radius-panel)] border border-line shadow-[var(--shadow-card)]">
-          <iframe title={`Map: ${site?.business_address || "Zanzibar, Tanzania"}`} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
-            src={`https://maps.google.com/maps?q=${encodeURIComponent(site?.business_address || "Zanzibar, Tanzania")}&z=13&output=embed`}
+          <iframe title={`Map: ${business.address}`} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+            src={business.googleMapsEmbedUrl}
             className="block h-[360px] w-full border-0 sm:h-[440px]" />
         </div>
       </section>
@@ -191,6 +193,7 @@ function Legal({ title, path, description, updated, children }) {
 export function Privacy() {
   const { t } = useTranslation();
   const { data: site } = useSite();
+  const business = getBusinessInfo(site);
   return (
     <Legal title={t("footer.privacy")} path="/privacy" updated={fmtDate("2026-11-01", { month: "long", year: "numeric" })} description={t("footer.privacy")}>
       <section><h2>Who we are</h2><p>{site?.business_name || "Rafiki Car Hire"} ("we", "us") provides car rental services in Zanzibar, Tanzania. We are responsible for the personal information you give us when you make an enquiry or booking.</p></section>
@@ -208,7 +211,7 @@ export function Privacy() {
         <li>Your booking page is protected by a private, expiring access link.</li>
       </ul></section>
       <section><h2>How long we keep it</h2><p>Passport and licence copies are securely deleted after your rental ends (or after a booking is cancelled), once they are no longer needed. Booking, invoice and payment records are kept for as long as required for accounting and legal purposes.</p></section>
-      <section><h2>Your rights</h2><p>You can ask us for a copy of your information, to correct it, or to delete it where we are not legally required to keep it. Contact us{site?.business_email ? ` at ${site.business_email}` : ""} and we will respond promptly.</p></section>
+      <section><h2>Your rights</h2><p>You can ask us for a copy of your information, to correct it, or to delete it where we are not legally required to keep it. Contact us{business.email ? ` at ${business.email}` : ""} and we will respond promptly.</p></section>
     </Legal>
   );
 }

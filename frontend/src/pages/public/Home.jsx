@@ -10,6 +10,7 @@ import { api } from "../../lib/api";
 import { useBookingOptions, useReveal, useSite, useVehicles } from "../../lib/hooks";
 import { DESTINATIONS, HOW_IT_WORKS, babySeatText, faqs, priceOf, zoneFee } from "../../lib/content";
 import { cx, todayISO, usd, whatsappLink } from "../../lib/format";
+import { getBusinessInfo } from "../../data/businessInfo";
 import { Seo, businessJsonLd } from "../../lib/seo";
 import { Button, Skeleton } from "../../components/ui";
 import VehicleCard from "../../components/VehicleCard";
@@ -460,13 +461,14 @@ function FinalCta({ wa }) {
 export default function Home() {
   const { t } = useTranslation();
   const { data: site } = useSite();
+  const business = getBusinessInfo(site);
   const { data: options } = useBookingOptions();
   const vehicles = useVehicles({});
   const testimonials = useQuery({ queryKey: ["testimonials"], queryFn: () => api.get("/testimonials/"), staleTime: 600_000 });
   const ref = useReveal([vehicles.data, testimonials.data]);
   const fromPrice = vehicles.data?.length ? Math.min(...vehicles.data.map((v) => Number(v.price_per_day))) : null;
   const faqList = faqs(options);
-  const wa = whatsappLink(site?.whatsapp_number);
+  const wa = whatsappLink(business.whatsappNumber);
 
   return (
     <div ref={ref}>
@@ -483,7 +485,7 @@ export default function Home() {
       <Destinations />
       <Testimonials items={testimonials.data} />
       <Faq list={faqList} />
-      <FinalCta wa={wa ? whatsappLink(site.whatsapp_number, "Hello Rafiki Car Hire! I would like to book a car.") : null} />
+      <FinalCta wa={wa ? whatsappLink(business.whatsappNumber, "Hello Rafiki Car Hire! I would like to book a car.") : null} />
     </div>
   );
 }

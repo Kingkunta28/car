@@ -1,4 +1,5 @@
 import { LANGUAGES } from "../i18n";
+import { getBusinessInfo } from "../data/businessInfo";
 // React 19 hoists <title>, <meta> and <link> rendered anywhere into <head>.
 const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://car-lovat-two.vercel.app").replace(/\/$/, "");
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
@@ -26,16 +27,17 @@ export function Seo({ title, description, path = "", image, noindex = false, jso
 }
 
 export function businessJsonLd(site) {
+  const business = getBusinessInfo(site);
   return {
     "@context": "https://schema.org",
     "@type": "AutoRental",
-    name: site?.business_name || "Rafiki Car Hire",
+    name: business.businessName,
     slogan: "Drive Zanzibar with Confidence.",
     url: SITE_URL,
-    ...(site?.business_phone && { telephone: site.business_phone }),
-    ...(site?.business_email && { email: site.business_email }),
+    ...(business.phone && { telephone: business.phone }),
+    ...(business.email && { email: business.email }),
     address: { "@type": "PostalAddress", addressLocality: "Zanzibar", addressCountry: "TZ",
-      streetAddress: site?.business_address || "Zanzibar, Tanzania" },
+      streetAddress: business.address },
     areaServed: { "@type": "Place", name: "Zanzibar (Unguja), Tanzania" },
     priceRange: "$$",
     currenciesAccepted: "USD",

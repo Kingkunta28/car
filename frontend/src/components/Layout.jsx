@@ -4,6 +4,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { ArrowUpRight, CalendarCheck, Mail, MapPin, Menu, MessageCircle, Phone, X } from "lucide-react";
 import { useSite } from "../lib/hooks";
 import { cx, whatsappLink } from "../lib/format";
+import { getBusinessInfo } from "../data/businessInfo";
 import { Button } from "./ui";
 import ErrorBoundary from "./ErrorBoundary";
 import logoMark from "../assets/logo-mark.webp";
@@ -53,6 +54,7 @@ export function Logo({ light = false, compact = false, mark = true }) {
 function Header() {
   const { t } = useTranslation();
   const { data: site } = useSite();
+  const business = getBusinessInfo(site);
   const { pathname } = useLocation();
   const [mobile, setMobile] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -113,8 +115,8 @@ function Header() {
           <div className="mt-auto space-y-3 pt-8">
             <LanguageSelect />
             <Button to="/book" size="lg" className="w-full" icon={CalendarCheck} tabIndex={mobile ? 0 : -1}>{t("nav.book")}</Button>
-            {whatsappLink(site?.whatsapp_number) && (
-              <Button href={whatsappLink(site.whatsapp_number, "Hello Rafiki Car Hire!")} target="_blank" rel="noopener noreferrer"
+            {whatsappLink(business.whatsappNumber) && (
+              <Button href={whatsappLink(business.whatsappNumber, "Hello Rafiki Car Hire!")} target="_blank" rel="noopener noreferrer"
                 variant="whatsapp" size="lg" className="w-full" icon={MessageCircle} tabIndex={mobile ? 0 : -1}>{t("actions.whatsapp")}</Button>
             )}
           </div>
@@ -184,9 +186,10 @@ function ContactItem({ icon: Icon, label, children, href, external }) {
 function Footer() {
   const { t } = useTranslation();
   const { data: site } = useSite();
-  const wa = whatsappLink(site?.whatsapp_number, "Hello Rafiki Car Hire, I'd like to ask about renting a car.");
+  const business = getBusinessInfo(site);
+  const wa = whatsappLink(business.whatsappNumber, "Hello Rafiki Car Hire, I'd like to ask about renting a car.");
   const year = new Date().getFullYear();
-  const name = site?.business_name || "Rafiki Car Hire";
+  const name = business.businessName;
   return (
     <footer className="relative overflow-hidden bg-navy-950 text-white/70" aria-labelledby="footer-heading">
       <h2 id="footer-heading" className="sr-only">{name} — site information</h2>
@@ -215,12 +218,12 @@ function Footer() {
           <div className="col-span-2 lg:col-span-1">
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-white">{t("footer.contact")}</h2>
             <ul className="mt-5 space-y-4">
-              {site?.business_phone && <ContactItem icon={Phone} label={t("footer.phone")} href={`tel:${site.business_phone.replace(/\s/g, "")}`}>{site.business_phone}</ContactItem>}
-              {wa && <ContactItem icon={MessageCircle} label={t("footer.whatsappSupport")} href={wa} external>{site.business_phone || `+${site.whatsapp_number}`}</ContactItem>}
-              {site?.business_email && <ContactItem icon={Mail} label={t("footer.email")} href={`mailto:${site.business_email}`}>{site.business_email}</ContactItem>}
+              {business.phone && <ContactItem icon={Phone} label={t("footer.phone")} href={business.phoneHref}>{business.phone}</ContactItem>}
+              {wa && <ContactItem icon={MessageCircle} label={t("footer.whatsappSupport")} href={wa} external>{business.whatsappDisplay}</ContactItem>}
+              {business.email && <ContactItem icon={Mail} label={t("footer.email")} href={`mailto:${business.email}`}>{business.email}</ContactItem>}
               <ContactItem icon={MapPin} label={t("footer.place")} external
-                href={`https://maps.google.com/?q=${encodeURIComponent(site?.business_address || "Zanzibar, Tanzania")}`}>
-                {site?.business_address || "Zanzibar, Tanzania"}
+                href={business.googleMapsUrl}>
+                {business.address}
               </ContactItem>
             </ul>
           </div>
@@ -261,7 +264,8 @@ function WhatsAppFab() {
   const { t } = useTranslation();
   const { data: site } = useSite();
   const { pathname } = useLocation();
-  const href = whatsappLink(site?.whatsapp_number, "Hello Rafiki Car Hire, I have a question about car hire.");
+  const business = getBusinessInfo(site);
+  const href = whatsappLink(business.whatsappNumber, "Hello Rafiki Car Hire, I have a question about car hire.");
   if (!href || pathname.startsWith("/book") || pathname.startsWith("/fleet/")) return null;
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" aria-label={t("footer.chat")}
