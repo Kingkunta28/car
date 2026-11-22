@@ -1,15 +1,15 @@
-/**
- * Public business details displayed by the Contact page and elsewhere.
- * Phone, WhatsApp and email are provided by the existing public Site Settings
- * API; only the Contact page's existing Zanzibar fallback is defined here.
- */
-export const BUSINESS_LOCATION_FALLBACK = "Zanzibar, Tanzania";
+/** Verified public details used across the website and kept language-neutral. */
+export const businessInfo = Object.freeze({
+  location: "Abeid Amani Karume International Airport, Zanzibar, Tanzania",
+  phone: "+255 715 518 980",
+  whatsapp: "255715518980",
+});
 
 export function getBusinessInfo(site) {
   const businessName = site?.business_name?.trim() || "Rafiki Car Hire";
-  const address = site?.business_address?.trim() || BUSINESS_LOCATION_FALLBACK;
-  const phone = site?.business_phone?.trim() || "";
-  const whatsappNumber = site?.whatsapp_number?.trim() || "";
+  const address = businessInfo.location;
+  const phone = businessInfo.phone;
+  const whatsappNumber = businessInfo.whatsapp;
   const email = site?.business_email?.trim() || "";
   const encodedAddress = encodeURIComponent(address);
 

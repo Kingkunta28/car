@@ -26,7 +26,7 @@ const TRUST = [
   { icon: Plane, title: "home.convenientPickup", text: "home.convenientPickupText" },
 ];
 
-function HeroVisual({ photo, fromPrice }) {
+function HeroVisual({ photo, fromPrice, location }) {
   const { t } = useTranslation();
   return (
     <div className="relative mx-auto w-full max-w-[560px] lg:max-w-none">
@@ -37,8 +37,8 @@ function HeroVisual({ photo, fromPrice }) {
           <img src={photo} alt="Turquoise water and white sand on the coast of Zanzibar" width="1600" height="1001"
             className="h-full w-full scale-105 object-cover object-[60%_78%] lg:object-[60%_center]" fetchPriority="high" />
           <div className="absolute inset-0 bg-gradient-to-t from-navy-950/55 via-transparent to-transparent" aria-hidden />
-          <figcaption className="absolute right-5 top-5 rounded-full bg-navy-950/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">
-            Zanzibar, Tanzania
+          <figcaption className="absolute right-3 top-3 max-w-[calc(100%-1.5rem)] rounded-full bg-navy-950/60 px-3 py-1.5 text-right text-xs font-medium leading-tight text-white backdrop-blur sm:right-5 sm:top-5">
+            {location}
           </figcaption>
         </figure>
       </Parallax>
@@ -74,6 +74,7 @@ function HeroVisual({ photo, fromPrice }) {
 
 function Hero({ site, fromPrice }) {
   const { t } = useTranslation();
+  const business = getBusinessInfo(site);
   const photo = site?.hero_image_url || heroBeach;
   return (
     <section className="relative isolate overflow-hidden bg-navy-950 pb-16 pt-28 text-white sm:pt-32 lg:pb-20 lg:pt-36" aria-labelledby="hero-title">
@@ -102,7 +103,7 @@ function Hero({ site, fromPrice }) {
             </ul>
           </div>
           <div className="lg:col-span-6 lg:pl-8">
-            <HeroVisual photo={photo} fromPrice={fromPrice} />
+            <HeroVisual photo={photo} fromPrice={fromPrice} location={business.location} />
           </div>
         </div>
         <div className="mt-20 animate-[fade-up_0.9s_var(--ease-out-soft)_0.6s_both] lg:mt-24">

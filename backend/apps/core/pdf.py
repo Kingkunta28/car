@@ -383,8 +383,9 @@ def brand_header(site: dict, title: str, meta_rows: list[tuple[str, str]], logo=
     biz = [p(esc(site.get("business_name") or "Rafiki Car Hire"), "brand"),
            p(esc(site.get("tagline") or "Drive Zanzibar with Confidence."), "tagline"),
            Spacer(1, 1.5 * mm),
-           p(esc(site.get("business_address") or "Zanzibar, Tanzania"), "small"),
-           p(esc("Zanzibar, Tanzania") if "Tanzania" not in (site.get("business_address") or "") else "", "small")]
+           p(esc(site.get("business_address") or "Abeid Amani Karume International Airport, Zanzibar, Tanzania"), "small"),
+           p(esc("Abeid Amani Karume International Airport, Zanzibar, Tanzania")
+             if "Tanzania" not in (site.get("business_address") or "") else "", "small")]
     if contact:
         biz.append(p(" · ".join(esc(c) for c in contact), "small"))
     if site.get("website"):
@@ -479,7 +480,8 @@ def build_pdf(story, *, title: str, author: str, footer: str = "", footer_note: 
     buf = BytesIO()
     pagesize = landscape(A4) if landscape_mode else A4
     if site and not footer:
-        bits = [site.get("business_name") or "Rafiki Car Hire", "Zanzibar, Tanzania"]
+        bits = [site.get("business_name") or "Rafiki Car Hire",
+                "Abeid Amani Karume International Airport, Zanzibar, Tanzania"]
         bits += [x for x in (site.get("business_phone"), site.get("business_email"), site.get("website")) if x]
         footer = "  ·  ".join(bits)
     doc = SimpleDocTemplate(buf, pagesize=pagesize, leftMargin=MARGIN_X, rightMargin=MARGIN_X,

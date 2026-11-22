@@ -62,7 +62,7 @@ def _to_pdf(report) -> HttpResponse:
     logo = fitted_image(image_reader(logo_path(site)), 30 * mm, 22 * mm)
     company = [p(esc(site.business_name), "brand"),
                p(esc(site.tagline or "Drive Zanzibar with Confidence"), "tagline"),
-               p(esc(site.business_address or "Zanzibar, Tanzania"), "small")]
+               p(esc(site.business_address or "Abeid Amani Karume International Airport, Zanzibar, Tanzania"), "small")]
     contacts = " · ".join(x for x in (site.business_phone, site.business_email) if x)
     if contacts:
         company.append(p(esc(contacts), "small"))

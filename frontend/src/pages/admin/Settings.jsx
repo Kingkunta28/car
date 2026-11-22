@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Send, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
 import { cx, fmtDateTime, usd } from "../../lib/format";
+import { businessInfo } from "../../data/businessInfo";
 import { Alert, Badge, Button, ErrorState, Field, Modal, PageLoader, useToast } from "../../components/ui";
 import { can, FINANCE, PageHeader, Table, TableSkeleton, useAdmin } from "./AdminShell";
 
@@ -14,7 +15,9 @@ function Business() {
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-settings"], queryFn: () => api.get("/admin/settings/") });
   const [f, setF] = useState(null);
   const [files, setFiles] = useState({});
-  useEffect(() => { if (data) setF(data); }, [data]);
+  useEffect(() => {
+    if (data) setF({ ...data, business_address: businessInfo.location, business_phone: businessInfo.phone, whatsapp_number: businessInfo.whatsapp });
+  }, [data]);
   const save = useMutation({
     mutationFn: () => {
       const form = new FormData();
@@ -36,9 +39,9 @@ function Business() {
       {!admin && <Alert tone="info">Only administrators can change business settings.</Alert>}
       <div className="card grid gap-4 p-5 sm:grid-cols-2">
         {inp("business_name", "Business name")}{inp("tagline", "Tagline")}
-        {inp("business_email", "Public email", { type: "email" })}{inp("business_phone", "Public phone")}
-        {inp("whatsapp_number", "WhatsApp number", { hint: "Digits with country code, no + or spaces — e.g. 255777123456" })}
-        {inp("business_address", "Address")}
+        {inp("business_email", "Public email", { type: "email" })}{inp("business_phone", "Public phone", { readOnly: true, hint: "Official public phone number" })}
+        {inp("whatsapp_number", "WhatsApp number", { readOnly: true, hint: "Official WhatsApp contact number" })}
+        {inp("business_address", "Address", { readOnly: true, hint: "Official business location" })}
         {inp("owner_notification_email", "Owner notification email", { type: "email", hint: "New bookings, payments and enquiries are sent here." })}
         {inp("email_configuration_reference", "Email provider note", { hint: "For reference only (e.g. 'Brevo SMTP on Render'). Never enter passwords here." })}
       </div>

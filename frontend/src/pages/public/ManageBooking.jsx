@@ -111,6 +111,7 @@ export default function ManageBooking() {
   }
 
   const b = q.data;
+  const bookingWhatsApp = whatsappLink(business.whatsappNumber, `Hello Rafiki Car Hire, I have a question about booking ${b.booking_reference}.`);
   const refresh = () => qc.invalidateQueries({ queryKey: ["guest-booking"] });
   const canPay = Number(b.balance_due) > 0 && ["PENDING_CONFIRMATION", "CONFIRMED"].includes(b.booking_status);
   const dl = async (path, params, name) => {
@@ -146,7 +147,7 @@ export default function ManageBooking() {
               <Badge status={b.payment_status}>{b.payment_status_display}</Badge>
             </div>
           </div>
-          {b.whatsapp_url && <Button href={b.whatsapp_url} target="_blank" rel="noopener noreferrer" variant="whatsapp" icon={MessageCircle}>{t("manage.contactWhatsApp")}</Button>}
+          {bookingWhatsApp && <Button href={bookingWhatsApp} target="_blank" rel="noopener noreferrer" variant="whatsapp" icon={MessageCircle}>{t("manage.contactWhatsApp")}</Button>}
         </div>
       </div>
 

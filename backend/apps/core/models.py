@@ -47,12 +47,15 @@ class SiteSettings(models.Model):
     business_name = models.CharField(max_length=120, default="Rafiki Car Hire")
     tagline = models.CharField(max_length=160, default="Drive Zanzibar with Confidence.")
     business_email = models.EmailField(blank=True)
-    business_phone = models.CharField(max_length=40, blank=True)
+    business_phone = models.CharField(max_length=40, blank=True, default="+255 715 518 980")
     whatsapp_number = models.CharField(
-        max_length=20, blank=True,
-        help_text="International format digits only, e.g. 255777123456",
+        max_length=20, blank=True, default="255715518980",
+        help_text="Official international WhatsApp number in digits only.",
     )
-    business_address = models.CharField(max_length=255, default="Zanzibar, Tanzania")
+    business_address = models.CharField(
+        max_length=255,
+        default="Abeid Amani Karume International Airport, Zanzibar, Tanzania",
+    )
     logo = models.ImageField(upload_to="branding/", blank=True)
     hero_image = models.ImageField(upload_to="branding/", blank=True,
                                    help_text="Wide landscape photo for the homepage hero (min. 2000px wide).")

@@ -256,7 +256,7 @@ BOOKING_MAX_RENTAL_DAYS = env.int("BOOKING_MAX_RENTAL_DAYS", default=90)
 BOOKING_MAX_ADVANCE_DAYS = env.int("BOOKING_MAX_ADVANCE_DAYS", default=540)
 BOOKING_ACCESS_TOKEN_DAYS = env.int("BOOKING_ACCESS_TOKEN_DAYS", default=120)
 DOCUMENT_RETENTION_DAYS = env.int("DOCUMENT_RETENTION_DAYS", default=30)
-DEFAULT_ARRIVAL_AIRPORT = "Abeid Amani Karume International Airport, Zanzibar"
+DEFAULT_ARRIVAL_AIRPORT = "Abeid Amani Karume International Airport, Zanzibar, Tanzania"
 CURRENCY = "USD"
 
 # --------------------------------------------------------------------------

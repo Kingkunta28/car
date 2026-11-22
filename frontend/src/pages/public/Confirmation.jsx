@@ -4,7 +4,8 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, CheckCircle2, Clock, Download, Home, MapPin, MessageCircle, Settings } from "lucide-react";
 import { api, download } from "../../lib/api";
-import { fmtDate, fmtDateTime, fmtTime, usd } from "../../lib/format";
+import { fmtDate, fmtDateTime, fmtTime, usd, whatsappLink } from "../../lib/format";
+import { getBusinessInfo } from "../../data/businessInfo";
 import { loadGuest } from "../../lib/guest";
 import { Seo } from "../../lib/seo";
 import { Alert, Badge, Button, Skeleton, useToast } from "../../components/ui";
@@ -22,6 +23,9 @@ function Row({ label, value, strong }) {
 export default function Confirmation() {
   const { t } = useTranslation();
   const { state } = useLocation();
+  const business = getBusinessInfo();
+  const confirmationWhatsApp = whatsappLink(business.whatsappNumber,
+    `Hello Rafiki Car Hire, I have a question about booking ${state?.booking_reference || ""}.`);
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [confirmationBusy, setConfirmationBusy] = useState(false);
@@ -124,8 +128,8 @@ export default function Confirmation() {
                   {state.payment_method === "ONLINE" ? t("confirmation.payView") : t("confirmation.viewPayment")}
                 </Button>
                 <div className="grid gap-2.5 sm:grid-cols-2">
-                  {state.whatsapp_url && <Button href={state.whatsapp_url} target="_blank" rel="noopener noreferrer" variant="whatsapp" icon={MessageCircle}>{t("confirmation.whatsapp")}</Button>}
-                  <Button to="/" variant="outline" icon={Home} className={state.whatsapp_url ? "" : "sm:col-span-2"}>{t("confirmation.home")}</Button>
+                  {confirmationWhatsApp && <Button href={confirmationWhatsApp} target="_blank" rel="noopener noreferrer" variant="whatsapp" icon={MessageCircle}>{t("confirmation.whatsapp")}</Button>}
+                  <Button to="/" variant="outline" icon={Home} className={confirmationWhatsApp ? "" : "sm:col-span-2"}>{t("confirmation.home")}</Button>
                 </div>
               </div>
               <p className="text-center text-xs text-muted">{t("confirmation.private")}</p>

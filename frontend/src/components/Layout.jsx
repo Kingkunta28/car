@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { ArrowUpRight, CalendarCheck, Mail, MapPin, Menu, MessageCircle, Phone, X } from "lucide-react";
@@ -18,12 +18,12 @@ const NAV = [
   { to: "/contact", key: "nav.contact" },
 ];
 
-function LanguageSelect({ overHero = false }) {
+function LanguageSelect({ overHero = false, disabled = false }) {
   const { t } = useTranslation();
   return (
     <label className="inline-flex items-center gap-1.5">
       <span className="sr-only">{t("language.label")}</span>
-      <select aria-label={t("language.label")} value={i18n.resolvedLanguage || "en"}
+      <select aria-label={t("language.label")} value={i18n.resolvedLanguage || "en"} disabled={disabled}
         onChange={(event) => i18n.changeLanguage(event.target.value)}
         className={cx("h-10 max-w-[9.5rem] cursor-pointer rounded-full border px-2.5 text-sm font-medium outline-none transition focus:ring-2 focus:ring-orange-500",
           overHero ? "border-white/20 bg-navy-950/40 text-white" : "border-line bg-white text-navy-900")}>
@@ -58,6 +58,8 @@ function Header() {
   const { pathname } = useLocation();
   const [mobile, setMobile] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const mobileToggleRef = useRef(null);
+  const mobileMenuRef = useRef(null);
   const overHero = pathname === "/" && !scrolled && !mobile;
 
   useEffect(() => { setMobile(false); }, [pathname]);
@@ -68,16 +70,48 @@ function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
   useEffect(() => {
-    document.body.style.overflow = mobile ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (!mobile) return undefined;
+    const oldOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMobile(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = [...(mobileMenuRef.current?.querySelectorAll(
+        'a[href], button:not(:disabled), select:not(:disabled), [tabindex]:not([tabindex="-1"])',
+      ) || [])].filter((element) => element.getClientRects().length);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    const focusFrame = window.requestAnimationFrame(() => {
+      mobileMenuRef.current?.querySelector("a[href]")?.focus();
+    });
+    return () => {
+      document.body.style.overflow = oldOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+      window.cancelAnimationFrame(focusFrame);
+      mobileToggleRef.current?.focus();
+    };
   }, [mobile]);
 
   return (
     <header className={cx("fixed inset-x-0 top-0 z-50 transition-[background,box-shadow,border-color] duration-500",
       overHero ? "border-b border-transparent bg-transparent" : "border-b border-line/70 bg-white/85 shadow-[0_1px_0_rgb(11_31_58/0.02)] backdrop-blur-xl")}>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2">{t("nav.skip")}</a>
-      <div className="container-x flex h-[76px] items-center justify-between gap-6">
-        <Link to="/" aria-label="Rafiki Car Hire home" className="relative z-10"><Logo light={overHero} site={site} /></Link>
+      <div className="container-x flex h-[76px] items-center justify-between gap-3 sm:gap-6">
+        <Link to="/" aria-label="Rafiki Car Hire home" className="relative z-10 shrink-0"><Logo light={overHero} site={site} /></Link>
         <nav className="hidden items-center gap-1 lg:flex" aria-label={t("nav.main")}>
           {NAV.map((m) => (
             <NavLink key={m.to} to={m.to} end={m.end} className={({ isActive }) => cx(
@@ -88,37 +122,46 @@ function Header() {
               isActive ? "after:scale-x-100" : "after:scale-x-0 hover:after:scale-x-100")}>{t(m.key)}</NavLink>
           ))}
         </nav>
-        <div className="relative z-10 flex items-center gap-2">
-          <LanguageSelect overHero={overHero} />
+        <div className="relative z-10 flex shrink-0 items-center gap-2">
+          <div className="hidden lg:flex"><LanguageSelect overHero={overHero} /></div>
           <Link to="/booking/manage" className={cx("hidden rounded-full px-3.5 py-2 text-sm font-medium transition xl:inline-flex",
             overHero ? "text-white/75 hover:text-white" : "text-muted hover:text-navy-900")}>{t("nav.myBooking")}</Link>
           <Button to="/book" size="sm" arrow className="hidden sm:inline-flex">{t("nav.book")}</Button>
-          <button onClick={() => setMobile((o) => !o)} aria-expanded={mobile} aria-controls="mobile-nav" aria-label={mobile ? t("nav.close") : t("nav.open")}
-            className={cx("grid size-11 place-items-center rounded-full transition lg:hidden", overHero ? "text-white hover:bg-white/10" : "text-navy-900 hover:bg-navy-50")}>
-            {mobile ? <X className="size-6" /> : <Menu className="size-6" />}
+          <button ref={mobileToggleRef} type="button" onClick={() => setMobile((o) => !o)} aria-expanded={mobile} aria-controls="mobile-nav" aria-haspopup="dialog" aria-label={mobile ? t("nav.close") : t("nav.open")}
+            className={cx("grid size-10 shrink-0 place-items-center rounded-full transition lg:hidden", overHero ? "text-white hover:bg-white/10" : "text-navy-900 hover:bg-navy-50")}>
+            {mobile ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
         </div>
       </div>
 
-      {/* Full-screen mobile menu */}
-      <div id="mobile-nav" className={cx("fixed inset-x-0 bottom-0 top-[76px] overflow-y-auto bg-white transition duration-500 ease-[var(--ease-out-soft)] lg:hidden",
-        mobile ? "visible translate-y-0 opacity-100" : "invisible -translate-y-3 opacity-0")} aria-hidden={!mobile}>
-        <nav className="container-x flex min-h-full flex-col py-6" aria-label={t("nav.mobile")}>
+      {mobile && <button type="button" tabIndex={-1} aria-label={t("nav.close")} onClick={() => setMobile(false)}
+        className="fixed inset-x-0 bottom-0 top-[76px] z-40 bg-navy-950/25 backdrop-blur-[2px] lg:hidden" />}
+      <div ref={mobileMenuRef} id="mobile-nav" role="dialog" aria-modal="true" aria-label={t("nav.mobile")}
+        className={cx("fixed inset-x-0 top-[76px] z-[60] max-h-[calc(100dvh-76px)] overflow-y-auto rounded-b-3xl border-t border-line bg-white shadow-[0_20px_50px_-25px_rgb(11_31_58/0.45)] transition duration-300 ease-[var(--ease-out-soft)] lg:hidden",
+          mobile ? "visible translate-y-0 opacity-100" : "invisible pointer-events-none -translate-y-2 opacity-0")} aria-hidden={!mobile}>
+        <nav className="container-x py-3" aria-label={t("nav.mobile")}>
           {[...NAV, { to: "/booking/manage", key: "nav.manageBooking" }].map((n, i) => (
             <NavLink key={n.to} to={n.to} end tabIndex={mobile ? 0 : -1}
+              onClick={() => setMobile(false)}
               style={{ transitionDelay: mobile ? `${60 + i * 40}ms` : "0ms" }}
-              className={({ isActive }) => cx("flex items-center justify-between border-b border-line py-4 font-display text-2xl font-semibold transition duration-500",
+              className={({ isActive }) => cx("flex items-center justify-between border-b border-line py-3 font-display text-xl font-semibold transition duration-300",
                 mobile ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0", isActive ? "text-orange-600" : "text-navy-900")}>
               {t(n.key)}<ArrowUpRight className="size-5 text-muted" aria-hidden />
             </NavLink>
           ))}
-          <div className="mt-auto space-y-3 pt-8">
-            <LanguageSelect />
-            <Button to="/book" size="lg" className="w-full" icon={CalendarCheck} tabIndex={mobile ? 0 : -1}>{t("nav.book")}</Button>
+          <div className="space-y-2.5 pt-4 pb-2">
+            <LanguageSelect disabled={!mobile} />
+            <Button to="/book" size="md" className="w-full" icon={CalendarCheck} tabIndex={mobile ? 0 : -1} onClick={() => setMobile(false)}>{t("nav.book")}</Button>
             {whatsappLink(business.whatsappNumber) && (
               <Button href={whatsappLink(business.whatsappNumber, "Hello Rafiki Car Hire!")} target="_blank" rel="noopener noreferrer"
-                variant="whatsapp" size="lg" className="w-full" icon={MessageCircle} tabIndex={mobile ? 0 : -1}>{t("actions.whatsapp")}</Button>
+                variant="whatsapp" size="md" className="w-full" icon={MessageCircle} tabIndex={mobile ? 0 : -1} onClick={() => setMobile(false)}>
+                {t("actions.whatsapp")}
+              </Button>
             )}
+            {business.phoneHref && <a href={business.phoneHref} tabIndex={mobile ? 0 : -1} aria-label={`${t("footer.phone")}: ${business.phone}`}
+              className="flex min-h-10 items-center justify-center gap-2 text-sm font-semibold text-navy-800">
+              <Phone className="size-4 text-orange-600" aria-hidden />{business.phone}
+            </a>}
           </div>
         </nav>
       </div>
