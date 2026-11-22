@@ -66,7 +66,7 @@ def replace_inventory_constraint(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    dependencies = [("bookings", "0003_overlap_exclusion_constraint")]
+    dependencies = [("bookings", "0005_booking_dossier")]
 
     operations = [
         migrations.AddField(
