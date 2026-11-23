@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowUpRight, Briefcase, Car, Fuel, Settings2, Users } from "lucide-react";
 import { cx, usd } from "../lib/format";
 import vehiclePhotos from "../lib/vehicle-photos";
+import { Badge } from "./ui";
 
 /** Real photo if uploaded; otherwise a composed, branded panel (never a cartoon car). */
 export function VehicleImage({ vehicle, image, className, eager = false, sizes = "(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" }) {
