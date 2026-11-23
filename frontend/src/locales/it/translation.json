@@ -321,7 +321,7 @@
     "continue": "Continua",
     "edit": "Modifica",
     "quoteHelp": "Scegli un'auto e le date per vedere il prezzo.",
-    "quoteUnavailable": "Non è stato possibile confermare il prezzo aggiornato. Controlla le date e riprova.",
+    "quoteUnavailable": "Il prezzo indicativo è visibile, ma il servizio non ha potuto confermare disponibilità e costi aggiornati. Riprova prima di inviare.",
     "priceChanged": "Il prezzo o la disponibilità sono cambiati. Controlla il nuovo totale prima di inviare.",
     "quoteFinal": "Il prezzo finale sarà confermato dal sistema al momento dell'invio.",
     "progress": "Avanzamento prenotazione",
@@ -338,7 +338,7 @@
     "addressHint": "Hotel, resort, strada o struttura",
     "airportInstructions": "Informazioni utili, ad esempio se viaggi con bambini piccoli",
     "addressInstructions": "Codici d'accesso, punti di riferimento o dettagli della reception",
-    "optionsFallback": "Alcuni extra o costi di consegna non sono temporaneamente disponibili. Il servizio verificherà il totale.",
+    "optionsFallback": "Alcune impostazioni aggiornate della prenotazione non sono disponibili. La stima usa i prezzi predefiniti e il servizio verificherà il totale prima dell'invio.",
     "duration": "Durata del noleggio",
     "durationRule": "Ogni periodo iniziato di 24 ore conta come un giorno di noleggio.",
     "samePickup": "Riconsegna nello stesso luogo del ritiro",
@@ -419,7 +419,10 @@
       "payment": "Scegli come desideri pagare.",
       "terms": "Accetta i termini per continuare.",
       "serverField": "Controlla questo dato della prenotazione e riprova."
-    }
+    },
+    "checkingPrice": "Verifica del prezzo aggiornato...",
+    "priceConfigError": "Non è stato possibile calcolare un totale affidabile per il veicolo e le opzioni selezionati.",
+    "deliveryFeeRule": "Si applica una sola tariffa di consegna di {{amount}} per prenotazione se il ritiro o la riconsegna è fuori dalla zona gratuita."
   },
   "seo": {
     "home": "Noleggio auto self-drive a Zanzibar",

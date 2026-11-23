@@ -430,6 +430,8 @@ def booking_options() -> dict:
         ],
         "extras": ExtraServicePublicSerializer(
             [s for c, s in services.items() if c != ExtraService.OUTSIDE_ZONE], many=True).data,
+        "tax_rate": str(site.tax_rate),
+        "tax_label": site.tax_label,
         "default_arrival_airport": settings.DEFAULT_ARRIVAL_AIRPORT,
         "hold_hours": settings.BOOKING_HOLD_HOURS,
         "min_lead_hours": settings.BOOKING_MIN_LEAD_HOURS,

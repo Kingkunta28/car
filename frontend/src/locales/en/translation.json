@@ -321,7 +321,7 @@
     "continue": "Continue",
     "edit": "Edit",
     "quoteHelp": "Choose a car and dates to see your price.",
-    "quoteUnavailable": "We couldn't confirm a current price. Check your dates and try again.",
+    "quoteUnavailable": "The estimate is shown, but the booking service could not confirm current availability and charges. Try again before submitting.",
     "priceChanged": "The price or availability changed. Review the updated total before submitting.",
     "quoteFinal": "Final price is confirmed by our system when you submit.",
     "progress": "Booking progress",
@@ -338,7 +338,7 @@
     "addressHint": "Hotel, resort, street or property name",
     "airportInstructions": "Anything we should know, such as travelling with infants",
     "addressInstructions": "Gate codes, landmarks or reception details",
-    "optionsFallback": "Some extras or location fees are temporarily unavailable. The booking service will validate your total.",
+    "optionsFallback": "Some live booking settings are unavailable. The displayed estimate uses default prices and the booking service will verify it before submission.",
     "duration": "Rental duration",
     "durationRule": "Each started 24-hour period counts as one rental day.",
     "samePickup": "Return to the same place as pickup",
@@ -419,7 +419,10 @@
       "payment": "Choose how you would like to pay.",
       "terms": "Accept the terms to continue.",
       "serverField": "Check this booking detail and try again."
-    }
+    },
+    "checkingPrice": "Checking the current price...",
+    "priceConfigError": "A reliable total could not be calculated from the selected vehicle and booking options.",
+    "deliveryFeeRule": "A delivery fee of {{amount}} applies once per booking if either pickup or return is outside the free zone."
   },
   "seo": {
     "home": "Self-drive car rental in Zanzibar",

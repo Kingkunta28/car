@@ -321,7 +321,7 @@
     "continue": "Continuer",
     "edit": "Modifier",
     "quoteHelp": "Choisissez une voiture et des dates pour afficher le prix.",
-    "quoteUnavailable": "Le prix actuel n'a pas pu être confirmé. Vérifiez les dates et réessayez.",
+    "quoteUnavailable": "Le prix estimé est affiché, mais le service n’a pas pu confirmer la disponibilité et les frais actuels. Réessayez avant l’envoi.",
     "priceChanged": "Le prix ou la disponibilité a changé. Vérifiez le nouveau total avant l'envoi.",
     "quoteFinal": "Le système confirmera le prix final lors de l'envoi.",
     "progress": "Progression de la réservation",
@@ -338,7 +338,7 @@
     "addressHint": "Hôtel, resort, rue ou établissement",
     "airportInstructions": "Toute précision utile, par exemple si vous voyagez avec un bébé",
     "addressInstructions": "Codes d'accès, repères ou informations de réception",
-    "optionsFallback": "Certains extras ou frais sont momentanément indisponibles. Le service vérifiera le montant total.",
+    "optionsFallback": "Certains paramètres de réservation ne sont pas disponibles. Le prix estimé utilise les tarifs par défaut et sera vérifié avant l'envoi.",
     "duration": "Durée de location",
     "durationRule": "Toute période commencée de 24 heures compte comme une journée.",
     "samePickup": "Retour au lieu de prise en charge",
@@ -419,7 +419,10 @@
       "payment": "Choisissez votre mode de paiement.",
       "terms": "Veuillez accepter les conditions pour continuer.",
       "serverField": "Vérifiez cette information de réservation et réessayez."
-    }
+    },
+    "checkingPrice": "Vérification du prix actuel...",
+    "priceConfigError": "Impossible de calculer un total fiable pour le véhicule et les options sélectionnés.",
+    "deliveryFeeRule": "Des frais de livraison de {{amount}} s'appliquent une seule fois par réservation si le retrait ou le retour a lieu hors de la zone gratuite."
   },
   "seo": {
     "home": "Location de voiture en autonomie à Zanzibar",

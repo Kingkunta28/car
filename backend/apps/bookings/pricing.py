@@ -130,7 +130,7 @@ def _extra_total(extra: ExtraService, qty: int, days: int) -> tuple[Decimal, Dec
 
 def build_quote(*, vehicle, pickup_at: datetime, return_at: datetime, pickup_type: str, return_type: str,
                 extras: dict[str, int] | None = None, daily_rate: Decimal | None = None) -> Quote:
-    """Calculate the full price.
+    """Calculate the full price. Outside-zone delivery is charged once per booking.
 
     ``extras`` maps ExtraService.code -> requested quantity. Unknown,
     inactive or system location codes are rejected; quantities are bounded
@@ -149,11 +149,14 @@ def build_quote(*, vehicle, pickup_at: datetime, return_at: datetime, pickup_typ
 
     services = {s.code: s for s in ExtraService.objects.filter(is_active=True)}
     zone = services.get(ExtraService.OUTSIDE_ZONE) or ExtraService.objects.filter(code=ExtraService.OUTSIDE_ZONE).first()
+    delivery_applied = False
     for leg, loc in (("pickup", pickup_type), ("return", return_type)):
         if loc not in LocationType.values:
             raise ValidationError({f"{leg}_type": "Choose a valid location."})
         label = LocationType(loc).label
-        fee = money(zone.price) if (loc == LocationType.OUTSIDE_ZONE and zone) else ZERO
+        outside_leg = loc == LocationType.OUTSIDE_ZONE
+        fee = money(zone.price) if (outside_leg and zone and not delivery_applied) else ZERO
+        delivery_applied = delivery_applied or outside_leg
         quote.lines.append(QuoteLine(
             code=f"{leg}_location", description=f"{leg.capitalize()}: {label}", quantity=1,
             unit_price=fee, total=fee, kind=leg,

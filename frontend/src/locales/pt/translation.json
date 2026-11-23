@@ -321,7 +321,7 @@
     "continue": "Continuar",
     "edit": "Editar",
     "quoteHelp": "Escolha um carro e as datas para ver o preço.",
-    "quoteUnavailable": "Não foi possível confirmar o preço atual. Verifique as datas e tente novamente.",
+    "quoteUnavailable": "O preço estimado está visível, mas o serviço não conseguiu confirmar a disponibilidade e os encargos atuais. Tente novamente antes de enviar.",
     "priceChanged": "O preço ou a disponibilidade mudou. Reveja o total atualizado antes de enviar.",
     "quoteFinal": "O sistema confirma o preço final quando enviar o pedido.",
     "progress": "Progresso da reserva",
@@ -338,7 +338,7 @@
     "addressHint": "Hotel, resort, rua ou alojamento",
     "airportInstructions": "Informações úteis, por exemplo se viaja com bebés",
     "addressInstructions": "Códigos de acesso, referências ou detalhes da receção",
-    "optionsFallback": "Alguns extras ou taxas estão temporariamente indisponíveis. O serviço confirmará o total.",
+    "optionsFallback": "Algumas definições atuais da reserva não estão disponíveis. O preço estimado usa os valores predefinidos e será verificado antes do envio.",
     "duration": "Duração do aluguer",
     "durationRule": "Cada período iniciado de 24 horas conta como um dia.",
     "samePickup": "Devolver no mesmo local da recolha",
@@ -419,7 +419,10 @@
       "payment": "Escolha como pretende pagar.",
       "terms": "Aceite os termos para continuar.",
       "serverField": "Verifique este dado da reserva e tente novamente."
-    }
+    },
+    "checkingPrice": "A confirmar o preço atual...",
+    "priceConfigError": "Não foi possível calcular um total fiável para o veículo e as opções selecionados.",
+    "deliveryFeeRule": "Aplica-se uma taxa de entrega de {{amount}} uma só vez por reserva se o levantamento ou a devolução ocorrer fora da zona gratuita."
   },
   "seo": {
     "home": "Aluguer de carros sem condutor em Zanzibar",

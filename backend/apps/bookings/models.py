@@ -59,7 +59,7 @@ class ExtraService(UUIDModel, TimeStampedModel):
     """Priced options. All fees live here so prices are never hard-coded.
 
     System rows (``is_system``) are created by migration and drive core rules:
-      * outside_zone_delivery — charged per leg (pickup / return) outside the free zone
+      * outside_zone_delivery — charged once if pickup or return is outside the free zone
       * baby_seat              — per seat, per booking
       * driving_permit         — permit arrangement, requires documents
     """

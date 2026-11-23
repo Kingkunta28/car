@@ -36,26 +36,26 @@ class PricingEngineTests(TestCase):
             self.assertEqual(q.pickup_fee, Decimal("0.00"))
             self.assertEqual(q.return_fee, Decimal("0.00"))
 
-    def test_outside_zone_charged_per_leg_independently(self):
+    def test_outside_zone_delivery_fee_charged_once_per_booking(self):
         self.assertEqual(self.q(pickup="OUTSIDE_ZONE").pickup_fee, Decimal("25.00"))
         self.assertEqual(self.q(pickup="OUTSIDE_ZONE").return_fee, Decimal("0.00"))
+        self.assertEqual(self.q(ret="OUTSIDE_ZONE").return_fee, Decimal("25.00"))
         q = self.q(pickup="OUTSIDE_ZONE", ret="OUTSIDE_ZONE")
-        self.assertEqual(q.pickup_fee + q.return_fee, Decimal("50.00"))
-        self.assertEqual(q.grand_total, Decimal("200.00"))
+        self.assertEqual(q.pickup_fee + q.return_fee, Decimal("25.00"))
+        self.assertEqual(q.grand_total, Decimal("175.00"))
 
     def test_baby_seat_is_per_seat_per_booking_not_per_day(self):
         q = self.q(days=7, extras={"baby_seat": 1})
         self.assertEqual(q.extras_total, Decimal("60.00"))  # 1 × $60, regardless of 7 days
 
-    def test_baby_seat_bulk_price_from_two(self):
-        # Website: "$60.00 per seat" and "$50.00 each when you take 2 or more"
+    def test_baby_seat_price_is_sixty_dollars_per_seat(self):
         self.assertEqual(self.q(extras={"baby_seat": 1}).extras_total, Decimal("60.00"))
-        self.assertEqual(self.q(extras={"baby_seat": 2}).extras_total, Decimal("100.00"))
-        self.assertEqual(self.q(days=7, extras={"baby_seat": 3}).extras_total, Decimal("150.00"))
+        self.assertEqual(self.q(extras={"baby_seat": 2}).extras_total, Decimal("120.00"))
+        self.assertEqual(self.q(days=7, extras={"baby_seat": 3}).extras_total, Decimal("180.00"))
         line = [l for l in self.q(extras={"baby_seat": 2}).lines if l.code == "baby_seat"][0]
-        self.assertEqual(line.unit_price, Decimal("50.00"))
+        self.assertEqual(line.unit_price, Decimal("60.00"))
 
-    def test_bulk_price_editable(self):
+    def test_baby_seat_unit_price_remains_editable_in_service_configuration(self):
         ExtraService.objects.filter(code="baby_seat").update(bulk_min_quantity=None, bulk_unit_price=None)
         self.assertEqual(self.q(extras={"baby_seat": 2}).extras_total, Decimal("120.00"))
 
@@ -71,8 +71,8 @@ class PricingEngineTests(TestCase):
 
     def test_full_combination(self):
         q = self.q(days=4, pickup="OUTSIDE_ZONE", ret="TOWN", extras={"baby_seat": 2, "driving_permit": 1})
-        # 4×50 + 25 + 0 + 2×50 (bulk) + 25
-        self.assertEqual(q.grand_total, Decimal("350.00"))
+        # 4×50 + 25 delivery + 2×60 seats + 25 permit
+        self.assertEqual(q.grand_total, Decimal("370.00"))
 
     def test_prices_come_from_database(self):
         ExtraService.objects.filter(code="baby_seat").update(price=Decimal("65.00"))

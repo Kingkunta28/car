@@ -25,12 +25,17 @@ export const DEFAULT_VEHICLES = [
 export const DEFAULT_BOOKING_OPTIONS = {
   isFallback: true,
   currency: "USD",
+  tax_rate: "0.00",
+  tax_label: "VAT",
   locations: [
     { code: "AIRPORT", label: "Zanzibar Airport", fee: "0.00" },
     { code: "TOWN", label: "Zanzibar Town", fee: "0.00" },
-    { code: "OUTSIDE_ZONE", label: "Outside Free Zone", fee: "0.00" },
+    { code: "OUTSIDE_ZONE", label: "Outside Free Zone", fee: "25.00" },
   ],
-  extras: [],
+  extras: [
+    { code: "baby_seat", name: "Baby seat", description: "Per seat, for the whole booking (not per day).", price: "60.00", pricing_type: "PER_UNIT", max_quantity: 4, bulk_min_quantity: null, bulk_unit_price: null, requires_documents: false },
+    { code: "driving_permit", name: "Driving permit arrangement", description: "We arrange the Zanzibar driving permit. Requires passport and driving licence copies.", price: "25.00", pricing_type: "PER_BOOKING", max_quantity: 1, bulk_min_quantity: null, bulk_unit_price: null, requires_documents: true },
+  ],
   default_arrival_airport: "Abeid Amani Karume International Airport",
   hold_hours: 24,
   min_lead_hours: 0,

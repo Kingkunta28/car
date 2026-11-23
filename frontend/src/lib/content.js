@@ -1,4 +1,4 @@
-import { usd } from "./format";
+import { usd } from "./format.js";
 
 // Prices are never hard-coded: they are read from the booking-options API.
 export function priceOf(options, code) {
@@ -11,7 +11,7 @@ const p = (v, fallback = "a small fee") => (v != null ? usd(v) : fallback);
 
 /** Unit price for an extra at a quantity (applies the volume price, e.g. 2+ baby seats). */
 export function unitPrice(extra, qty) {
-  if (extra?.bulk_min_quantity && extra.bulk_unit_price != null && qty >= extra.bulk_min_quantity) return Number(extra.bulk_unit_price);
+  if (extra?.code !== "baby_seat" && extra?.bulk_min_quantity && extra.bulk_unit_price != null && qty >= extra.bulk_min_quantity) return Number(extra.bulk_unit_price);
   return Number(extra?.price || 0);
 }
 
@@ -19,9 +19,7 @@ export function unitPrice(extra, qty) {
 export function babySeatText(options) {
   const e = options?.extras?.find((x) => x.code === "baby_seat");
   if (!e) return "available";
-  return e.bulk_min_quantity && e.bulk_unit_price != null
-    ? `${usd(e.price)} per seat, or ${usd(e.bulk_unit_price)} each for ${e.bulk_min_quantity} or more`
-    : `${usd(e.price)} per seat`;
+  return `${usd(e.price)} per seat`;
 }
 
 export function faqs(options) {

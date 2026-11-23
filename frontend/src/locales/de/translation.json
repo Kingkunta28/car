@@ -321,7 +321,7 @@
     "continue": "Weiter",
     "edit": "Bearbeiten",
     "quoteHelp": "Wählen Sie ein Auto und Daten, um den Preis zu sehen.",
-    "quoteUnavailable": "Der aktuelle Preis konnte nicht bestätigt werden. Prüfen Sie die Daten und versuchen Sie es erneut.",
+    "quoteUnavailable": "Der Schätzpreis wird angezeigt, aber der Dienst konnte die aktuelle Verfügbarkeit und die Gebühren nicht bestätigen. Versuchen Sie es vor dem Absenden erneut.",
     "priceChanged": "Preis oder Verfügbarkeit haben sich geändert. Prüfen Sie den aktualisierten Gesamtbetrag vor dem Absenden.",
     "quoteFinal": "Der endgültige Preis wird beim Absenden vom System bestätigt.",
     "progress": "Buchungsfortschritt",
@@ -338,7 +338,7 @@
     "addressHint": "Hotel, Resort, Straße oder Unterkunft",
     "airportInstructions": "Wichtige Hinweise, zum Beispiel Reisen mit Kleinkindern",
     "addressInstructions": "Zugangscodes, Orientierungspunkte oder Empfangsdetails",
-    "optionsFallback": "Einige Extras oder Gebühren sind vorübergehend nicht verfügbar. Der Dienst prüft den Gesamtbetrag.",
+    "optionsFallback": "Einige aktuelle Buchungseinstellungen sind nicht verfügbar. Der angezeigte Schätzpreis nutzt Standardpreise und wird vor dem Absenden vom Buchungsservice geprüft.",
     "duration": "Mietdauer",
     "durationRule": "Jeder begonnene 24-Stunden-Zeitraum zählt als ein Miettag.",
     "samePickup": "Rückgabe am Abholort",
@@ -419,7 +419,10 @@
       "payment": "Wählen Sie Ihre Zahlungsart.",
       "terms": "Bitte akzeptieren Sie die Bedingungen, um fortzufahren.",
       "serverField": "Prüfen Sie diese Buchungsangabe und versuchen Sie es erneut."
-    }
+    },
+    "checkingPrice": "Aktueller Preis wird geprüft...",
+    "priceConfigError": "Für das ausgewählte Fahrzeug und die Optionen konnte kein zuverlässiger Gesamtbetrag berechnet werden.",
+    "deliveryFeeRule": "Eine Liefergebühr von {{amount}} fällt einmal pro Buchung an, wenn Abholung oder Rückgabe außerhalb der kostenlosen Zone liegt."
   },
   "seo": {
     "home": "Mietwagen zur Selbstfahrt auf Sansibar",

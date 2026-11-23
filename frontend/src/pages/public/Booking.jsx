@@ -10,6 +10,7 @@ import { api, ApiError } from "../../lib/api";
 import { useBookingOptions, useVehicles } from "../../lib/hooks";
 import { cx, fmtDate, rentalDays, todayISO, usd } from "../../lib/format";
 import { babySeatText, unitPrice } from "../../lib/content";
+import { calculateBookingPrice } from "../../lib/bookingPrice";
 import { DEFAULT_BOOKING_OPTIONS, vehicleSnapshot } from "../../data/vehicles";
 import { saveGuest } from "../../lib/guest";
 import { Seo } from "../../lib/seo";
@@ -76,7 +77,8 @@ function validateStep(step, s, files, options, t, vehicle) {
   };
   if (step === 2) leg("pickup", "pickup");
   if (step === 3) leg("ret", "return");
-  if (step === 5 && s.extras.driving_permit && !options?.isFallback) {
+  const permit = options?.extras?.find((extra) => extra.code === "driving_permit");
+  if (step === 5 && s.extras.driving_permit && permit?.requires_documents) {
     const max = (options?.max_upload_mb || 8) * 1024 * 1024;
     for (const [k, message] of [["passport", "passport"], ["driving_licence", "licence"]]) {
       if (!files[k]) e[k] = t(`booking.validation.${message}`);
@@ -122,7 +124,7 @@ function toPayload(s, vehicle, totalAmount, options) {
     pickup_date: s.pickup_date, pickup_time: s.pickup_time, return_date: s.return_date, return_time: s.return_time,
     pickup_type: s.pickup.type, pickup_area: s.pickup.area, pickup_address: s.pickup.address, pickup_instructions: s.pickup.instructions,
     return_type: s.ret.type, return_area: s.ret.area, return_address: s.ret.address, return_instructions: s.ret.instructions,
-    flight, extras: Object.fromEntries(Object.entries(options.isFallback ? {} : s.extras).filter(([, q]) => q > 0)),
+    flight, extras: Object.fromEntries(Object.entries(s.extras).filter(([, q]) => q > 0)),
     payment_method: s.payment_method, accept_terms: s.accept_terms,
   };
 }
@@ -152,6 +154,7 @@ function useQuote(s, vehicle) {
 function LocationPicker({ prefix, leg, onChange, options, errors, isReturn }) {
   const { t } = useTranslation();
   const icons = { AIRPORT: Plane, TOWN: Building2, OUTSIDE_ZONE: MapPin };
+  const outsideFee = options.locations.find((item) => item.code === "OUTSIDE_ZONE")?.fee;
   return (
     <div className="space-y-6">
       <fieldset>
@@ -166,13 +169,14 @@ function LocationPicker({ prefix, leg, onChange, options, errors, isReturn }) {
                   active ? "border-navy-900 bg-navy-50" : "border-line hover:border-navy-600")}>
                 <Icon className={cx("size-6", active ? "text-orange-600" : "text-navy-600")} aria-hidden />
                 <span className="mt-3 font-semibold text-navy-900">{t(`booking.locations.${l.code}`, { defaultValue: l.label })}</span>
-                <span className={cx("mt-1 text-sm font-semibold", options.isFallback && l.code === "OUTSIDE_ZONE" ? "text-muted" : Number(l.fee) ? "text-orange-600" : "text-emerald-700")}>
-                  {options.isFallback && l.code === "OUTSIDE_ZONE" ? t("booking.confirmFee") : Number(l.fee) ? usd(l.fee) : t("booking.free").toUpperCase()}
+                <span className={cx("mt-1 text-sm font-semibold", Number(l.fee) ? "text-orange-600" : "text-emerald-700")}>
+                  {Number(l.fee) ? usd(l.fee) : t("booking.free").toUpperCase()}
                 </span>
               </button>
             );
           })}
         </div>
+        {Number(outsideFee) > 0 && <p className="mt-2 text-xs text-muted">{t("booking.deliveryFeeRule", { amount: usd(outsideFee) })}</p>}
         {errors[`${prefix}_type`] && <p className="mt-2 text-sm text-red-600" role="alert">{errors[`${prefix}_type`]}</p>}
       </fieldset>
 
@@ -235,9 +239,10 @@ function FileDrop({ id, label, file, onFile, error, maxMb }) {
   );
 }
 
-function Summary({ s, quote, vehicle, compact }) {
+function Summary({ s, quote, price, vehicle, compact }) {
   const { t } = useTranslation();
-  const q = quote.data;
+  const q = price?.grand_total ? price : null;
+  const deliveryFee = q ? (q.delivery_fee ?? (Number(q.pickup_fee) + Number(q.return_fee))) : 0;
   return (
     <div className="card overflow-hidden">
       {vehicle && !compact && (
@@ -248,16 +253,17 @@ function Summary({ s, quote, vehicle, compact }) {
         {s.pickup_date && s.return_date && (
           <p className="mt-1 text-sm text-muted">{fmtDate(s.pickup_date)} {s.pickup_time} → {fmtDate(s.return_date)} {s.return_time}</p>
         )}
-        {!q && !quote.isFetching && <p className="mt-4 text-sm text-muted">{t("booking.quoteHelp")}</p>}
-        {quote.isFetching && !q && <div className="mt-4"><Spinner /></div>}
-        {quote.error && <p className="mt-4 text-sm text-red-600" role="alert">{t("booking.quoteUnavailable")}</p>}
+        {!q && !price?.error && <p className="mt-4 text-sm text-muted">{t("booking.quoteHelp")}</p>}
+        {price?.error && <p className="mt-4 text-sm text-red-600" role="alert">{t("booking.priceConfigError")}</p>}
+        {quote.isFetching && <div className="mt-3 flex items-center gap-2 text-xs text-muted"><Spinner />{t("booking.checkingPrice")}</div>}
+        {quote.error && <p className="mt-3 text-sm text-red-700" role="alert">{t("booking.quoteUnavailable")}</p>}
+        {quote.data && q && quote.data.grand_total !== q.grand_total && <Alert tone="error" className="mt-3">{t("booking.priceChanged")}</Alert>}
         {q && (
           <>
-            {!q.available && <Alert tone="error" className="mt-4">{t("booking.reservedConflict")}</Alert>}
-            <dl className={cx("mt-4 space-y-2 text-sm", quote.isFetching && "opacity-60")}>
+            {quote.data && !quote.data.available && <Alert tone="error" className="mt-4">{t("booking.reservedConflict")}</Alert>}
+            <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between"><dt className="text-muted">{t("booking.rentalLine", { days: q.rental_days, rate: usd(q.daily_rate) })}</dt><dd className="font-medium tabular-nums">{usd(q.rental_total)}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">{t("booking.pickupFee")}</dt><dd className="tabular-nums">{Number(q.pickup_fee) ? usd(q.pickup_fee) : t("booking.free")}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">{t("booking.returnFee")}</dt><dd className="tabular-nums">{Number(q.return_fee) ? usd(q.return_fee) : t("booking.free")}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">{t("booking.deliveryFee")}</dt><dd className="tabular-nums">{Number(deliveryFee) ? usd(deliveryFee) : t("booking.free")}</dd></div>
               {q.lines.filter((l) => l.kind === "extra").map((l) => (
                 <div key={l.code} className="flex justify-between"><dt className="text-muted">{extraLabel({ code: l.code, name: l.description }, t)}{l.quantity > 1 ? ` × ${l.quantity}` : ""}</dt><dd className="tabular-nums">{usd(l.total)}</dd></div>
               ))}
@@ -295,6 +301,18 @@ export default function Booking() {
   const topRef = useRef(null);
   const vehicle = useMemo(() => vehicles.data?.find((v) => v.slug === s.vehicle), [vehicles.data, s.vehicle]);
   const quote = useQuote(s, vehicle);
+  const price = useMemo(() => calculateBookingPrice({
+    vehicle,
+    pickupDate: s.pickup_date,
+    pickupTime: s.pickup_time,
+    returnDate: s.return_date,
+    returnTime: s.return_time,
+    pickupType: s.pickup.type,
+    returnType: s.ret.type,
+    extras: s.extras,
+    options,
+  }), [vehicle, s.pickup_date, s.pickup_time, s.return_date, s.return_time,
+    s.pickup.type, s.ret.type, s.extras, options]);
 
   useEffect(() => {
     const { accept_terms, ...draft } = s; // eslint-disable-line no-unused-vars
@@ -342,8 +360,13 @@ export default function Booking() {
         setStep(1);
         return;
       }
+      if (price.error || latestQuote.data.grand_total !== price.grand_total) {
+        setSubmitError(t("booking.priceChanged"));
+        setStep(1);
+        return;
+      }
       const form = new FormData();
-      form.append("payload", JSON.stringify(toPayload(s, vehicle, latestQuote.data.grand_total, options)));
+      form.append("payload", JSON.stringify(toPayload(s, vehicle, price.grand_total)));
       if (s.extras.driving_permit) {
         form.append("passport", files.passport);
         form.append("driving_licence", files.driving_licence);
@@ -411,7 +434,7 @@ export default function Booking() {
                 <span className="flex items-center gap-2 font-display text-lg">{quote.data ? usd(quote.data.grand_total) : "—"}
                   <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden /></span>
               </summary>
-              <div className="px-2 pb-2"><Summary s={s} quote={quote} vehicle={vehicle} compact /></div>
+              <div className="px-2 pb-2"><Summary s={s} quote={quote} price={price} vehicle={vehicle} compact /></div>
             </details>
           )}
           {step === 0 && (
@@ -607,7 +630,7 @@ export default function Booking() {
                   </div>
                 ))}
               </div>
-              <div className="lg:hidden"><Summary s={s} quote={quote} vehicle={vehicle} compact /></div>
+              <div className="lg:hidden"><Summary s={s} quote={quote} price={price} vehicle={vehicle} compact /></div>
               <label className="flex gap-3 text-sm leading-relaxed">
                 <input type="checkbox" className="mt-0.5 size-5 accent-navy-900" checked={s.accept_terms} onChange={(e) => up({ accept_terms: e.target.checked })}
                   aria-invalid={!!errors.accept_terms} />
@@ -629,7 +652,7 @@ export default function Booking() {
           </div>
         </form>
 
-        <aside className="hidden lg:block"><div className="sticky top-24"><Summary s={s} quote={quote} vehicle={vehicle} /></div></aside>
+        <aside className="hidden lg:block"><div className="sticky top-24"><Summary s={s} quote={quote} price={price} vehicle={vehicle} /></div></aside>
       </div>
     </>
   );

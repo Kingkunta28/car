@@ -35,24 +35,33 @@ class BookingFlowTests(TestCase):
         return {"HTTP_X_BOOKING_REFERENCE": res.data["booking_reference"],
                 "HTTP_X_BOOKING_TOKEN": res.data["access_token"]}
 
+    def test_public_booking_options_expose_current_price_configuration(self):
+        response = self.client.get("/api/v1/booking-options/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["tax_rate"], "0.00")
+        self.assertEqual(response.data["locations"][2]["fee"], "25.00")
+        baby_seat = next(extra for extra in response.data["extras"] if extra["code"] == "baby_seat")
+        self.assertEqual(baby_seat["price"], "60.00")
+        self.assertIsNone(baby_seat["bulk_unit_price"])
+
     # ---- Happy path ----------------------------------------------------------
     def test_complete_guest_workflow(self):
         res = self.create(pickup_type="OUTSIDE_ZONE", return_type="TOWN", extras={"baby_seat": 2})
         self.assertEqual(res.status_code, 201, res.data)
         self.assertEqual(res.data["booking_status"], "PENDING_CONFIRMATION")
         self.assertEqual(res.data["payment_status"], "UNPAID")
-        # 3 days × 55 + 25 outside zone + 2 × 50 (2+ baby seats)
-        self.assertEqual(res.data["grand_total"], "290.00")
+        # 3 days × 55 + 25 outside zone + 2 × 60 baby seats
+        self.assertEqual(res.data["grand_total"], "310.00")
         self.assertTrue(res.data["invoice_number"].startswith(f"RCI-{timezone.localdate().year}-"))
 
         b = Booking.objects.get(booking_reference=res.data["booking_reference"])
         self.assertTrue(b.blocks_inventory)
         self.assertIsNotNone(b.hold_expires_at)
-        self.assertEqual(b.pricing_breakdown["grand_total"], "290.00")
+        self.assertEqual(b.pricing_breakdown["grand_total"], "310.00")
         self.assertEqual(b.extras.get(code="baby_seat").quantity, 2)
         inv = Invoice.objects.get(booking=b)
         self.assertTrue(inv.pdf_file)
-        self.assertEqual(inv.total_amount, Decimal("290.00"))
+        self.assertEqual(inv.total_amount, Decimal("310.00"))
 
         # Emails to guest and owner, with invoice attached and a secure link (no raw token stored).
         recipients = sorted(m.to[0] for m in mail.outbox)
@@ -67,7 +76,7 @@ class BookingFlowTests(TestCase):
         # Guest can view their booking and download the invoice PDF.
         track = self.client.get("/api/v1/bookings/track/", **self.guest_headers(res))
         self.assertEqual(track.status_code, 200)
-        self.assertEqual(track.data["grand_total"], "290.00")
+        self.assertEqual(track.data["grand_total"], "310.00")
         pdf = self.client.get("/api/v1/invoices/download/", **self.guest_headers(res))
         self.assertEqual(pdf.status_code, 200)
         self.assertEqual(pdf["Content-Type"], "application/pdf")
@@ -87,6 +96,13 @@ class BookingFlowTests(TestCase):
         self.assertEqual(res.status_code, 400, res.data)
         self.assertEqual(res.data["error"]["code"], "validation_error")
         self.assertFalse(Booking.objects.exists())
+
+    def test_matching_submitted_quote_creates_booking(self):
+        payload = f.booking_payload(self.v)
+        payload["total_amount"] = "165.00"
+        res = self.create(payload)
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(res.data["grand_total"], payload["total_amount"])
 
     def test_static_catalogue_booking_needs_no_vehicle_row_and_saves_snapshot(self):
         slug = "toyota-rav4-2018"
@@ -298,5 +314,5 @@ class BookingFlowTests(TestCase):
             "vehicle", "pickup_date", "pickup_time", "return_date", "return_time", "pickup_type", "return_type",
             "extras")}, format="json")
         self.assertEqual(quote.status_code, 200)
-        self.assertEqual(quote.data["grand_total"], "300.00")
+        self.assertEqual(quote.data["grand_total"], "275.00")
         self.assertTrue(quote.data["available"])

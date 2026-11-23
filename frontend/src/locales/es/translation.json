@@ -321,7 +321,7 @@
     "continue": "Continuar",
     "edit": "Editar",
     "quoteHelp": "Elige un coche y las fechas para ver el precio.",
-    "quoteUnavailable": "No se pudo confirmar el precio actual. Revisa las fechas e inténtalo de nuevo.",
+    "quoteUnavailable": "Se muestra un precio estimado, pero el servicio no pudo confirmar la disponibilidad y los cargos actuales. Inténtalo de nuevo antes de enviar.",
     "priceChanged": "El precio o la disponibilidad han cambiado. Revisa el nuevo total antes de enviar.",
     "quoteFinal": "El sistema confirmará el precio final al enviar la solicitud.",
     "progress": "Progreso de la reserva",
@@ -338,7 +338,7 @@
     "addressHint": "Hotel, complejo, calle o alojamiento",
     "airportInstructions": "Cualquier detalle útil, por ejemplo si viajas con bebés",
     "addressInstructions": "Códigos de acceso, referencias o recepción",
-    "optionsFallback": "Algunos extras o tarifas no están disponibles temporalmente. El servicio confirmará el total.",
+    "optionsFallback": "Algunas opciones de reserva actualizadas no están disponibles. El precio estimado usa los valores predeterminados y el servicio lo verificará antes del envío.",
     "duration": "Duración del alquiler",
     "durationRule": "Cada periodo iniciado de 24 horas cuenta como un día.",
     "samePickup": "Devolver en el mismo lugar de recogida",
@@ -419,7 +419,10 @@
       "payment": "Elige cómo deseas pagar.",
       "terms": "Acepta las condiciones para continuar.",
       "serverField": "Revisa este dato de la reserva e inténtalo de nuevo."
-    }
+    },
+    "checkingPrice": "Comprobando el precio actual...",
+    "priceConfigError": "No se pudo calcular un total fiable para el vehículo y las opciones seleccionados.",
+    "deliveryFeeRule": "Se aplica una sola tarifa de entrega de {{amount}} por reserva si la recogida o la devolución es fuera de la zona gratuita."
   },
   "seo": {
     "home": "Alquiler de coches sin conductor en Zanzíbar",
