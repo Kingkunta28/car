@@ -38,8 +38,15 @@ export function todayISO(offsetDays = 0) {
 
 export function rentalDays(pd, pt, rd, rt) {
   if (!pd || !rd || !pt || !rt) return 0;
-  const ms = new Date(`${rd}T${rt}`) - new Date(`${pd}T${pt}`);
-  return ms > 0 ? Math.max(1, Math.ceil(ms / 86_400_000)) : 0;
+  const asUtcTimestamp = (date, time) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(time)) return NaN;
+    const timestamp = Date.parse(`${date}T${time.length === 5 ? `${time}:00` : time}Z`);
+    return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === date ? timestamp : NaN;
+  };
+  const start = asUtcTimestamp(pd, pt);
+  const end = asUtcTimestamp(rd, rt);
+  const ms = end - start;
+  return Number.isFinite(ms) && ms > 0 ? Math.max(1, Math.ceil(ms / 86_400_000)) : 0;
 }
 
 export const cx = (...c) => c.filter(Boolean).join(" ");

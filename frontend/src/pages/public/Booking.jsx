@@ -53,44 +53,63 @@ function loadDraft(sp) {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_RE = /^\+?[0-9 ()-]{7,25}$/;
 
-function validateStep(step, s, files, options) {
+function validateStep(step, s, files, options, t, vehicle) {
   const e = {};
   if (step === 0) {
-    if ((s.customer.full_name || "").trim().length < 2) e["customer.full_name"] = "Please enter your full name.";
-    if (!EMAIL_RE.test(s.customer.email || "")) e["customer.email"] = "Please enter a valid email address.";
-    if (!PHONE_RE.test(s.customer.phone || "")) e["customer.phone"] = "Include your country code, e.g. +44 7700 900123.";
+    if ((s.customer.full_name || "").trim().length < 2) e["customer.full_name"] = t("booking.validation.fullName");
+    if (!EMAIL_RE.test(s.customer.email || "")) e["customer.email"] = t("booking.validation.email");
+    if (!PHONE_RE.test(s.customer.phone || "")) e["customer.phone"] = t("booking.validation.phone");
   }
   if (step === 1) {
-    if (!s.vehicle) e.vehicle = "Please choose a vehicle.";
-    if (!s.pickup_date) e.pickup_date = "Choose a pickup date.";
-    if (!s.return_date) e.return_date = "Choose a return date.";
+    if (!s.vehicle || !vehicle) e.vehicle = t("booking.validation.vehicle");
+    if (!s.pickup_date) e.pickup_date = t("booking.validation.pickupDate");
+    if (!s.return_date) e.return_date = t("booking.validation.returnDate");
     if (s.pickup_date && s.return_date && rentalDays(s.pickup_date, s.pickup_time, s.return_date, s.return_time) < 1)
-      e.return_date = "Return must be after pickup.";
-    if (s.pickup_date && s.pickup_date < todayISO()) e.pickup_date = "Pickup can't be in the past.";
+      e.return_date = t("booking.validation.returnAfterPickup");
+    if (s.pickup_date && s.pickup_date < todayISO()) e.pickup_date = t("booking.validation.pickupPast");
   }
   const leg = (key, prefix) => {
     const l = s[key];
-    if (!l.type) e[`${prefix}_type`] = "Choose a location.";
-    if ((l.type === "TOWN" || l.type === "OUTSIDE_ZONE") && !l.address.trim()) e[`${prefix}_address`] = "Please enter the exact address, hotel or property.";
-    if (l.type === "OUTSIDE_ZONE" && !l.area.trim()) e[`${prefix}_area`] = "Please enter the area or destination.";
+    if (!l.type) e[`${prefix}_type`] = t("booking.validation.location");
+    if ((l.type === "TOWN" || l.type === "OUTSIDE_ZONE") && !l.address.trim()) e[`${prefix}_address`] = t("booking.validation.address");
+    if (l.type === "OUTSIDE_ZONE" && !l.area.trim()) e[`${prefix}_area`] = t("booking.validation.area");
   };
   if (step === 2) leg("pickup", "pickup");
   if (step === 3) leg("ret", "return");
   if (step === 5 && s.extras.driving_permit && !options?.isFallback) {
     const max = (options?.max_upload_mb || 8) * 1024 * 1024;
-    for (const [k, label] of [["passport", "passport"], ["driving_licence", "driving licence"]]) {
-      if (!files[k]) e[k] = `Please upload a copy of your ${label}.`;
-      else if (files[k].size > max) e[k] = `File is larger than ${options?.max_upload_mb || 8} MB.`;
+    for (const [k, message] of [["passport", "passport"], ["driving_licence", "licence"]]) {
+      if (!files[k]) e[k] = t(`booking.validation.${message}`);
+      else if (files[k].size > max) e[k] = t("booking.validation.fileSize", { size: options?.max_upload_mb || 8 });
     }
   }
-  if (step === 6 && !s.payment_method) e.payment_method = "Choose how you'd like to pay.";
-  if (step === 7 && !s.accept_terms) e.accept_terms = "Please accept the terms to continue.";
+  if (step === 6 && !s.payment_method) e.payment_method = t("booking.validation.payment");
+  if (step === 7 && !s.accept_terms) e.accept_terms = t("booking.validation.terms");
   return e;
+}
+
+function localizedApiFieldError(field, t) {
+  if (field.startsWith("customer.full_name")) return t("booking.validation.fullName");
+  if (field.startsWith("customer.email")) return t("booking.validation.email");
+  if (field.startsWith("customer.phone")) return t("booking.validation.phone");
+  if (/^(vehicle|vehicle_snapshot)/.test(field)) return t("booking.validation.vehicle");
+  if (/^(pickup_date|pickup_time)/.test(field)) return t("booking.validation.pickupDate");
+  if (/^(return_date|return_time)/.test(field)) return t("booking.validation.returnDate");
+  if (/^(pickup_type|return_type)$/.test(field)) return t("booking.validation.location");
+  if (/(pickup|return)_address/.test(field)) return t("booking.validation.address");
+  if (/(pickup|return)_area/.test(field)) return t("booking.validation.area");
+  if (/^(passport|driving_licence|documents)/.test(field)) return t("booking.validation.documents");
+  if (field.startsWith("payment")) return t("booking.validation.payment");
+  if (field.startsWith("extras")) return t("booking.validation.extras");
+  if (field.startsWith("flight")) return t("booking.validation.serverField");
+  if (field === "accept_terms") return t("booking.validation.terms");
+  if (/^(total_amount|daily_rate)$/.test(field)) return t("booking.priceChanged");
+  return t("booking.validation.serverField");
 }
 
 // Map server field names to the step where they're edited.
 const FIELD_STEP = (k) => k.startsWith("customer") ? 0
-  : /^(vehicle|pickup_date|pickup_time|return_date|return_time)/.test(k) ? 1
+  : /^(vehicle|total_amount|pickup_date|pickup_time|return_date|return_time)/.test(k) ? 1
   : k.startsWith("pickup_") ? 2 : k.startsWith("return_") ? 3 : k.startsWith("flight") ? 4
   : /^(extras|documents|passport|driving_licence)/.test(k) ? 5 : k.startsWith("payment") ? 6 : 7;
 
@@ -117,18 +136,16 @@ function extraLabel(extra, t) {
 function useQuote(s, vehicle) {
   const ready = s.vehicle && s.pickup_date && s.return_date && s.pickup_time && s.return_time
     && vehicle && rentalDays(s.pickup_date, s.pickup_time, s.return_date, s.return_time) > 0;
-  const body = {
+  const body = useMemo(() => ({
     vehicle: s.vehicle, vehicle_id: vehicle?.id, vehicle_snapshot: vehicleSnapshot(vehicle), daily_rate: vehicle?.price_per_day,
     pickup_date: s.pickup_date, pickup_time: s.pickup_time, return_date: s.return_date,
     return_time: s.return_time, pickup_type: s.pickup.type || "AIRPORT", return_type: s.ret.type || "AIRPORT",
     extras: Object.fromEntries(Object.entries(s.extras).filter(([, q]) => q > 0)),
-  };
-  const [debounced, setDebounced] = useState(body);
-  const key = JSON.stringify(body);
-  useEffect(() => { const t = setTimeout(() => setDebounced(JSON.parse(key)), 300); return () => clearTimeout(t); }, [key]);
+  }), [s.vehicle, vehicle, s.pickup_date, s.pickup_time, s.return_date, s.return_time,
+    s.pickup.type, s.ret.type, s.extras]);
   return useQuery({
-    queryKey: ["quote", debounced], enabled: !!ready, retry: false, placeholderData: (prev) => prev,
-    queryFn: () => api.post("/bookings/quote/", debounced),
+    queryKey: ["quote", body], enabled: !!ready, retry: false,
+    queryFn: () => api.post("/bookings/quote/", body),
   });
 }
 
@@ -233,7 +250,7 @@ function Summary({ s, quote, vehicle, compact }) {
         )}
         {!q && !quote.isFetching && <p className="mt-4 text-sm text-muted">{t("booking.quoteHelp")}</p>}
         {quote.isFetching && !q && <div className="mt-4"><Spinner /></div>}
-        {quote.error && <p className="mt-4 text-sm text-red-600" role="alert">{quote.error.message}</p>}
+        {quote.error && <p className="mt-4 text-sm text-red-600" role="alert">{t("booking.quoteUnavailable")}</p>}
         {q && (
           <>
             {!q.available && <Alert tone="error" className="mt-4">{t("booking.reservedConflict")}</Alert>}
@@ -274,6 +291,7 @@ export default function Booking() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const submitLock = useRef(false);
   const topRef = useRef(null);
   const vehicle = useMemo(() => vehicles.data?.find((v) => v.slug === s.vehicle), [vehicles.data, s.vehicle]);
   const quote = useQuote(s, vehicle);
@@ -283,15 +301,15 @@ export default function Booking() {
     try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch { /* ignore */ }
   }, [s]);
 
-  const up = (patch) => setS((p) => ({ ...p, ...patch }));
-  const upCustomer = (k, v) => setS((p) => ({ ...p, customer: { ...p.customer, [k]: v } }));
-  const upFlight = (k, v) => setS((p) => ({ ...p, flight: { ...p.flight, [k]: v } }));
-  const setExtra = (code, qty) => setS((p) => ({ ...p, extras: { ...p.extras, [code]: qty } }));
+  const up = (patch) => { setSubmitError(""); setS((p) => ({ ...p, ...patch })); };
+  const upCustomer = (k, v) => { setSubmitError(""); setS((p) => ({ ...p, customer: { ...p.customer, [k]: v } })); };
+  const upFlight = (k, v) => { setSubmitError(""); setS((p) => ({ ...p, flight: { ...p.flight, [k]: v } })); };
+  const setExtra = (code, qty) => { setSubmitError(""); setS((p) => ({ ...p, extras: { ...p.extras, [code]: qty } })); };
 
   const go = (n) => { setStep(n); setErrors({}); topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); };
   const next = () => {
-    const e = validateStep(step, s, files, options);
-    if (step === 1 && quote.data && !quote.data.available) e.vehicle = "This car is reserved for these dates — choose other dates or another car.";
+    const e = validateStep(step, s, files, options, t, vehicle);
+    if (step === 1 && quote.data && !quote.data.available) e.vehicle = t("booking.reservedConflict");
     setErrors(e);
     if (Object.keys(e).length) {
       requestAnimationFrame(() => document.querySelector('[aria-invalid="true"], [role="alert"]')?.focus?.());
@@ -301,16 +319,31 @@ export default function Booking() {
   };
 
   const submit = async () => {
+    if (submitLock.current) return;
     for (let i = 0; i < STEPS.length; i++) {
-      const e = validateStep(i, s, files, options);
+      const e = validateStep(i, s, files, options, t, vehicle);
       if (Object.keys(e).length) { setErrors(e); setStep(i); return; }
     }
+    submitLock.current = true;
     setSubmitting(true);
     setSubmitError("");
     try {
+      // Always verify the quote for the current form values immediately before
+      // submission. This keeps the displayed estimate and submitted snapshot aligned.
+      const latestQuote = await quote.refetch();
+      if (latestQuote.error || !latestQuote.data) {
+        setSubmitError(t("booking.quoteUnavailable"));
+        setStep(1);
+        return;
+      }
+      if (!latestQuote.data.available) {
+        setErrors({ vehicle: t("booking.reservedConflict") });
+        setSubmitError(t("booking.reservedConflict"));
+        setStep(1);
+        return;
+      }
       const form = new FormData();
-      const totalAmount = quote.data && !quote.isFetching && !quote.isPlaceholderData ? quote.data.grand_total : null;
-      form.append("payload", JSON.stringify(toPayload(s, vehicle, totalAmount, options)));
+      form.append("payload", JSON.stringify(toPayload(s, vehicle, latestQuote.data.grand_total, options)));
       if (s.extras.driving_permit) {
         form.append("passport", files.passport);
         form.append("driving_licence", files.driving_licence);
@@ -324,15 +357,17 @@ export default function Booking() {
         const fe = err.fieldErrors();
         const keys = Object.keys(fe);
         if (keys.length) {
-          const mapped = Object.fromEntries(keys.map((k) => [k.replace(/^(\w+)\.0$/, "$1"), fe[k]]));
+          const mapped = Object.fromEntries(keys.map((k) => [k.replace(/^(\w+)\.0$/, "$1"), localizedApiFieldError(k, t)]));
           setErrors(mapped);
+          if (fe.total_amount) setSubmitError(t("booking.priceChanged"));
           setStep(Math.min(...keys.map(FIELD_STEP)));
         }
-        setSubmitError(err.message);
+        if (!keys.includes("total_amount")) setSubmitError(err.message);
       } else {
-        setSubmitError("We couldn't reach our server. Please check your connection and try again.");
+        setSubmitError(t("booking.quoteUnavailable"));
       }
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   };

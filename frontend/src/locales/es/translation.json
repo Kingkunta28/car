@@ -321,6 +321,8 @@
     "continue": "Continuar",
     "edit": "Editar",
     "quoteHelp": "Elige un coche y las fechas para ver el precio.",
+    "quoteUnavailable": "No se pudo confirmar el precio actual. Revisa las fechas e inténtalo de nuevo.",
+    "priceChanged": "El precio o la disponibilidad han cambiado. Revisa el nuevo total antes de enviar.",
     "quoteFinal": "El sistema confirmará el precio final al enviar la solicitud.",
     "progress": "Progreso de la reserva",
     "stepLabel": "Paso {{number}}: {{label}}",
@@ -396,7 +398,28 @@
       "PER_UNIT_PER_DAY": "por unidad y día"
     },
     "pickupLocation": "Lugar de recogida",
-    "returnLocation": "Lugar de devolución"
+    "returnLocation": "Lugar de devolución",
+    "validation": {
+      "fullName": "Escribe tu nombre completo.",
+      "email": "Escribe una dirección de correo válida.",
+      "phone": "Incluye el prefijo internacional, por ejemplo, +44 7700 900123.",
+      "vehicle": "Elige un vehículo.",
+      "pickupDate": "Elige una fecha de recogida válida.",
+      "returnDate": "Elige una fecha de devolución válida.",
+      "returnAfterPickup": "La devolución debe ser posterior a la recogida.",
+      "pickupPast": "La fecha de recogida no puede estar en el pasado.",
+      "location": "Elige el lugar de recogida o devolución.",
+      "address": "Indica la dirección exacta del hotel, resort, calle o alojamiento.",
+      "area": "Indica la zona o el destino.",
+      "passport": "Sube una copia del pasaporte.",
+      "licence": "Sube una copia del permiso de conducir.",
+      "fileSize": "El archivo supera el límite de {{size}} MB.",
+      "documents": "Revisa el pasaporte y el permiso de conducir subidos.",
+      "extras": "Revisa los extras seleccionados.",
+      "payment": "Elige cómo deseas pagar.",
+      "terms": "Acepta las condiciones para continuar.",
+      "serverField": "Revisa este dato de la reserva e inténtalo de nuevo."
+    }
   },
   "seo": {
     "home": "Alquiler de coches sin conductor en Zanzíbar",

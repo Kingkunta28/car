@@ -13,8 +13,12 @@ export class ApiError extends Error {
     this.details = err.details || null;
   }
   get message() {
-    const key = `errors.api.${this.code}`;
-    return this.code && i18n.exists(key) ? i18n.t(key) : this.originalMessage;
+    const code = this.code || (this.status === 404 ? "not_found"
+      : this.status === 409 ? "conflict"
+        : this.status >= 500 || this.status === 401 || this.status === 403 || this.status === 405 || this.status === 429
+          ? "server_error" : this.status === 400 ? "validation_error" : null);
+    const key = code ? `errors.api.${code}` : "";
+    return key && i18n.exists(key) ? i18n.t(key) : this.originalMessage;
   }
   fieldErrors() {
     const out = {};
@@ -58,7 +62,12 @@ export async function request(path, { method = "GET", body, form, guest, raw, pa
     headers["X-Booking-Reference"] = guest.reference;
     headers["X-Booking-Token"] = guest.token;
   }
-  if (method !== "GET" && method !== "HEAD") headers["X-CSRFToken"] = await ensureCsrf();
+  // Public APIs use AllowAny and do not rely on a browser session. Only the
+  // session-authenticated admin endpoints need a CSRF token; avoid an extra
+  // CSRF round trip for public quote and booking requests.
+  if (method !== "GET" && method !== "HEAD" && path.startsWith("/admin/")) {
+    headers["X-CSRFToken"] = await ensureCsrf();
+  }
   const qs = params ? "?" + new URLSearchParams(Object.entries(params).filter(([, v]) => v !== "" && v != null)) : "";
   const res = await fetch(`${BASE}${path}${qs}`, {
     method, headers, credentials: "include", signal,

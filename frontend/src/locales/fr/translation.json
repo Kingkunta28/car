@@ -321,6 +321,8 @@
     "continue": "Continuer",
     "edit": "Modifier",
     "quoteHelp": "Choisissez une voiture et des dates pour afficher le prix.",
+    "quoteUnavailable": "Le prix actuel n'a pas pu être confirmé. Vérifiez les dates et réessayez.",
+    "priceChanged": "Le prix ou la disponibilité a changé. Vérifiez le nouveau total avant l'envoi.",
     "quoteFinal": "Le système confirmera le prix final lors de l'envoi.",
     "progress": "Progression de la réservation",
     "stepLabel": "Étape {{number}} : {{label}}",
@@ -396,7 +398,28 @@
       "PER_UNIT_PER_DAY": "par unité et par jour"
     },
     "pickupLocation": "Lieu de prise en charge",
-    "returnLocation": "Lieu de restitution"
+    "returnLocation": "Lieu de restitution",
+    "validation": {
+      "fullName": "Veuillez saisir votre nom complet.",
+      "email": "Veuillez saisir une adresse e-mail valide.",
+      "phone": "Indiquez l’indicatif du pays, par exemple +44 7700 900123.",
+      "vehicle": "Veuillez choisir un véhicule.",
+      "pickupDate": "Choisissez une date de prise en charge valide.",
+      "returnDate": "Choisissez une date de retour valide.",
+      "returnAfterPickup": "Le retour doit avoir lieu après la prise en charge.",
+      "pickupPast": "La date de prise en charge ne peut pas être passée.",
+      "location": "Choisissez un lieu de prise en charge ou de retour.",
+      "address": "Indiquez l’adresse exacte de l’hôtel, du resort, de la rue ou de l’établissement.",
+      "area": "Indiquez la zone ou la destination.",
+      "passport": "Veuillez téléverser une copie de votre passeport.",
+      "licence": "Veuillez téléverser une copie de votre permis de conduire.",
+      "fileSize": "Le fichier dépasse la limite de {{size}} Mo.",
+      "documents": "Vérifiez le passeport et le permis de conduire téléversés.",
+      "extras": "Vérifiez les options sélectionnées.",
+      "payment": "Choisissez votre mode de paiement.",
+      "terms": "Veuillez accepter les conditions pour continuer.",
+      "serverField": "Vérifiez cette information de réservation et réessayez."
+    }
   },
   "seo": {
     "home": "Location de voiture en autonomie à Zanzibar",

@@ -321,6 +321,8 @@
     "continue": "Continue",
     "edit": "Edit",
     "quoteHelp": "Choose a car and dates to see your price.",
+    "quoteUnavailable": "We couldn't confirm a current price. Check your dates and try again.",
+    "priceChanged": "The price or availability changed. Review the updated total before submitting.",
     "quoteFinal": "Final price is confirmed by our system when you submit.",
     "progress": "Booking progress",
     "stepLabel": "Step {{number}}: {{label}}",
@@ -396,7 +398,28 @@
       "PER_UNIT_PER_DAY": "per unit, per day"
     },
     "pickupLocation": "Pickup location",
-    "returnLocation": "Return location"
+    "returnLocation": "Return location",
+    "validation": {
+      "fullName": "Please enter your full name.",
+      "email": "Please enter a valid email address.",
+      "phone": "Include your country code, for example +44 7700 900123.",
+      "vehicle": "Please choose a vehicle.",
+      "pickupDate": "Choose a valid pickup date.",
+      "returnDate": "Choose a valid return date.",
+      "returnAfterPickup": "Return must be after pickup.",
+      "pickupPast": "Pickup cannot be in the past.",
+      "location": "Choose a pickup or return location.",
+      "address": "Enter the exact hotel, resort, street or property address.",
+      "area": "Enter the area or destination.",
+      "passport": "Please upload a copy of your passport.",
+      "licence": "Please upload a copy of your driving licence.",
+      "fileSize": "The file exceeds the {{size}} MB limit.",
+      "documents": "Check the uploaded passport and driving licence.",
+      "extras": "Check the selected extras.",
+      "payment": "Choose how you would like to pay.",
+      "terms": "Accept the terms to continue.",
+      "serverField": "Check this booking detail and try again."
+    }
   },
   "seo": {
     "home": "Self-drive car rental in Zanzibar",

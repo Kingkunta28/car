@@ -321,6 +321,8 @@
     "continue": "Continuar",
     "edit": "Editar",
     "quoteHelp": "Escolha um carro e as datas para ver o preço.",
+    "quoteUnavailable": "Não foi possível confirmar o preço atual. Verifique as datas e tente novamente.",
+    "priceChanged": "O preço ou a disponibilidade mudou. Reveja o total atualizado antes de enviar.",
     "quoteFinal": "O sistema confirma o preço final quando enviar o pedido.",
     "progress": "Progresso da reserva",
     "stepLabel": "Etapa {{number}}: {{label}}",
@@ -396,7 +398,28 @@
       "PER_UNIT_PER_DAY": "por unidade e por dia"
     },
     "pickupLocation": "Local de retirada",
-    "returnLocation": "Local de devolução"
+    "returnLocation": "Local de devolução",
+    "validation": {
+      "fullName": "Introduza o seu nome completo.",
+      "email": "Introduza um endereço de e-mail válido.",
+      "phone": "Inclua o indicativo internacional, por exemplo, +44 7700 900123.",
+      "vehicle": "Escolha um veículo.",
+      "pickupDate": "Escolha uma data de levantamento válida.",
+      "returnDate": "Escolha uma data de devolução válida.",
+      "returnAfterPickup": "A devolução tem de ser posterior ao levantamento.",
+      "pickupPast": "A data de levantamento não pode estar no passado.",
+      "location": "Escolha o local de levantamento ou devolução.",
+      "address": "Indique a morada exata do hotel, resort, rua ou alojamento.",
+      "area": "Indique a zona ou o destino.",
+      "passport": "Carregue uma cópia do passaporte.",
+      "licence": "Carregue uma cópia da carta de condução.",
+      "fileSize": "O ficheiro excede o limite de {{size}} MB.",
+      "documents": "Verifique o passaporte e a carta de condução carregados.",
+      "extras": "Verifique os extras selecionados.",
+      "payment": "Escolha como pretende pagar.",
+      "terms": "Aceite os termos para continuar.",
+      "serverField": "Verifique este dado da reserva e tente novamente."
+    }
   },
   "seo": {
     "home": "Aluguer de carros sem condutor em Zanzibar",

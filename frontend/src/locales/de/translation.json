@@ -321,6 +321,8 @@
     "continue": "Weiter",
     "edit": "Bearbeiten",
     "quoteHelp": "Wählen Sie ein Auto und Daten, um den Preis zu sehen.",
+    "quoteUnavailable": "Der aktuelle Preis konnte nicht bestätigt werden. Prüfen Sie die Daten und versuchen Sie es erneut.",
+    "priceChanged": "Preis oder Verfügbarkeit haben sich geändert. Prüfen Sie den aktualisierten Gesamtbetrag vor dem Absenden.",
     "quoteFinal": "Der endgültige Preis wird beim Absenden vom System bestätigt.",
     "progress": "Buchungsfortschritt",
     "stepLabel": "Schritt {{number}}: {{label}}",
@@ -396,7 +398,28 @@
       "PER_UNIT_PER_DAY": "pro Einheit und Tag"
     },
     "pickupLocation": "Abholort",
-    "returnLocation": "Rückgabeort"
+    "returnLocation": "Rückgabeort",
+    "validation": {
+      "fullName": "Bitte geben Sie Ihren vollständigen Namen ein.",
+      "email": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+      "phone": "Geben Sie die Landesvorwahl an, zum Beispiel +44 7700 900123.",
+      "vehicle": "Bitte wählen Sie ein Fahrzeug aus.",
+      "pickupDate": "Wählen Sie ein gültiges Abholdatum.",
+      "returnDate": "Wählen Sie ein gültiges Rückgabedatum.",
+      "returnAfterPickup": "Die Rückgabe muss nach der Abholung erfolgen.",
+      "pickupPast": "Das Abholdatum darf nicht in der Vergangenheit liegen.",
+      "location": "Wählen Sie einen Abhol- oder Rückgabeort.",
+      "address": "Geben Sie die genaue Adresse des Hotels, Resorts, der Straße oder Unterkunft ein.",
+      "area": "Geben Sie das Gebiet oder Reiseziel ein.",
+      "passport": "Bitte laden Sie eine Kopie Ihres Reisepasses hoch.",
+      "licence": "Bitte laden Sie eine Kopie Ihres Führerscheins hoch.",
+      "fileSize": "Die Datei überschreitet die Grenze von {{size}} MB.",
+      "documents": "Prüfen Sie den hochgeladenen Reisepass und Führerschein.",
+      "extras": "Prüfen Sie die ausgewählten Extras.",
+      "payment": "Wählen Sie Ihre Zahlungsart.",
+      "terms": "Bitte akzeptieren Sie die Bedingungen, um fortzufahren.",
+      "serverField": "Prüfen Sie diese Buchungsangabe und versuchen Sie es erneut."
+    }
   },
   "seo": {
     "home": "Mietwagen zur Selbstfahrt auf Sansibar",

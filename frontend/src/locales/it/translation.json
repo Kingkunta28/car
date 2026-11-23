@@ -321,6 +321,8 @@
     "continue": "Continua",
     "edit": "Modifica",
     "quoteHelp": "Scegli un'auto e le date per vedere il prezzo.",
+    "quoteUnavailable": "Non è stato possibile confermare il prezzo aggiornato. Controlla le date e riprova.",
+    "priceChanged": "Il prezzo o la disponibilità sono cambiati. Controlla il nuovo totale prima di inviare.",
     "quoteFinal": "Il prezzo finale sarà confermato dal sistema al momento dell'invio.",
     "progress": "Avanzamento prenotazione",
     "stepLabel": "Passaggio {{number}}: {{label}}",
@@ -396,7 +398,28 @@
       "PER_UNIT_PER_DAY": "per unità, al giorno"
     },
     "pickupLocation": "Luogo di ritiro",
-    "returnLocation": "Luogo di riconsegna"
+    "returnLocation": "Luogo di riconsegna",
+    "validation": {
+      "fullName": "Inserisci il tuo nome completo.",
+      "email": "Inserisci un indirizzo email valido.",
+      "phone": "Includi il prefisso internazionale, ad esempio +44 7700 900123.",
+      "vehicle": "Scegli un veicolo.",
+      "pickupDate": "Scegli una data di ritiro valida.",
+      "returnDate": "Scegli una data di riconsegna valida.",
+      "returnAfterPickup": "La riconsegna deve avvenire dopo il ritiro.",
+      "pickupPast": "La data di ritiro non può essere nel passato.",
+      "location": "Scegli il luogo di ritiro o riconsegna.",
+      "address": "Inserisci l’indirizzo esatto dell’hotel, resort, via o struttura.",
+      "area": "Inserisci la zona o la destinazione.",
+      "passport": "Carica una copia del passaporto.",
+      "licence": "Carica una copia della patente di guida.",
+      "fileSize": "Il file supera il limite di {{size}} MB.",
+      "documents": "Controlla il passaporto e la patente caricati.",
+      "extras": "Controlla gli extra selezionati.",
+      "payment": "Scegli come desideri pagare.",
+      "terms": "Accetta i termini per continuare.",
+      "serverField": "Controlla questo dato della prenotazione e riprova."
+    }
   },
   "seo": {
     "home": "Noleggio auto self-drive a Zanzibar",

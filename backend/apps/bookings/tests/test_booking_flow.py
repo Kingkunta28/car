@@ -80,6 +80,14 @@ class BookingFlowTests(TestCase):
         self.assertEqual(res.status_code, 201)
         self.assertEqual(res.data["grand_total"], "225.00")
 
+    def test_stale_submitted_quote_is_rejected_before_booking_creation(self):
+        payload = f.booking_payload(self.v)
+        payload["total_amount"] = "1.00"
+        res = self.create(payload)
+        self.assertEqual(res.status_code, 400, res.data)
+        self.assertEqual(res.data["error"]["code"], "validation_error")
+        self.assertFalse(Booking.objects.exists())
+
     def test_static_catalogue_booking_needs_no_vehicle_row_and_saves_snapshot(self):
         slug = "toyota-rav4-2018"
         snapshot = {
