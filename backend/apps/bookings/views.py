@@ -1,8 +1,12 @@
+import base64
+import logging
+
 import django_filters
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
@@ -86,7 +90,19 @@ class BookingCreateView(APIView):
             documents[DocumentType.DRIVING_LICENCE] = request.FILES["driving_licence"]
         result = services.create_booking(dict(s.validated_data), documents=documents, request=request)
         b, inv = result.booking, result.invoice
-        return Response({
+        # The booking is already committed before voucher rendering starts.
+        # If PDF generation fails, keep the saved booking and let the guest
+        # retry through the protected confirmation-download endpoint.
+        voucher_pdf = None
+        try:
+            from .pdf import render_confirmation_pdf
+
+            voucher_pdf = base64.b64encode(render_confirmation_pdf(b)).decode("ascii")
+        except Exception:
+            logging.getLogger(__name__).exception(
+                "Guest voucher generation failed for saved booking %s", b.booking_reference
+            )
+        response = Response({
             "booking_reference": b.booking_reference,
             "access_token": result.access_token,
             "invoice_number": inv.invoice_number,
@@ -100,7 +116,13 @@ class BookingCreateView(APIView):
             "currency": b.currency,
             "hold_expires_at": b.hold_expires_at,
             "whatsapp_url": guest_to_owner_url(b),
+            "voucher_pdf": voucher_pdf,
+            "voucher_available": voucher_pdf is not None,
+            "voucher_download_url": "/api/v1/bookings/confirmation/download/",
         }, status=status.HTTP_201_CREATED)
+        response["Cache-Control"] = "private, no-store, max-age=0"
+        response["X-Content-Type-Options"] = "nosniff"
+        return response
 
 
 class BookingTrackView(APIView):

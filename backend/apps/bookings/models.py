@@ -91,6 +91,7 @@ class ExtraService(UUIDModel, TimeStampedModel):
 
 
 class Booking(UUIDModel, TimeStampedModel):
+    submission_key = models.UUIDField(null=True, blank=True, unique=True, editable=False)
     booking_reference = models.CharField(max_length=20, unique=True)
     customer = models.ForeignKey("customers.Customer", on_delete=models.PROTECT, related_name="bookings")
     # ``vehicle`` is retained only to keep older bookings linked to their

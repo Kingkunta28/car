@@ -100,6 +100,23 @@ export async function download(path, opts = {}, fallbackName = "document.pdf") {
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
+/** Save a PDF included as base64 in a successful booking response. */
+export function downloadBase64Pdf(encoded, fileName) {
+  if (typeof encoded !== "string" || !encoded) throw new Error("The voucher PDF was empty.");
+  const binary = window.atob(encoded);
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  const blob = new Blob([bytes], { type: "application/pdf" });
+  if (blob.size < 5 || new TextDecoder().decode(bytes.subarray(0, 5)) !== "%PDF-") {
+    throw new Error("The voucher response was not a valid PDF.");
+  }
+  const url = URL.createObjectURL(blob);
+  const link = Object.assign(document.createElement("a"), { href: url, download: fileName });
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+}
+
 export const api = {
   get: (p, o) => request(p, { ...o, method: "GET" }),
   post: (p, body, o) => request(p, { ...o, method: "POST", body }),

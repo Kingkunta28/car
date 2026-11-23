@@ -135,7 +135,7 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
     flight, private documents, invoice,
     and queued notifications (sent after commit).
     """
-    from apps.invoices.services import issue_invoice
+    from apps.invoices.services import current_invoice, issue_invoice
     from apps.notifications import services as notify
 
     documents = documents or {}
@@ -153,6 +153,14 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
                                                 "and your driving licence."})
     for f in documents.values():
         validate_identity_upload(f)
+
+    submission_key = data.get("submission_key")
+    if submission_key:
+        existing = Booking.objects.filter(submission_key=submission_key).first()
+        if existing:
+            invoice = current_invoice(existing) or issue_invoice(existing)
+            token = issue_access_token(existing, purpose="confirmation")
+            return BookingResult(booking=existing, access_token=token, invoice=invoice)
 
     try:
         with transaction.atomic():
@@ -189,7 +197,7 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
                 customer.save()
 
             booking = Booking(
-                booking_reference=_unique_reference(), customer=customer, vehicle=vehicle,
+                submission_key=submission_key, booking_reference=_unique_reference(), customer=customer, vehicle=vehicle,
                 vehicle_slug=vehicle_slug, vehicle_snapshot=vehicle_snapshot,
                 pickup_date=data["pickup_date"], pickup_time=data["pickup_time"],
                 return_date=data["return_date"], return_time=data["return_time"],
@@ -200,7 +208,14 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
                 return_address=data.get("return_address", ""), return_instructions=data.get("return_instructions", ""),
                 payment_method=data["payment_method"], language=data.get("language", "en"),
                 customer_notes=c.get("additional_info", ""),
-                hold_expires_at=timezone.now() + timedelta(hours=settings.BOOKING_HOLD_HOURS),
+                # The public static catalogue is directly bookable. Once its
+                # validated details are saved, accept it without an inventory
+                # confirmation hold. Legacy database vehicles keep the
+                # existing staff confirmation workflow.
+                booking_status=(BookingStatus.PENDING_CONFIRMATION if vehicle_model is not None
+                                else BookingStatus.CONFIRMED),
+                hold_expires_at=(timezone.now() + timedelta(hours=settings.BOOKING_HOLD_HOURS)
+                                 if vehicle_model is not None else None),
                 # Static frontend catalogue bookings do not reserve a Django fleet
                 # record or block another visitor from booking the same catalogue car.
                 blocks_inventory=vehicle_model is not None,
@@ -223,7 +238,8 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
                 )
 
             _record_status(booking, BookingStatusHistory.Field.BOOKING, "", booking.booking_status,
-                           notes="Booking submitted by guest.")
+                           notes=("Booking submitted by guest; awaiting staff confirmation."
+                                  if vehicle_model is not None else "Static catalogue booking accepted after saving."))
             token = issue_access_token(booking, purpose="confirmation")
             invoice = issue_invoice(booking)
             notify.booking_submitted(booking, invoice)
@@ -232,6 +248,14 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
     except IntegrityError as exc:
         if _is_overlap_error(exc):
             raise ConflictError(OVERLAP_MESSAGE) from exc
+        # A concurrent retry can race the preflight lookup. The database
+        # uniqueness constraint ensures only one booking is committed.
+        if submission_key:
+            existing = Booking.objects.filter(submission_key=submission_key).first()
+            if existing:
+                invoice = current_invoice(existing) or issue_invoice(existing)
+                token = issue_access_token(existing, purpose="confirmation")
+                return BookingResult(booking=existing, access_token=token, invoice=invoice)
         raise
     if documents:
         # The booking is already committed. A dossier-rendering failure must

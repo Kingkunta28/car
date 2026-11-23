@@ -1,3 +1,5 @@
+import base64
+import uuid
 from unittest import skipUnless
 from datetime import timedelta
 from decimal import Decimal
@@ -6,6 +8,7 @@ from django.core import mail
 from django.db import connection, IntegrityError, transaction
 from django.test import TestCase
 from django.utils import timezone
+import pypdfium2 as pdfium
 from rest_framework.test import APIClient
 
 from apps.accounts.models import Role
@@ -122,6 +125,8 @@ class BookingFlowTests(TestCase):
         res = self.create(payload)
         self.assertEqual(res.status_code, 201, res.data)
         booking = Booking.objects.get(booking_reference=res.data["booking_reference"])
+        self.assertEqual(res.data["booking_status"], BookingStatus.CONFIRMED)
+        self.assertEqual(booking.booking_status, BookingStatus.CONFIRMED)
         self.assertIsNone(booking.vehicle_id)
         self.assertFalse(booking.blocks_inventory)
         self.assertEqual(booking.vehicle_slug, slug)
@@ -129,12 +134,64 @@ class BookingFlowTests(TestCase):
         self.assertEqual(booking.daily_rate, Decimal("35.00"))
         invoice = Invoice.objects.get(booking=booking)
         self.assertTrue(invoice.pdf_file)
+        self.assertTrue(res.data["voucher_available"])
+        voucher_bytes = base64.b64decode(res.data["voucher_pdf"])
+        self.assertTrue(voucher_bytes.startswith(b"%PDF"))
+        voucher = pdfium.PdfDocument(voucher_bytes)
+        voucher_text = "\n".join(voucher[i].get_textpage().get_text_range() for i in range(len(voucher)))
+        voucher.close()
+        self.assertIn("ACCEPTED", voucher_text)
+        self.assertIn(booking.booking_reference, voucher_text)
+        self.assertIn("Toyota RAV4", voucher_text)
 
         # Static catalogue vehicles are always bookable; the catalogue does not
         # participate in Django inventory conflict checks.
         again = self.create(payload)
         self.assertEqual(again.status_code, 201, again.data)
         self.assertEqual(Booking.objects.filter(vehicle_slug=slug).count(), 2)
+
+    def test_voucher_failure_keeps_saved_booking_and_guest_can_retry(self):
+        from unittest.mock import patch
+
+        slug = "toyota-rav4-2018"
+        snapshot = {
+            "id": slug, "slug": slug, "name": "Toyota RAV4", "brand": "Toyota", "model": "RAV4",
+            "category": "SUV", "price_per_day": "35.00", "transmission": "AUTOMATIC", "fuel_type": "PETROL",
+            "passenger_capacity": 5, "luggage_capacity": 3,
+        }
+        payload = f.booking_payload(self.v)
+        payload.update(vehicle=slug, vehicle_id=slug, vehicle_snapshot=snapshot, daily_rate="35.00")
+
+        with patch("apps.bookings.pdf.render_confirmation_pdf", side_effect=RuntimeError("renderer unavailable")):
+            res = self.create(payload)
+
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertFalse(res.data["voucher_available"])
+        booking = Booking.objects.get(booking_reference=res.data["booking_reference"])
+        self.assertEqual(booking.booking_status, BookingStatus.CONFIRMED)
+        self.assertEqual(Booking.objects.filter(booking_reference=booking.booking_reference).count(), 1)
+        pdf = self.client.get("/api/v1/bookings/confirmation/download/", **self.guest_headers(res))
+        self.assertEqual(pdf.status_code, 200)
+        self.assertTrue(pdf.content.startswith(b"%PDF"))
+
+    def test_booking_submission_key_reuses_saved_booking_on_retry(self):
+        slug = "toyota-rav4-2018"
+        snapshot = {
+            "id": slug, "slug": slug, "name": "Toyota RAV4", "brand": "Toyota", "model": "RAV4",
+            "category": "SUV", "price_per_day": "35.00", "transmission": "AUTOMATIC", "fuel_type": "PETROL",
+            "passenger_capacity": 5, "luggage_capacity": 3,
+        }
+        payload = f.booking_payload(self.v)
+        payload.update(vehicle=slug, vehicle_id=slug, vehicle_snapshot=snapshot, daily_rate="35.00",
+                       submission_key=str(uuid.uuid4()))
+
+        first = self.create(payload)
+        second = self.create(payload)
+        self.assertEqual(first.status_code, 201, first.data)
+        self.assertEqual(second.status_code, 201, second.data)
+        self.assertEqual(first.data["booking_reference"], second.data["booking_reference"])
+        self.assertEqual(Booking.objects.filter(submission_key=payload["submission_key"]).count(), 1)
+        self.assertEqual(Booking.objects.filter(vehicle_slug=slug).count(), 1)
 
     def test_static_catalogue_booking_rejects_unapproved_price(self):
         slug = "toyota-rav4-2018"

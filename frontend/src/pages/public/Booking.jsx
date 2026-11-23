@@ -5,7 +5,7 @@ import {
   ArrowLeft, ArrowRight, Baby, Building2, Check, ChevronDown, CreditCard, FileCheck2, Landmark, Lock, MapPin, Minus, Plane,
   Plus, ShieldCheck, Upload,
 } from "lucide-react";
-import { api, ApiError } from "../../lib/api";
+import { api, ApiError, download, downloadBase64Pdf } from "../../lib/api";
 import { useBookingOptions, useVehicles } from "../../lib/hooks";
 import { cx, fmtDate, rentalDays, todayISO, usd } from "../../lib/format";
 import { babySeatText, unitPrice } from "../../lib/content";
@@ -18,6 +18,25 @@ import { VehicleImage } from "../../components/VehicleCard";
 
 const STEPS = Array.from({ length: 8 }, (_, index) => `booking.steps.${index}`);
 const DRAFT_KEY = "rafiki.booking-draft";
+const SUBMISSION_KEY = "rafiki.booking-submission-key";
+const newSubmissionKey = () => globalThis.crypto?.randomUUID?.()
+  || "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+    const random = Math.floor(Math.random() * 16);
+    return (char === "x" ? random : (random & 3) | 8).toString(16);
+  });
+
+function getSubmissionKey() {
+  try {
+    let key = sessionStorage.getItem(SUBMISSION_KEY);
+    if (!key) {
+      key = newSubmissionKey();
+      sessionStorage.setItem(SUBMISSION_KEY, key);
+    }
+    return key;
+  } catch {
+    return newSubmissionKey();
+  }
+}
 
 const emptyLeg = { type: "", area: "", address: "", instructions: "" };
 const initialState = (sp) => ({
@@ -114,10 +133,10 @@ const FIELD_STEP = (k) => k.startsWith("customer") ? 0
   : k.startsWith("pickup_") ? 2 : k.startsWith("return_") ? 3 : k.startsWith("flight") ? 4
   : /^(extras|documents|passport|driving_licence)/.test(k) ? 5 : k.startsWith("payment") ? 6 : 7;
 
-function toPayload(s, vehicle, totalAmount) {
+function toPayload(s, vehicle, totalAmount, submissionKey) {
   const flight = Object.fromEntries(Object.entries(s.flight).map(([k, v]) => [k, v || (k.includes("date") || k.includes("time") ? null : "")]));
   return {
-    customer: s.customer, vehicle: s.vehicle, vehicle_id: vehicle.id, language: document.documentElement.lang || "en",
+    submission_key: submissionKey, customer: s.customer, vehicle: s.vehicle, vehicle_id: vehicle.id, language: document.documentElement.lang || "en",
     vehicle_snapshot: vehicleSnapshot(vehicle), daily_rate: vehicle.price_per_day,
     ...(totalAmount ? { total_amount: totalAmount } : {}),
     pickup_date: s.pickup_date, pickup_time: s.pickup_time, return_date: s.return_date, return_time: s.return_time,
@@ -317,7 +336,15 @@ export default function Booking() {
     if (submitLock.current) return;
     for (let i = 0; i < STEPS.length; i++) {
       const e = validateStep(i, s, files, options, t, vehicle);
-      if (Object.keys(e).length) { setErrors(e); setStep(i); return; }
+      if (Object.keys(e).length) {
+        setErrors(e);
+        setStep(i);
+        requestAnimationFrame(() => {
+          topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+          requestAnimationFrame(() => document.querySelector('[aria-invalid="true"]')?.focus?.());
+        });
+        return;
+      }
     }
     submitLock.current = true;
     setSubmitting(true);
@@ -328,10 +355,12 @@ export default function Booking() {
       if (price.error || !price.grand_total) {
         setSubmitError(t("booking.priceConfigError"));
         setStep(1);
+        requestAnimationFrame(() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
         return;
       }
       const form = new FormData();
-      form.append("payload", JSON.stringify(toPayload(s, vehicle, price.grand_total)));
+      const submissionKey = getSubmissionKey();
+      form.append("payload", JSON.stringify(toPayload(s, vehicle, price.grand_total, submissionKey)));
       if (s.extras.driving_permit) {
         form.append("passport", files.passport);
         form.append("driving_licence", files.driving_licence);
@@ -339,7 +368,29 @@ export default function Booking() {
       const res = await api.upload("/bookings/", form);
       saveGuest(res.booking_reference, res.access_token);
       try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
-      nav("/booking/confirmation", { state: res, replace: true });
+      let voucher_ready = false;
+      const guest = { reference: res.booking_reference, token: res.access_token };
+      if (res.voucher_pdf) {
+        try {
+          downloadBase64Pdf(res.voucher_pdf, `${res.booking_reference}-voucher.pdf`);
+          voucher_ready = true;
+        } catch (err) {
+          if (import.meta.env.DEV) console.error("Booking was saved, but its voucher could not be downloaded.", err);
+        }
+      }
+      // If generation or the browser download failed, try the protected
+      // endpoint once. The booking is already saved; never submit it again.
+      if (!voucher_ready) {
+        try {
+          await download("/bookings/confirmation/download/", { guest }, `${res.booking_reference}-voucher.pdf`);
+          voucher_ready = true;
+        } catch (err) {
+          if (import.meta.env.DEV) console.error("Saved booking voucher is not ready yet.", err);
+        }
+      }
+      const { voucher_pdf: _voucherPdf, ...confirmation } = res;
+      nav("/booking/confirmation", { state: { ...confirmation, voucher_ready }, replace: true });
+      try { sessionStorage.removeItem(SUBMISSION_KEY); } catch { /* ignore */ }
     } catch (err) {
       if (err instanceof ApiError) {
         const fe = err.fieldErrors();

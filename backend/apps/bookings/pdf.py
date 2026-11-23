@@ -21,8 +21,9 @@ def render_confirmation_pdf(booking) -> bytes:
         "return": f"{booking.return_date:%a %d %b %Y} at {booking.return_time:%H:%M}",
     }
     meta = [("Booking ref.", booking.booking_reference), ("Created", booking.created_at.strftime("%d %B %Y"))]
-    story = [brand_header(site, "Booking confirmation", meta, logo_path(SiteSettings.load())),
-             chips_row([("Booking status", booking.get_booking_status_display(), "green" if booking.booking_status == "CONFIRMED" else "amber"),
+    customer_status = "ACCEPTED" if booking.booking_status == "CONFIRMED" else booking.get_booking_status_display()
+    story = [brand_header(site, "Booking voucher", meta, logo_path(SiteSettings.load())),
+             chips_row([("Booking status", customer_status, "green" if booking.booking_status == "CONFIRMED" else "amber"),
                         ("Payment status", booking.get_payment_status_display(), "green" if booking.payment_status == "PAID" else "amber")]),
              section("Guest"), info_grid([
                  ("Name", booking.customer.full_name), ("Email", booking.customer.email),
@@ -78,10 +79,10 @@ def render_confirmation_pdf(booking) -> bytes:
               section("Payment"), info_grid([
                   ("Method", booking.get_payment_method_display()), ("Payment status", booking.get_payment_status_display()),
                   ("Paid", f"${booking.amount_paid:,.2f}"), ("Balance due", f"${booking.balance_due:,.2f}"),
-              ]), p("Your booking remains subject to the status shown above. Payment status is tracked separately.", "small")]
+              ]), p("Your booking status is shown above. Payment status is tracked separately.", "small")]
     if site_settings.invoice_terms:
         story += [section("Important rental information"),
                   p(esc(site_settings.invoice_terms).replace("\n", "<br/>"), "small")]
     footer = " · ".join(x for x in (site.get("business_phone"), site.get("business_email"), site.get("website")) if x)
-    return build_pdf(story, title=f"Booking confirmation {booking.booking_reference}", author=site["business_name"],
+    return build_pdf(story, title=f"Booking voucher {booking.booking_reference}", author=site["business_name"],
                      footer=footer, footer_note="Thank you for choosing Rafiki Car Hire · Drive Zanzibar with Confidence.")

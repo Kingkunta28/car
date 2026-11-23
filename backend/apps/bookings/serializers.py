@@ -125,6 +125,7 @@ class FlightInputSerializer(serializers.Serializer):
 
 
 class BookingCreateSerializer(TripSerializer):
+    submission_key = serializers.UUIDField(required=False)
     customer = CustomerInputSerializer()
     pickup_area = serializers.CharField(max_length=160, required=False, allow_blank=True, default="")
     pickup_address = serializers.CharField(max_length=255, required=False, allow_blank=True, default="")
