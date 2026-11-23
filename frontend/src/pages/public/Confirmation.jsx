@@ -82,8 +82,8 @@ export default function Confirmation() {
                     <div className="h-20 w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100"><VehicleImage vehicle={b.vehicle} image={b.vehicle.image ? { url: b.vehicle.image } : null} /></div>
                     <div>
                       <p className="font-display text-lg font-semibold text-navy-900">{b.vehicle.name}</p>
-                      <p className="text-sm text-muted">{b.vehicle.transmission} · {b.vehicle.passenger_capacity} seats</p>
-                      <p className="mt-1 text-sm text-muted">{b.rental_days} day{b.rental_days > 1 ? "s" : ""}</p>
+                      <p className="text-sm text-muted">{b.vehicle.transmission} · {b.vehicle.passenger_capacity} {t("vehicle.passengers")}</p>
+                      <p className="mt-1 text-sm text-muted">{t("booking.durationDays", { count: b.rental_days })}</p>
                     </div>
                   </div>
                   <dl className="mt-5 grid gap-4 border-t border-line pt-5 sm:grid-cols-2">

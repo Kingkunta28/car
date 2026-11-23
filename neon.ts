@@ -3,6 +3,11 @@ import { defineConfig } from "@neon/config/v1";
 export default defineConfig({
   // Declare your Neon services here
   auth: false,
+  // Public vehicle images and private booking documents use separate buckets.
+  buckets: {
+    "rafiki-public": { access: "public_read" },
+    "rafiki-private": { access: "private" },
+  },
   // Branch policy: per-branch tuning
   branch: (branch) => {
     if (branch.isDefault) {

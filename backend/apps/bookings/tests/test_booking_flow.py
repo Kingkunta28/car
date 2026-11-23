@@ -259,8 +259,9 @@ class BookingFlowTests(TestCase):
 
     def test_document_access_restricted_to_finance_roles(self):
         p = f.booking_payload(self.v, extras={"driving_permit": 1})
-        self.create(p, files={"passport": f.pdf_upload(), "driving_licence": f.pdf_upload()})
-        b = Booking.objects.get()
+        res = self.create(p, files={"passport": f.pdf_upload(), "driving_licence": f.pdf_upload()})
+        self.assertEqual(res.status_code, 201, res.data)
+        b = Booking.objects.get(booking_reference=res.data["booking_reference"])
         doc = b.documents.first()
         url = f"/api/v1/admin/bookings/{b.pk}/documents/{doc.pk}/download/"
         self.assertIn(self.client.get(url).status_code, (401, 403))

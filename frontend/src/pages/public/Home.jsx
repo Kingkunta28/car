@@ -19,7 +19,7 @@ import { Counter, Parallax } from "../../components/Motion";
 import heroBeach from "../../assets/hero-beach.webp";
 import heroCar from "../../assets/hero-prado.webp";
 
-/* ------------------------------------------------------------------ Hero */
+/* ---------------------------------- Hero */
 const TRUST = [
   { icon: CalendarDays, title: "home.flexible", text: "home.flexibleText" },
   { icon: MessageCircle, title: "home.support", text: "home.supportText" },
@@ -34,7 +34,7 @@ function HeroVisual({ photo, fromPrice, location }) {
       <div className="absolute -right-3 -top-3 hidden h-[calc(100%-2rem)] w-[calc(100%-2rem)] rounded-[2rem] border-2 border-orange-500/70 sm:block" aria-hidden />
       <Parallax speed={0.04}>
         <figure className="relative aspect-[4/3] overflow-hidden rounded-[2rem] bg-navy-800 shadow-[var(--shadow-lift)] animate-[reveal_1.2s_var(--ease-out-soft)_0.15s_both] lg:aspect-[5/6]">
-          <img src={photo} alt="Turquoise water and white sand on the coast of Zanzibar" width="1600" height="1001"
+          <img src={photo} alt={t("home.beachAlt")} width="1600" height="1001"
             className="h-full w-full scale-105 object-cover object-[60%_78%] lg:object-[60%_center]" fetchPriority="high" />
           <div className="absolute inset-0 bg-gradient-to-t from-navy-950/55 via-transparent to-transparent" aria-hidden />
           <figcaption className="absolute right-3 top-3 max-w-[calc(100%-1.5rem)] rounded-full bg-navy-950/60 px-3 py-1.5 text-right text-xs font-medium leading-tight text-white backdrop-blur sm:right-5 sm:top-5">
@@ -46,7 +46,7 @@ function HeroVisual({ photo, fromPrice, location }) {
       <div className="absolute -bottom-6 left-[4%] w-[92%] sm:-left-10 lg:-bottom-10 lg:-left-24 lg:w-[105%]">
         <div className="relative animate-[car-in_1.3s_var(--ease-out-soft)_0.45s_both]">
           <div className="absolute inset-x-[10%] bottom-[3%] h-[10%] rounded-[50%] bg-black/60 blur-2xl" aria-hidden />
-          <img src={heroCar} width="1100" height="647" alt="Black Toyota Land Cruiser Prado available for hire in Zanzibar from Rafiki Car Hire"
+          <img src={heroCar} width="1100" height="647" alt={t("home.heroCarAlt")}
             className="relative w-full drop-shadow-[0_25px_35px_rgb(0_0_0/0.45)]" fetchPriority="high" />
         </div>
       </div>
@@ -64,7 +64,7 @@ function HeroVisual({ photo, fromPrice, location }) {
         <div className="absolute -right-2 top-[42%] hidden animate-[fade-up_0.9s_var(--ease-out-soft)_1.05s_both] sm:block lg:-right-6">
           <div className="animate-float rounded-2xl bg-navy-950 px-4 py-3 text-white shadow-[var(--shadow-lift)] [animation-delay:-3s]">
             <span className="block text-xs text-white/60">{t("home.carsFrom")}</span>
-            <span className="font-display text-xl font-bold">{usd(fromPrice)}<span className="text-sm font-normal text-white/60"> / day</span></span>
+            <span className="font-display text-xl font-bold">{usd(fromPrice)}<span className="text-sm font-normal text-white/60"> / {t("home.dayUnit")}</span></span>
           </div>
         </div>
       )}
@@ -138,7 +138,7 @@ function QuickSearch() {
       </label>
       <label className="block">
         <span className="label flex items-center justify-between"><span className="flex items-center gap-1.5"><CalendarDays className="size-4 text-orange-600" aria-hidden /> {t("home.returnDate")}</span>
-          {days > 0 && <span className="text-xs font-normal text-muted">{days} day{days > 1 ? "s" : ""}</span>}</span>
+          {days > 0 && <span className="text-xs font-normal text-muted">{t("booking.durationDays", { count: days })}</span>}</span>
         <input type="date" className="input" min={f.pickup_date} value={f.return_date} required onChange={(e) => setF({ ...f, return_date: e.target.value })} />
       </label>
       <Button type="submit" size="lg" className="h-[46px] w-full md:w-auto" arrow>{t("home.checkAvailability")}</Button>
@@ -156,7 +156,7 @@ function Stats({ vehicles, options, fromPrice }) {
     fromPrice != null ? { v: Number(fromPrice), prefix: "$", label: t("home.stats.price"), sub: t("home.stats.priceNote") } : null,
   ].filter(Boolean);
   return (
-    <section className="pt-20 sm:pt-24" aria-label="Rafiki at a glance">
+    <section className="pt-20 sm:pt-24" aria-label={t("home.statsLabel")}>
       <div className="container-x">
         <dl className={cx("grid gap-px overflow-hidden rounded-[var(--radius-card)] border border-line bg-line", stats.length === 4 ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-3")}>
           {stats.map((s, i) => (
@@ -193,7 +193,7 @@ function FleetShowcase({ vehicles, loading }) {
           <Button to="/fleet" variant="outline" arrow>{t("home.viewFleet")}</Button>
         </div>
         {available.length > 2 && (
-          <div className="mt-10 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Vehicle type">
+          <div className="mt-10 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label={t("fleet.vehicleType")}>
             {available.map(([k, l]) => (
               <button key={l} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
                 className={cx("shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition",
@@ -278,13 +278,13 @@ function Bento({ options }) {
               </div>
               {/* Invoice motif */}
               <div className="animate-float w-full max-w-[230px] rotate-2 rounded-2xl bg-white p-4 text-ink shadow-2xl sm:w-[230px]" aria-hidden>
-                <div className="flex items-center justify-between"><span className="font-display text-sm font-extrabold tracking-wider text-navy-900">RAFIKI<span className="text-orange-500">.</span></span><span className="text-[10px] font-semibold text-muted">INVOICE</span></div>
+                <div className="flex items-center justify-between"><span className="font-display text-sm font-extrabold tracking-wider text-navy-900">RAFIKI<span className="text-orange-500">.</span></span><span className="text-[10px] font-semibold text-muted">{t("home.sampleInvoiceLabel")}</span></div>
                 <div className="mt-3 h-px bg-orange-500" />
-                {[["Rental · 4 days", "220.00"], ["Pickup · Nungwi", "25.00"], ["Baby seat × 2", "120.00"]].map(([a, b]) => (
+                {[[t("home.sampleRental"), "220.00"], [t("home.samplePickup"), "25.00"], [t("home.sampleBabySeats"), "120.00"]].map(([a, b]) => (
                   <div key={a} className="mt-2 flex justify-between text-[11px]"><span className="text-muted">{a}</span><span className="tabular-nums">${b}</span></div>
                 ))}
-                <div className="mt-3 flex justify-between border-t border-line pt-2 text-xs font-bold"><span>Total USD</span><span className="tabular-nums">$365.00</span></div>
-                <p className="mt-1 text-[9px] text-muted">Example only</p>
+                <div className="mt-3 flex justify-between border-t border-line pt-2 text-xs font-bold"><span>{t("home.totalUSD")}</span><span className="tabular-nums">$365.00</span></div>
+                <p className="mt-1 text-[9px] text-muted">{t("home.exampleOnly")}</p>
               </div>
             </div>
           </div>

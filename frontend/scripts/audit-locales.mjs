@@ -9,11 +9,15 @@ const errors = [];
 const empty = [];
 const encodingIssues = [];
 const usedKeys = new Set();
+const hasCorruptEncoding = (text) => [...text].some((char, index, chars) => char === "?"
+  && ((/\p{L}/u.test(chars[index - 1] || "") && /\p{L}/u.test(chars[index + 1] || ""))
+    || (/\s/.test(chars[index - 1] || "") && /\s/.test(chars[index + 1] || "")
+      && /\p{Ll}/u.test(chars[index + 2] || ""))))
+  || /(?:\u00c3[\u0080-\u00bf]|\u00c2[\u0080-\u00bf]|\u00e2[\u0080-\u00bf]|\ufffd)/u.test(text);
 const flatten = (value, prefix = "") => Object.entries(value).flatMap(([key, child]) => {
   const name = prefix ? `${prefix}.${key}` : key;
   if (child && typeof child === "object") return flatten(child, name);
-  if (typeof child === "string" && [...child].some((char, index, chars) => char === "?"
-    && /\p{L}/u.test(chars[index - 1] || "") && /\p{L}/u.test(chars[index + 1] || ""))) {
+  if (typeof child === "string" && hasCorruptEncoding(child)) {
     encodingIssues.push(`${name}: ${child}`);
   }
   if (typeof child !== "string" || !child.trim()) empty.push(name);
@@ -38,6 +42,11 @@ for (const { language, keys } of keysets.slice(1)) {
 }
 
 const hardcoded = [];
+// Brand terms and the standard document-format abbreviation are intentionally
+// shared across locales, so they are not translation omissions.
+const intentionallyUntranslated = new Set(["RAFIKI", "CAR HIRE", "PDF"]);
+const shouldAuditText = (value) => /\p{L}{3}/u.test(value)
+  && !intentionallyUntranslated.has(value.replace(/[.:]/g, "").trim());
 const visit = (directory) => {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const file = path.join(directory, entry.name);
@@ -55,10 +64,10 @@ const visit = (directory) => {
         }
         if (node.type === "JSXText") {
           const text = node.value.replace(/\s+/g, " ").trim();
-          if (/[A-Za-zÀ-ÿ]{3}/.test(text)) hardcoded.push(`${path.relative(root, file)}:${node.loc.start.line}: ${text.slice(0, 100)}`);
+          if (shouldAuditText(text)) hardcoded.push(`${path.relative(root, file)}:${node.loc.start.line}: ${text.slice(0, 100)}`);
         }
         if (node.type === "JSXAttribute" && ["aria-label", "title", "placeholder", "alt", "label"].includes(node.name?.name)
-          && node.value?.type === "StringLiteral" && /[A-Za-zÀ-ÿ]{3}/.test(node.value.value)) {
+          && node.value?.type === "StringLiteral" && shouldAuditText(node.value.value)) {
           hardcoded.push(`${path.relative(root, file)}:${node.loc.start.line}: ${node.name.name}="${node.value.value}"`);
         }
         for (const [key, value] of Object.entries(node)) {

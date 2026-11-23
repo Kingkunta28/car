@@ -70,8 +70,8 @@ function Filters({ params, set, clear, count }) {
         </label>
         <p className="mt-3 text-sm text-muted">{t("fleet.checkDates")}</p>
         <div className="mt-2 grid grid-cols-2 gap-2">
-          <input aria-label="From date" type="date" min={todayISO()} className="input" value={params.get("from") || ""} onChange={(e) => set({ from: e.target.value })} />
-          <input aria-label="To date" type="date" min={params.get("from") || todayISO()} className="input" value={params.get("to") || ""} onChange={(e) => set({ to: e.target.value })} />
+          <input aria-label={t("fleet.from")} type="date" min={todayISO()} className="input" value={params.get("from") || ""} onChange={(e) => set({ from: e.target.value })} />
+          <input aria-label={t("fleet.to")} type="date" min={params.get("from") || todayISO()} className="input" value={params.get("to") || ""} onChange={(e) => set({ to: e.target.value })} />
         </div>
       </fieldset>
       <div className="flex items-center justify-between border-t border-line pt-5">

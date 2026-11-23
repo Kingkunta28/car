@@ -111,7 +111,7 @@ function Header() {
       overHero ? "border-b border-transparent bg-transparent" : "border-b border-line/70 bg-white/85 shadow-[0_1px_0_rgb(11_31_58/0.02)] backdrop-blur-xl")}>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2">{t("nav.skip")}</a>
       <div className="container-x flex h-[76px] items-center justify-between gap-3 sm:gap-6">
-        <Link to="/" aria-label="Rafiki Car Hire home" className="relative z-10 shrink-0"><Logo light={overHero} site={site} /></Link>
+        <Link to="/" aria-label={t("nav.homeAria")} className="relative z-10 shrink-0"><Logo light={overHero} site={site} /></Link>
         <nav className="hidden items-center gap-1 lg:flex" aria-label={t("nav.main")}>
           {NAV.map((m) => (
             <NavLink key={m.to} to={m.to} end={m.end} className={({ isActive }) => cx(
@@ -235,7 +235,7 @@ function Footer() {
   const name = business.businessName;
   return (
     <footer className="relative overflow-hidden bg-navy-950 text-white/70" aria-labelledby="footer-heading">
-      <h2 id="footer-heading" className="sr-only">{name} — site information</h2>
+      <h2 id="footer-heading" className="sr-only">{name} — {t("footer.siteInfo")}</h2>
       <div className="h-1 bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500" aria-hidden />
       <div className="container-x">
         <div className="grid grid-cols-2 gap-x-6 gap-y-12 py-16 lg:grid-cols-[1.35fr_1fr_1.15fr_1.25fr] lg:gap-10">
@@ -251,7 +251,7 @@ function Footer() {
             <p className="mt-6 max-w-xs text-[15px] leading-relaxed">
               {t("footer.discover")}
             </p>
-            <p className="mt-4 font-serif text-lg italic text-orange-400">{site?.tagline || "Drive Zanzibar with Confidence."}</p>
+            <p className="mt-4 font-serif text-lg italic text-orange-400">{site?.tagline || t("footer.tagline")}</p>
           </div>
 
           <FooterLinks title={t("footer.quick")} links={FOOTER_LINKS.quick} />
@@ -274,7 +274,7 @@ function Footer() {
 
         <div className="flex flex-col gap-4 border-t border-white/10 py-6 text-sm text-white/45 sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} {name}. {t("footer.rights")}</p>
-          <nav aria-label="Legal" className="flex gap-6">
+          <nav aria-label={t("info.legal.nav")} className="flex gap-6">
             <Link to="/privacy" className="transition-colors hover:text-orange-400">{t("footer.privacy")}</Link>
             <Link to="/terms" className="transition-colors hover:text-orange-400">{t("footer.terms")}</Link>
           </nav>

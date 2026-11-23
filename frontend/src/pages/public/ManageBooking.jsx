@@ -21,7 +21,7 @@ function AccessForm({ onAccess }) {
       <h1 className="mt-5 text-3xl font-bold">{t("manage.title")}</h1>
       <p className="mt-2 text-muted">{t("manage.intro")}</p>
       <form className="mt-8 space-y-4" onSubmit={(e) => { e.preventDefault(); saveGuest(ref.trim().toUpperCase(), token.trim()); onAccess(); }}>
-        <Field label={t("manage.reference")} required>{(a) => <input {...a} className="input uppercase" placeholder="RCH-XXXXXXX" value={ref} onChange={(e) => setRef(e.target.value)} required />}</Field>
+        <Field label={t("manage.reference")} required>{(a) => <input {...a} className="input uppercase" placeholder={t("manage.referencePlaceholder")} value={ref} onChange={(e) => setRef(e.target.value)} required />}</Field>
         <Field label={t("manage.accessCode")} required hint={t("manage.accessHint")}>{(a) => <input {...a} className="input" value={token} onChange={(e) => setToken(e.target.value)} required autoComplete="off" />}</Field>
         <Button type="submit" className="w-full" size="lg">{t("manage.open")}</Button>
       </form>
@@ -88,13 +88,13 @@ export default function ManageBooking() {
     queryFn: () => api.get("/bookings/track/", { guest }),
   });
 
-  if (!guest) return (<><Seo title="Manage booking" noindex /><AccessForm onAccess={() => setGuest(loadGuest())} /></>);
+  if (!guest) return (<><Seo title={t("manage.title")} noindex /><AccessForm onAccess={() => setGuest(loadGuest())} /></>);
   if (q.isLoading) return <PageLoader />;
   if (q.error) {
     const expired = q.error.status === 404;
     return (
       <div className="container-x max-w-xl py-20 text-center">
-        <Seo title="Manage booking" noindex />
+        <Seo title={t("manage.title")} noindex />
         {expired ? (
           <>
             <span className="mx-auto grid size-16 place-items-center rounded-full bg-orange-100 text-orange-600"><Clock className="size-8" /></span>

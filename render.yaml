@@ -63,4 +63,18 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: https://car-lovat-two.vercel.app,https://www.rafikicarhire.com
       - key: USE_S3
-        value: "false"
+        sync: false # Set true after provisioning the two Neon Object Storage buckets.
+      - key: AWS_ACCESS_KEY_ID
+        sync: false # Branch-scoped Neon Object Storage credential.
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_ENDPOINT_URL_S3
+        sync: false # Copy from the linked Neon branch environment.
+      - key: AWS_REGION
+        value: us-east-2
+      - key: AWS_PUBLIC_BUCKET_NAME
+        value: rafiki-public
+      - key: AWS_PRIVATE_BUCKET_NAME
+        value: rafiki-private
+      - key: AWS_S3_ADDRESSING_STYLE
+        value: path

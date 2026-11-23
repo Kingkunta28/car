@@ -181,8 +181,8 @@ export default function VehicleDetail() {
       {/* Mobile sticky booking bar */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 py-3 backdrop-blur-lg lg:hidden" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         <div className="flex items-center justify-between gap-4">
-          <p><span className="font-display text-2xl font-bold text-navy-900">{usd(v.price_per_day)}</span><span className="text-sm text-muted"> / day</span></p>
-          <Button to={`/book?vehicle=${v.slug}`} disabled={!bookable} arrow={bookable}>{bookable ? "Book this car" : "Unavailable"}</Button>
+          <p><span className="font-display text-2xl font-bold text-navy-900">{usd(v.price_per_day)}</span><span className="text-sm text-muted"> / {t("vehicle.perDay")}</span></p>
+          <Button to={`/book?vehicle=${v.slug}`} disabled={!bookable} arrow={bookable}>{bookable ? t("actions.book") : t("actions.unavailable")}</Button>
         </div>
       </div>
       <div className="h-20 lg:hidden" aria-hidden />

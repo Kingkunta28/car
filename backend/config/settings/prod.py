@@ -42,8 +42,17 @@ if _use_s3:
         default=env("AWS_STORAGE_BUCKET_NAME", default=""),
     ).strip()
     _private_bucket = env("AWS_PRIVATE_BUCKET_NAME", default="").strip()
-    _region = env("AWS_S3_REGION_NAME", default="").strip()
-    _endpoint = env("AWS_S3_ENDPOINT_URL", default="").strip() or None
+    # Neon Object Storage provides the standard AWS_* variable names. Retain
+    # the older AWS_S3_* names for other S3-compatible providers.
+    _region = env("AWS_S3_REGION_NAME", default=env("AWS_REGION", default="")).strip()
+    _endpoint = env(
+        "AWS_S3_ENDPOINT_URL",
+        default=env("AWS_ENDPOINT_URL_S3", default=""),
+    ).strip() or None
+    _addressing_style = env(
+        "AWS_S3_ADDRESSING_STYLE",
+        default="path" if _endpoint else "",
+    ).strip() or None
 
     _missing = []
     if not _access_key:
@@ -55,9 +64,9 @@ if _use_s3:
     if not _private_bucket:
         _missing.append("AWS_PRIVATE_BUCKET_NAME")
     if not _region:
-        _missing.append("AWS_S3_REGION_NAME")
+        _missing.append("AWS_S3_REGION_NAME (or AWS_REGION)")
     if _region.lower() == "auto" and not _endpoint:
-        _missing.append("AWS_S3_ENDPOINT_URL (required with region 'auto', e.g. Cloudflare R2)")
+        _missing.append("AWS_ENDPOINT_URL_S3 (required with region 'auto' for S3-compatible storage)")
     if _missing:
         raise ImproperlyConfigured(
             "USE_S3=True requires these Render environment variables: " + ", ".join(_missing)
@@ -70,6 +79,8 @@ if _use_s3:
         "region_name": _region,
         "file_overwrite": False,
     }
+    if _addressing_style:
+        _s3_common["addressing_style"] = _addressing_style
     STORAGES["default"] = {
         "BACKEND": "storages.backends.s3.S3Storage",
         "OPTIONS": {
@@ -84,7 +95,6 @@ if _use_s3:
         "OPTIONS": {
             **_s3_common,
             "bucket_name": _private_bucket,
-            "default_acl": "private",
             "querystring_auth": True,
             "querystring_expire": 60,
         },

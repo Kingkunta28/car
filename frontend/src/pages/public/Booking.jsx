@@ -138,7 +138,7 @@ function LocationPicker({ prefix, leg, onChange, options, errors, isReturn }) {
   return (
     <div className="space-y-6">
       <fieldset>
-        <legend className="sr-only">{isReturn ? "Return" : "Pickup"} location</legend>
+        <legend className="sr-only">{t(isReturn ? "booking.returnLocation" : "booking.pickupLocation")}</legend>
         <div className="grid gap-3 sm:grid-cols-3" role="radiogroup">
           {options.locations.map((l) => {
             const Icon = icons[l.code];

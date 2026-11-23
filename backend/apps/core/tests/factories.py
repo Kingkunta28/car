@@ -1,15 +1,26 @@
 """Small helpers for building test data (no external factory library)."""
 import json
+from io import BytesIO
 from datetime import timedelta
 from decimal import Decimal
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
+from reportlab.pdfgen.canvas import Canvas
 
 from apps.accounts.models import AdminUser, Role
 from apps.vehicles.models import Vehicle
 
-PDF_BYTES = b"%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF"
+def _valid_pdf_bytes():
+    """Build a real one-page PDF for tests that exercise document validation."""
+    stream = BytesIO()
+    canvas = Canvas(stream)
+    canvas.drawString(50, 700, "Synthetic test identity document")
+    canvas.save()
+    return stream.getvalue()
+
+
+PDF_BYTES = _valid_pdf_bytes()
 PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
 
 

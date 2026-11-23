@@ -15,7 +15,8 @@
     "main": "Main navigation",
     "mobile": "Mobile navigation",
     "open": "Open menu",
-    "close": "Close menu"
+    "close": "Close menu",
+    "homeAria": "Rafiki Car Hire home"
   },
   "actions": {
     "book": "Book now",
@@ -46,7 +47,9 @@
     "bookingInfo": "Booking Information",
     "permit": "Driving Permit Requirements",
     "faq": "Frequently Asked Questions",
-    "chat": "Chat with us"
+    "chat": "Chat with us",
+    "siteInfo": "site information",
+    "tagline": "Drive Zanzibar with confidence."
   },
   "fleet": {
     "title": "Find the right car",
@@ -256,7 +259,17 @@
         "time": "About 45 min from town",
         "text": "Home of the rare red colobus monkey and mangrove boardwalks."
       }
-    ]
+    ],
+    "beachAlt": "Turquoise water and white sand on the coast of Zanzibar",
+    "heroCarAlt": "Black Toyota Land Cruiser Prado available for hire in Zanzibar from Rafiki Car Hire",
+    "dayUnit": "day",
+    "statsLabel": "Rafiki at a glance",
+    "sampleInvoiceLabel": "INVOICE",
+    "sampleRental": "Rental · 4 days",
+    "samplePickup": "Pickup · Nungwi",
+    "sampleBabySeats": "Baby seat × 2",
+    "totalUSD": "Total USD",
+    "exampleOnly": "Example only"
   },
   "booking": {
     "steps": [
@@ -365,12 +378,12 @@
     "permit": "Driving permit",
     "yourBooking": "Your booking",
     "reservedConflict": "This car is already reserved for some of these dates. Please change the dates or choose another car.",
-    "rentalLine": "Rental ? {{days}} ? {{rate}}",
+    "rentalLine": "Rental — {{days}} — {{rate}}",
     "tax": "Tax",
     "finalPrice": "Our system confirms the final price when you submit.",
     "seatWhole": "for your whole booking, not per day.",
     "chooseFile": "Choose a file",
-    "fileSize": "PDF, JPG, PNG or WebP ? max {{size}} MB",
+    "fileSize": "PDF, JPG, PNG or WebP — max {{size}} MB",
     "fewer": "Fewer {{label}}",
     "more": "More {{label}}",
     "addExtra": "Add {{name}",
@@ -381,7 +394,9 @@
       "PER_UNIT": "per unit, per booking",
       "PER_DAY": "per day",
       "PER_UNIT_PER_DAY": "per unit, per day"
-    }
+    },
+    "pickupLocation": "Pickup location",
+    "returnLocation": "Return location"
   },
   "seo": {
     "home": "Self-drive car rental in Zanzibar",
@@ -411,8 +426,8 @@
     "invoiceNumber": "Invoice number",
     "pickup": "Pickup",
     "return": "Return",
-    "hold": "Your car is held until {{date}} while we confirm. An invoice is not a receipt ? you will receive a receipt for each payment once it is verified.",
-    "rental": "Rental ? {{days}} ? {{rate}}",
+    "hold": "Your car is held until {{date}} while we confirm. An invoice is not a receipt — you will receive a receipt for each payment once it is verified.",
+    "rental": "Rental — {{days}} — {{rate}}",
     "pickupFee": "Pickup fee",
     "returnFee": "Return fee",
     "free": "Free",
@@ -424,29 +439,29 @@
     "viewPayment": "View booking & payment",
     "whatsapp": "WhatsApp us",
     "home": "Back to home",
-    "private": "Keep the email we sent you ? its private link lets you return to this booking at any time.",
+    "private": "Keep the email we sent you — its private link lets you return to this booking at any time.",
     "fallback": "Your full booking details are in the email we just sent.",
-    "downloadError": "Download failed ? please try again.",
+    "downloadError": "Download failed — please try again.",
     "days_one": "{{count}} day",
     "days_other": "{{count}} days"
   },
   "manage": {
     "title": "Manage your booking",
-    "intro": "Open the private link in your booking email ? it signs you in automatically. Or enter your reference and access code below.",
+    "intro": "Open the private link in your booking email — it signs you in automatically. Or enter your reference and access code below.",
     "reference": "Booking reference",
     "accessCode": "Access code",
-    "accessHint": "The long code after ?token=? in your email link.",
+    "accessHint": "The long code after “token=” in your email link.",
     "open": "Open booking",
-    "lostEmail": "Lost the email? Contact us with your booking reference and we?ll resend it.",
+    "lostEmail": "Lost the email? Contact us with your booking reference and we’ll resend it.",
     "expired": "This booking link has expired",
-    "expiredText": "For your security, booking links stop working after a while. Message us with your booking reference and we?ll send you a fresh link.",
+    "expiredText": "For your security, booking links stop working after a while. Message us with your booking reference and we’ll send you a fresh link.",
     "openError": "We couldn't open this booking",
     "newLink": "Request a new link",
     "manual": "Enter details manually",
     "yourBooking": "Your booking",
     "contactWhatsApp": "Contact us on WhatsApp",
     "awaiting": "Awaiting confirmation",
-    "awaitingText": "We?re holding the car until {{date}}. You?ll get an email as soon as we confirm.",
+    "awaitingText": "We’re holding the car until {{date}}. You’ll get an email as soon as we confirm.",
     "vehicle": "Vehicle",
     "pickup": "Pickup",
     "return": "Return",
@@ -467,7 +482,7 @@
     "paid": "Paid",
     "balance": "Balance due",
     "payOnline": "Pay {{amount}} online",
-    "manualPaid": "I?ve paid manually",
+    "manualPaid": "I’ve paid manually",
     "permitDocs": "Permit documents",
     "storedDocs": "Stored privately and deleted after your rental.",
     "signOut": "Sign out of this booking",
@@ -483,8 +498,9 @@
     "note": "Note (optional)",
     "paymentDetails": "Submit payment details",
     "paymentInstructions": "Payment instructions",
-    "thanks": "Thank you ? we?ll verify your payment and send a receipt.",
-    "signInPrivate": "Open the private link from your booking email to manage this reservation."
+    "thanks": "Thank you — we’ll verify your payment and send a receipt.",
+    "signInPrivate": "Open the private link from your booking email to manage this reservation.",
+    "referencePlaceholder": "RCH-XXXXXXX"
   },
   "ui": {
     "loading": "Loading",
@@ -499,19 +515,19 @@
     "eachWay": "each way",
     "approx": "drive from the airport (approx.)",
     "chooseDestination": "Choose a destination",
-    "mapScale": "Illustration only ? not to scale",
+    "mapScale": "Illustration only — not to scale",
     "mapLabel": "Stylised map of Zanzibar showing delivery zones. Selected: {{place}}.",
     "freePlace": "free delivery",
     "outsidePlace": "outside the free zone",
     "refreshError": "Something went wrong on this page.",
-    "refreshText": "Please refresh. If it keeps happening, contact us on WhatsApp and we?ll help you book.",
+    "refreshText": "Please refresh. If it keeps happening, contact us on WhatsApp and we’ll help you book.",
     "refresh": "Refresh page",
     "driveFrom": "drive from the airport (approx.)",
     "meetArrivals": "Meet at arrivals"
   },
   "map": {
     "notes": [
-      "Hotels, the old town and port ? free handover.",
+      "Hotels, the old town and port — free handover.",
       "Abeid Amani Karume International. Meet us in arrivals with a name sign.",
       "Northern tip with beaches, sunsets and dhow builders.",
       "Calm water and long, swimmable beaches.",
@@ -528,16 +544,16 @@
   "paymentStatus": {
     "title": "Payment status",
     "processing": "Payment processing",
-    "processingText": "We?re waiting for the payment provider to confirm. This may take a minute; we?ll email your receipt when confirmed.",
+    "processingText": "We’re waiting for the payment provider to confirm. This may take a minute; we’ll email your receipt when confirmed.",
     "notCompleted": "Payment not completed",
     "notCompletedText": "No payment was taken. You can try again from your booking page.",
     "confirmed": "Payment confirmed",
-    "confirmedText": "Thank you ? {{amount}} was received for booking {{reference}}. Your receipt is on its way by email.",
+    "confirmedText": "Thank you — {{amount}} was received for booking {{reference}}. Your receipt is on its way by email.",
     "failed": "Payment failed",
     "failedText": "The payment did not go through and no money was taken. Try again or choose manual payment.",
     "checkError": "We couldn't check your payment",
     "checkErrorText": "If payment succeeded, it will still be confirmed automatically. Check your booking page shortly.",
-    "checking": "Checking your payment?",
+    "checking": "Checking your payment",
     "status": "Payment status:",
     "balance": "Balance due",
     "tryAgain": "Try again",
@@ -547,7 +563,7 @@
   "contact": {
     "title": "Let's plan your drive.",
     "lead": "The quickest way to reach us is WhatsApp. Our local team is available day and night.",
-    "whatsapp": "WhatsApp ? 24/7",
+    "whatsapp": "WhatsApp · 24/7",
     "find": "Find us",
     "openMap": "Open in Google Maps",
     "sent": "Message sent",
@@ -570,7 +586,52 @@
     },
     "legal": {
       "eyebrow": "Legal",
-      "updated": "Last updated: {{date}}"
+      "updated": "Last updated: {{date}}",
+      "nav": "Legal"
+    },
+    "privacy": {
+      "whoTitle": "Who we are",
+      "whoBody": "{{company}} (“we”, “us”) provides car rental services in Zanzibar, Tanzania. We are responsible for the personal information you provide when you make an enquiry or booking.",
+      "collectTitle": "What we collect",
+      "contactDetails": "Contact details: name, email address, phone number and nationality.",
+      "bookingDetails": "Booking details: dates, pickup and return locations, flight information and selected services.",
+      "identityDocuments": "Identity documents: copies of your passport and driving licence, only if you ask us to arrange a driving permit.",
+      "paymentRecords": "Payment records: amounts, references and proof of payment. Card details are entered on our payment provider’s secure page; we never see or store your card number.",
+      "useTitle": "How we use your information",
+      "useBody": "We use your information to manage bookings, issue invoices and receipts, arrange permits you request, contact you about your rental, meet legal and accounting obligations, and protect our services. We do not sell your data or use it for third-party advertising.",
+      "protectTitle": "How we protect your information",
+      "encrypted": "All data is transmitted over encrypted connections (HTTPS).",
+      "privateDocuments": "Identity documents are stored privately and are never publicly accessible. Only authorised staff can view them, and each access is logged.",
+      "noDocumentSharing": "We never send passport or driving licence copies by email or WhatsApp.",
+      "privateLink": "Your booking page is protected by a private, expiring access link.",
+      "retentionTitle": "How long we keep your information",
+      "retentionBody": "Passport and driving licence copies are securely deleted after your rental ends, or after a booking is cancelled, once they are no longer needed. Booking, invoice and payment records are kept for as long as accounting and legal requirements require.",
+      "rightsTitle": "Your rights",
+      "rightsBody": "You can request a copy of your information, ask us to correct it, or ask us to delete it where we are not legally required to keep it. Contact us{{email}} and we will respond promptly."
+    },
+    "terms": {
+      "bookingsTitle": "1. Bookings",
+      "bookingsBody": "A booking request holds the selected vehicle for {{hours}} hours while we review it. A booking is confirmed only when we confirm it in writing. We may decline a request; if so, any payment you have made will be refunded.",
+      "pricesTitle": "2. Prices and invoices",
+      "pricesBody": "Prices are in US dollars and are calculated by our booking system when you book. Your invoice is issued immediately. If a booking changes, we issue a revised invoice and keep the original on record. An invoice is not a receipt; we issue a receipt for each verified payment.",
+      "paymentsTitle": "3. Payments",
+      "paymentsBody": "Payment is currently made manually using the methods we accept. A manual payment counts towards your booking only after we have verified it.",
+      "periodTitle": "4. Rental period",
+      "periodBody": "Each started 24-hour period is charged as one rental day. Return the vehicle at the agreed time and place; late returns may be charged as additional days.",
+      "locationsTitle": "5. Pickup and return locations",
+      "locationsBody": "Handover at Zanzibar Airport and in Zanzibar Town is free. Locations outside the free zone carry a delivery fee{{feeText}} for each leg.",
+      "feeAt": " of {{fee}}",
+      "driversTitle": "6. Drivers and documents",
+      "driversBody": "Every driver must hold and carry a valid driving licence and any driving permit required in Zanzibar. Our permit arrangement service helps you apply; the issuing authority decides whether to approve it, and approval is not guaranteed by paying the arrangement fee.",
+      "useTitle": "7. Use of the vehicle",
+      "driveLawfully": "Drive lawfully, carefully and within the island’s speed limits.",
+      "prohibitedUse": "Do not drive under the influence of alcohol or drugs, carry more passengers than the vehicle’s seating capacity, or sub-let the vehicle.",
+      "reportIncidents": "Report any accident, damage or breakdown to us immediately.",
+      "cancellationsTitle": "8. Cancellations",
+      "cancellationsBody": "Tell us as early as possible if you need to cancel. Refunds are handled according to the cancellation terms in your booking confirmation.",
+      "contactTitle": "9. Contact",
+      "contactQuestion": "Questions about these terms?",
+      "contactLink": "Contact us"
     }
   },
   "errors": {

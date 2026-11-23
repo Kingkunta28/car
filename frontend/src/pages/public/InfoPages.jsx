@@ -196,22 +196,22 @@ export function Privacy() {
   const business = getBusinessInfo(site);
   return (
     <Legal title={t("footer.privacy")} path="/privacy" updated={fmtDate("2026-11-01", { month: "long", year: "numeric" })} description={t("footer.privacy")}>
-      <section><h2>Who we are</h2><p>{site?.business_name || "Rafiki Car Hire"} ("we", "us") provides car rental services in Zanzibar, Tanzania. We are responsible for the personal information you give us when you make an enquiry or booking.</p></section>
-      <section><h2>What we collect</h2><ul>
-        <li>Contact details: name, email address, phone number and nationality.</li>
-        <li>Booking details: dates, pickup and return locations, flight information and selected services.</li>
-        <li>Identity documents: copies of your passport and driving licence, only if you ask us to arrange a driving permit.</li>
-        <li>Payment records: amounts, references and proof of payment. Card details are entered on our payment provider's secure page — we never see or store your card number.</li>
+      <section><h2>{t("info.privacy.whoTitle")}</h2><p>{t("info.privacy.whoBody", { company: site?.business_name || "Rafiki Car Hire" })}</p></section>
+      <section><h2>{t("info.privacy.collectTitle")}</h2><ul>
+        <li>{t("info.privacy.contactDetails")}</li>
+        <li>{t("info.privacy.bookingDetails")}</li>
+        <li>{t("info.privacy.identityDocuments")}</li>
+        <li>{t("info.privacy.paymentRecords")}</li>
       </ul></section>
-      <section><h2>How we use it</h2><p>We use your information to process and manage your booking, issue invoices and receipts, arrange permits you request, contact you about your rental, meet legal and accounting obligations, and keep our services secure. We do not sell your data or use it for third-party advertising.</p></section>
-      <section><h2>How we protect it</h2><ul>
-        <li>All data is transmitted over encrypted connections (HTTPS).</li>
-        <li>Identity documents are kept in private storage that is never publicly accessible, and only authorised staff can view them. Each access is logged.</li>
-        <li>We never send passport or licence copies by email or WhatsApp.</li>
-        <li>Your booking page is protected by a private, expiring access link.</li>
+      <section><h2>{t("info.privacy.useTitle")}</h2><p>{t("info.privacy.useBody")}</p></section>
+      <section><h2>{t("info.privacy.protectTitle")}</h2><ul>
+        <li>{t("info.privacy.encrypted")}</li>
+        <li>{t("info.privacy.privateDocuments")}</li>
+        <li>{t("info.privacy.noDocumentSharing")}</li>
+        <li>{t("info.privacy.privateLink")}</li>
       </ul></section>
-      <section><h2>How long we keep it</h2><p>Passport and licence copies are securely deleted after your rental ends (or after a booking is cancelled), once they are no longer needed. Booking, invoice and payment records are kept for as long as required for accounting and legal purposes.</p></section>
-      <section><h2>Your rights</h2><p>You can ask us for a copy of your information, to correct it, or to delete it where we are not legally required to keep it. Contact us{business.email ? ` at ${business.email}` : ""} and we will respond promptly.</p></section>
+      <section><h2>{t("info.privacy.retentionTitle")}</h2><p>{t("info.privacy.retentionBody")}</p></section>
+      <section><h2>{t("info.privacy.rightsTitle")}</h2><p>{t("info.privacy.rightsBody", { email: business.email ? ` ${business.email}` : "" })}</p></section>
     </Legal>
   );
 }
@@ -221,19 +221,19 @@ export function Terms() {
   const { data: o } = useBookingOptions();
   return (
     <Legal title={t("footer.terms")} path="/terms" updated={fmtDate("2026-11-01", { month: "long", year: "numeric" })} description={t("footer.terms")}>
-      <section><h2>1. Bookings</h2><p>A booking request reserves the selected vehicle for {o?.hold_hours ?? 24} hours while we review it. A booking is confirmed only when we confirm it in writing. We may decline a request, in which case any payment you have made is refunded.</p></section>
-      <section><h2>2. Prices &amp; invoices</h2><p>All prices are in US dollars and are calculated by our booking system at the time of booking. Your invoice is issued immediately. If your booking is changed, we issue a revised invoice; the original remains on record. An invoice is not a receipt — a receipt is issued for each verified payment.</p></section>
-      <section><h2>3. Payments</h2><p>Payment is currently made manually using the methods we accept. A manual payment counts towards your booking only after we have verified it.</p></section>
-      <section><h2>4. Rental period</h2><p>Each started 24-hour period is charged as one rental day. Please return the vehicle at the agreed time and place; late returns may be charged as additional days.</p></section>
-      <section><h2>5. Pickup &amp; return locations</h2><p>Handover at Zanzibar Airport and in Zanzibar Town is free. Locations outside the free zone carry a delivery fee{o ? ` of ${usd(o.locations.find((l) => l.code === "OUTSIDE_ZONE")?.fee)}` : ""} for each leg.</p></section>
-      <section><h2>6. Drivers &amp; documents</h2><p>Every driver must hold a valid driving licence and carry it, together with any required Zanzibar driving permit, while driving. Our permit arrangement service helps you apply; approval is decided by the issuing authority and is not guaranteed by payment of the arrangement fee.</p></section>
-      <section><h2>7. Use of the vehicle</h2><ul>
-        <li>Drive lawfully, carefully and within the island's speed limits.</li>
-        <li>Do not drive under the influence of alcohol or drugs, carry more passengers than the vehicle's seats, or sub-let the vehicle.</li>
-        <li>Report any accident, damage or breakdown to us immediately.</li>
+      <section><h2>{t("info.terms.bookingsTitle")}</h2><p>{t("info.terms.bookingsBody", { hours: o?.hold_hours ?? 24 })}</p></section>
+      <section><h2>{t("info.terms.pricesTitle")}</h2><p>{t("info.terms.pricesBody")}</p></section>
+      <section><h2>{t("info.terms.paymentsTitle")}</h2><p>{t("info.terms.paymentsBody")}</p></section>
+      <section><h2>{t("info.terms.periodTitle")}</h2><p>{t("info.terms.periodBody")}</p></section>
+      <section><h2>{t("info.terms.locationsTitle")}</h2><p>{t("info.terms.locationsBody", { feeText: o ? ` ${t("info.terms.feeAt", { fee: usd(o.locations.find((l) => l.code === "OUTSIDE_ZONE")?.fee) })}` : "" })}</p></section>
+      <section><h2>{t("info.terms.driversTitle")}</h2><p>{t("info.terms.driversBody")}</p></section>
+      <section><h2>{t("info.terms.useTitle")}</h2><ul>
+        <li>{t("info.terms.driveLawfully")}</li>
+        <li>{t("info.terms.prohibitedUse")}</li>
+        <li>{t("info.terms.reportIncidents")}</li>
       </ul></section>
-      <section><h2>8. Cancellations</h2><p>Please tell us as early as possible if you need to cancel. Refunds for cancellations are handled according to the cancellation terms set out in your booking confirmation.</p></section>
-      <section><h2>9. Contact</h2><p>Questions about these terms? <Link to="/contact" className="font-semibold text-navy-700 underline">Contact us</Link>.</p></section>
+      <section><h2>{t("info.terms.cancellationsTitle")}</h2><p>{t("info.terms.cancellationsBody")}</p></section>
+      <section><h2>{t("info.terms.contactTitle")}</h2><p>{t("info.terms.contactQuestion")} <Link to="/contact" className="font-semibold text-navy-700 underline">{t("info.terms.contactLink")}</Link>.</p></section>
     </Legal>
   );
 }

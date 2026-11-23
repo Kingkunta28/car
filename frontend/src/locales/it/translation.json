@@ -15,7 +15,8 @@
     "main": "Navigazione principale",
     "mobile": "Navigazione mobile",
     "open": "Apri menu",
-    "close": "Chiudi menu"
+    "close": "Chiudi menu",
+    "homeAria": "Home di Rafiki Car Hire"
   },
   "actions": {
     "book": "Prenota ora",
@@ -46,7 +47,9 @@
     "bookingInfo": "Informazioni sulla prenotazione",
     "permit": "Requisiti per il permesso di guida",
     "faq": "Domande frequenti",
-    "chat": "Scrivici"
+    "chat": "Scrivici",
+    "siteInfo": "informazioni sul sito",
+    "tagline": "Esplora Zanzibar in libertà."
   },
   "fleet": {
     "title": "Scegli l'auto giusta",
@@ -163,12 +166,12 @@
     "why": "Perché Rafiki",
     "steps": [
       {
-        "title": "Scegli l?auto",
-        "text": "Consulta la flotta e scegli l?auto pi? adatta al gruppo, ai bagagli e al viaggio."
+        "title": "Scegli l’auto",
+        "text": "Consulta la flotta e scegli l’auto più adatta al gruppo, ai bagagli e al viaggio."
       },
       {
         "title": "Prenota in pochi minuti",
-        "text": "Indicaci date, luogo di incontro ed eventuali extra. Vedrai il prezzo completo prima dell?invio."
+        "text": "Indicaci date, luogo di incontro ed eventuali extra. Vedrai il prezzo completo prima dell’invio."
       },
       {
         "title": "Ricevi la fattura",
@@ -176,7 +179,7 @@
       },
       {
         "title": "Guida a Zanzibar",
-        "text": "Ci incontriamo in aeroporto, a Stone Town o in hotel: esplora l?isola con i tuoi tempi."
+        "text": "Ci incontriamo in aeroporto, a Stone Town o in hotel: esplora l’isola con i tuoi tempi."
       }
     ],
     "driving": "Guidare a Zanzibar",
@@ -230,7 +233,7 @@
     "noCars": "Nessun veicolo corrisponde ai filtri",
     "stats": {
       "fleet": "auto nella flotta",
-      "fleetNote": "Controllate e pulite tra un noleggio e l?altro",
+      "fleetNote": "Controllate e pulite tra un noleggio e l’altro",
       "handover": "Consegna in aeroporto e a Stone Town",
       "handoverNote": "Ti incontriamo agli arrivi",
       "hold": "Durata della prenotazione",
@@ -256,7 +259,17 @@
         "time": "Circa 45 min dal centro",
         "text": "La rara scimmia colobo rosso e passerelle tra le mangrovie."
       }
-    ]
+    ],
+    "beachAlt": "Acqua turchese e sabbia bianca sulla costa di Zanzibar",
+    "heroCarAlt": "Toyota Land Cruiser Prado nero a noleggio a Zanzibar con Rafiki Car Hire",
+    "dayUnit": "giorno",
+    "statsLabel": "Rafiki in breve",
+    "sampleInvoiceLabel": "FATTURA",
+    "sampleRental": "Noleggio · 4 giorni",
+    "samplePickup": "Ritiro · Nungwi",
+    "sampleBabySeats": "Seggiolini · 2",
+    "totalUSD": "Totale USD",
+    "exampleOnly": "Solo un esempio"
   },
   "booking": {
     "steps": [
@@ -364,24 +377,26 @@
     "deliveryFee": "Costo di consegna",
     "permit": "Permesso di guida",
     "yourBooking": "La tua prenotazione",
-    "reservedConflict": "Questa auto ? gi? prenotata per alcune date. Modifica le date o scegli un?altra auto.",
-    "rentalLine": "Noleggio ? {{days}} ? {{rate}}",
+    "reservedConflict": "Questa auto è già prenotata per alcune date. Modifica le date o scegli un’altra auto.",
+    "rentalLine": "Noleggio — {{days}} — {{rate}}",
     "tax": "Imposta",
-    "finalPrice": "Il sistema confermer? il prezzo finale al momento dell?invio.",
-    "seatWhole": "per l?intera prenotazione, non al giorno.",
+    "finalPrice": "Il sistema confermerà il prezzo finale al momento dell’invio.",
+    "seatWhole": "per l’intera prenotazione, non al giorno.",
     "chooseFile": "Scegli un file",
-    "fileSize": "PDF, JPG, PNG o WebP ? max {{size}} MB",
+    "fileSize": "PDF, JPG, PNG o WebP — max {{size}} MB",
     "fewer": "Meno {{label}}",
-    "more": "Pi? {{label}}",
+    "more": "Più {{label}}",
     "addExtra": "Aggiungi {{name}}",
     "dayCount_one": "{{count}} giorno",
     "dayCount_other": "{{count}} giorni",
     "pricing": {
       "PER_BOOKING": "per prenotazione",
-      "PER_UNIT": "per unit?, per prenotazione",
+      "PER_UNIT": "per unità, per prenotazione",
       "PER_DAY": "al giorno",
-      "PER_UNIT_PER_DAY": "per unit?, al giorno"
-    }
+      "PER_UNIT_PER_DAY": "per unità, al giorno"
+    },
+    "pickupLocation": "Luogo di ritiro",
+    "returnLocation": "Luogo di riconsegna"
   },
   "seo": {
     "home": "Noleggio auto self-drive a Zanzibar",
@@ -406,13 +421,13 @@
     "title": "Prenotazione ricevuta",
     "submitted": "Prenotazione inviata",
     "thanks": "Asante, {{name}}.",
-    "lead": "L?auto ? riservata e la fattura ? in arrivo via email. Il nostro team confermer? la prenotazione a breve.",
+    "lead": "L’auto è riservata e la fattura è in arrivo via email. Il nostro team confermerà la prenotazione a breve.",
     "reference": "Riferimento prenotazione",
     "invoiceNumber": "Numero fattura",
     "pickup": "Ritiro",
     "return": "Riconsegna",
-    "hold": "L?auto ? riservata fino al {{date}} mentre confermiamo. La fattura non ? una ricevuta: riceverai una ricevuta per ogni pagamento verificato.",
-    "rental": "Noleggio ? {{days}} ? {{rate}}",
+    "hold": "L’auto è riservata fino al {{date}} mentre confermiamo. La fattura non è una ricevuta: riceverai una ricevuta per ogni pagamento verificato.",
+    "rental": "Noleggio — {{days}} — {{rate}}",
     "pickupFee": "Costo di ritiro",
     "returnFee": "Costo di riconsegna",
     "free": "Gratis",
@@ -424,21 +439,21 @@
     "viewPayment": "Visualizza prenotazione e pagamenti",
     "whatsapp": "Contattaci su WhatsApp",
     "home": "Torna alla home",
-    "private": "Conserva l?email: il link privato ti consente di tornare a questa prenotazione in qualsiasi momento.",
-    "fallback": "I dettagli completi sono nell?email che ti abbiamo appena inviato.",
+    "private": "Conserva l’email: il link privato ti consente di tornare a questa prenotazione in qualsiasi momento.",
+    "fallback": "I dettagli completi sono nell’email che ti abbiamo appena inviato.",
     "downloadError": "Download non riuscito: riprova.",
     "days_one": "{{count}} giorno",
     "days_other": "{{count}} giorni"
   },
   "manage": {
     "title": "Gestisci la prenotazione",
-    "intro": "Apri il link privato nell?email di prenotazione per accedere automaticamente. Oppure inserisci qui il riferimento e il codice di accesso.",
+    "intro": "Apri il link privato nell’email di prenotazione per accedere automaticamente. Oppure inserisci qui il riferimento e il codice di accesso.",
     "reference": "Riferimento prenotazione",
     "accessCode": "Codice di accesso",
     "accessHint": "Il codice lungo dopo ?token=? nel link ricevuto via email.",
     "open": "Apri prenotazione",
-    "lostEmail": "Hai perso l?email? Contattaci con il riferimento della prenotazione e te la invieremo di nuovo.",
-    "expired": "Il link della prenotazione ? scaduto",
+    "lostEmail": "Hai perso l’email? Contattaci con il riferimento della prenotazione e te la invieremo di nuovo.",
+    "expired": "Il link della prenotazione è scaduto",
     "expiredText": "Per sicurezza, i link smettono di funzionare dopo un certo periodo. Scrivici il riferimento e te ne invieremo uno nuovo.",
     "openError": "Impossibile aprire la prenotazione",
     "newLink": "Richiedi un nuovo link",
@@ -446,7 +461,7 @@
     "yourBooking": "La tua prenotazione",
     "contactWhatsApp": "Contattaci su WhatsApp",
     "awaiting": "In attesa di conferma",
-    "awaitingText": "L?auto ? riservata fino al {{date}}. Ti invieremo un?email appena confermata.",
+    "awaitingText": "L’auto è riservata fino al {{date}}. Ti invieremo un’email appena confermata.",
     "vehicle": "Veicolo",
     "pickup": "Ritiro",
     "return": "Riconsegna",
@@ -484,11 +499,12 @@
     "paymentDetails": "Invia i dettagli del pagamento",
     "paymentInstructions": "Istruzioni di pagamento",
     "thanks": "Grazie: verificheremo il pagamento e invieremo una ricevuta.",
-    "signInPrivate": "Apri il link privato nell?email di prenotazione per gestire la prenotazione."
+    "signInPrivate": "Apri il link privato nell’email di prenotazione per gestire la prenotazione.",
+    "referencePlaceholder": "RCH-XXXXXXX"
   },
   "ui": {
     "loading": "Caricamento",
-    "errorTitle": "Si ? verificato un errore",
+    "errorTitle": "Si è verificato un errore",
     "errorText": "Controlla la connessione e riprova.",
     "tryAgain": "Riprova",
     "close": "Chiudi finestra",
@@ -497,16 +513,16 @@
     "free": "Consegna gratuita",
     "outside": "Fuori dalla zona gratuita",
     "eachWay": "a tratta",
-    "approx": "di viaggio dall?aeroporto (circa)",
+    "approx": "di viaggio dall’aeroporto (circa)",
     "chooseDestination": "Scegli una destinazione",
-    "mapScale": "Illustrazione indicativa ? non in scala",
+    "mapScale": "Illustrazione indicativa — non in scala",
     "mapLabel": "Mappa illustrativa di Zanzibar con le zone di consegna. Selezione: {{place}}.",
     "freePlace": "consegna gratuita",
     "outsidePlace": "fuori dalla zona gratuita",
-    "refreshError": "Si ? verificato un errore in questa pagina.",
+    "refreshError": "Si è verificato un errore in questa pagina.",
     "refreshText": "Aggiorna la pagina. Se il problema continua, contattaci su WhatsApp: ti aiuteremo con la prenotazione.",
     "refresh": "Aggiorna pagina",
-    "driveFrom": "di viaggio dall?aeroporto (circa)",
+    "driveFrom": "di viaggio dall’aeroporto (circa)",
     "meetArrivals": "Incontro agli arrivi"
   },
   "map": {
@@ -515,14 +531,14 @@
       "Aeroporto internazionale Abeid Amani Karume. Ti aspettiamo agli arrivi con un cartello.",
       "Punta settentrionale con spiagge, tramonti e cantieri di dhow.",
       "Acque calme e lunghe spiagge balneabili.",
-      "Costa nord-orientale tranquilla di fronte all?atollo di Mnemba.",
+      "Costa nord-orientale tranquilla di fronte all’atollo di Mnemba.",
       "Piccole baie orlate di palme sulla costa orientale.",
       "Scimmie colobo rosso e passerelle tra le mangrovie.",
       "Penisola con vista sulla laguna da entrambi i lati.",
       "Lunga spiaggia bianca tra Paje e Michamvi.",
       "Laguna per il kitesurf sulla costa sud-orientale.",
       "Villaggio di pescatori tranquillo con coltivazioni di alghe.",
-      "Estremit? meridionale, escursioni per vedere i delfini e baie tranquille."
+      "Estremità meridionale, escursioni per vedere i delfini e baie tranquille."
     ]
   },
   "paymentStatus": {
@@ -530,14 +546,14 @@
     "processing": "Pagamento in elaborazione",
     "processingText": "Attendiamo la conferma del gestore del pagamento. Potrebbe volerci un minuto; invieremo la ricevuta via email appena confermato.",
     "notCompleted": "Pagamento non completato",
-    "notCompletedText": "Non ? stato addebitato nulla. Puoi riprovare dalla pagina della prenotazione.",
+    "notCompletedText": "Non è stato addebitato nulla. Puoi riprovare dalla pagina della prenotazione.",
     "confirmed": "Pagamento confermato",
-    "confirmedText": "Grazie: abbiamo ricevuto {{amount}} per la prenotazione {{reference}}. La ricevuta arriver? via email.",
+    "confirmedText": "Grazie: abbiamo ricevuto {{amount}} per la prenotazione {{reference}}. La ricevuta arriverà via email.",
     "failed": "Pagamento non riuscito",
-    "failedText": "Il pagamento non ? stato completato e non ? stato addebitato nulla. Riprova o scegli il pagamento manuale.",
+    "failedText": "Il pagamento non è stato completato e non è stato addebitato nulla. Riprova o scegli il pagamento manuale.",
     "checkError": "Impossibile verificare il pagamento",
-    "checkErrorText": "Se il pagamento ? riuscito, verr? comunque confermato automaticamente. Controlla la prenotazione tra poco.",
-    "checking": "Verifica del pagamento?",
+    "checkErrorText": "Se il pagamento è riuscito, verrà comunque confermato automaticamente. Controlla la prenotazione tra poco.",
+    "checking": "Verifica del pagamento in corso",
     "status": "Stato del pagamento:",
     "balance": "Importo residuo",
     "tryAgain": "Riprova",
@@ -546,12 +562,12 @@
   },
   "contact": {
     "title": "Organizziamo il tuo viaggio.",
-    "lead": "Il modo pi? rapido per contattarci ? WhatsApp. Il team locale ? disponibile giorno e notte.",
-    "whatsapp": "WhatsApp ? 24/7",
+    "lead": "Il modo più rapido per contattarci è WhatsApp. Il team locale è disponibile giorno e notte.",
+    "whatsapp": "WhatsApp · 24/7",
     "find": "Dove siamo",
     "openMap": "Apri in Google Maps",
     "sent": "Messaggio inviato",
-    "thanks": "Grazie, {{name}}. Ti risponderemo presto all?indirizzo {{email}}.",
+    "thanks": "Grazie, {{name}}. Ti risponderemo presto all’indirizzo {{email}}.",
     "heading": "Scrivici un messaggio",
     "name": "Nome",
     "subject": "Oggetto",
@@ -564,22 +580,67 @@
     "notFound": {
       "title": "Pagina non trovata",
       "heading": "Questa strada non porta da nessuna parte.",
-      "text": "La pagina potrebbe essere stata spostata o non esistere pi?.",
+      "text": "La pagina potrebbe essere stata spostata o non esistere più.",
       "home": "Torna alla home",
       "fleet": "Scopri la flotta"
     },
     "legal": {
       "eyebrow": "Informazioni legali",
-      "updated": "Ultimo aggiornamento: {{date}}"
+      "updated": "Ultimo aggiornamento: {{date}}",
+      "nav": "Informazioni legali"
+    },
+    "privacy": {
+      "whoTitle": "Chi siamo",
+      "whoBody": "{{company}} (“noi”) offre servizi di autonoleggio a Zanzibar, in Tanzania. È responsabile delle informazioni personali che ci fornisci quando chiedi informazioni o prenoti.",
+      "collectTitle": "Quali dati raccogliamo",
+      "contactDetails": "Dati di contatto: nome, indirizzo email, numero di telefono e nazionalità.",
+      "bookingDetails": "Dati della prenotazione: date, luoghi di ritiro e riconsegna, informazioni sul volo e servizi scelti.",
+      "identityDocuments": "Documenti d’identità: copie del passaporto e della patente, solo se ci chiedi di organizzare un permesso di guida.",
+      "paymentRecords": "Dati di pagamento: importi, riferimenti e prove di pagamento. I dati della carta vengono inseriti nella pagina sicura del gestore dei pagamenti; non vediamo né conserviamo il numero della carta.",
+      "useTitle": "Come utilizziamo i dati",
+      "useBody": "Utilizziamo i tuoi dati per gestire le prenotazioni, emettere fatture e ricevute, organizzare i permessi richiesti, contattarti sul noleggio, rispettare gli obblighi legali e contabili e proteggere i nostri servizi. Non vendiamo i tuoi dati né li usiamo per pubblicità di terzi.",
+      "protectTitle": "Come proteggiamo i dati",
+      "encrypted": "Tutti i dati vengono trasmessi tramite connessioni cifrate (HTTPS).",
+      "privateDocuments": "I documenti d’identità sono conservati in modo privato e non sono accessibili pubblicamente. Solo il personale autorizzato può consultarli e ogni accesso viene registrato.",
+      "noDocumentSharing": "Non inviamo mai copie di passaporti o patenti via email o WhatsApp.",
+      "privateLink": "La pagina della prenotazione è protetta da un link privato con scadenza.",
+      "retentionTitle": "Per quanto tempo conserviamo i dati",
+      "retentionBody": "Le copie di passaporto e patente vengono eliminate in modo sicuro quando non sono più necessarie, dopo la fine del noleggio o l’annullamento della prenotazione. Conserviamo i dati di prenotazioni, fatture e pagamenti per il periodo richiesto dagli obblighi contabili e legali.",
+      "rightsTitle": "I tuoi diritti",
+      "rightsBody": "Puoi chiedere una copia dei tuoi dati, correggerli o cancellarli quando non siamo obbligati per legge a conservarli. Contattaci{{email}} e ti risponderemo al più presto."
+    },
+    "terms": {
+      "bookingsTitle": "1. Prenotazioni",
+      "bookingsBody": "La richiesta di prenotazione riserva l’auto scelta per {{hours}} ore mentre la esaminiamo. La prenotazione è confermata solo quando te lo comunichiamo per iscritto. Possiamo rifiutare una richiesta; in tal caso, ti rimborsiamo gli eventuali importi pagati.",
+      "pricesTitle": "2. Prezzi e fatture",
+      "pricesBody": "I prezzi sono in dollari statunitensi e vengono calcolati dal sistema al momento della prenotazione. La fattura viene emessa subito. Se la prenotazione cambia, emettiamo una fattura aggiornata e conserviamo la precedente. La fattura non è una ricevuta: emettiamo una ricevuta per ogni pagamento verificato.",
+      "paymentsTitle": "3. Pagamenti",
+      "paymentsBody": "Al momento il pagamento viene effettuato manualmente con i metodi accettati. Un pagamento manuale viene conteggiato per la prenotazione solo dopo la verifica.",
+      "periodTitle": "4. Periodo di noleggio",
+      "periodBody": "Ogni periodo iniziato di 24 ore viene addebitato come un giorno di noleggio. Riconsegna l’auto all’ora e nel luogo concordati; i ritardi possono essere addebitati come giorni aggiuntivi.",
+      "locationsTitle": "5. Luoghi di ritiro e riconsegna",
+      "locationsBody": "La consegna all’aeroporto di Zanzibar e a Zanzibar Town è gratuita. Per le località fuori dalla zona gratuita è previsto un costo{{feeText}} per ogni tratta.",
+      "feeAt": " di {{fee}}",
+      "driversTitle": "6. Conducenti e documenti",
+      "driversBody": "Ogni conducente deve avere con sé una patente valida e gli eventuali permessi di guida richiesti a Zanzibar. Il nostro servizio ti aiuta a richiedere il permesso; la decisione spetta all’autorità competente e il pagamento del servizio non ne garantisce l’approvazione.",
+      "useTitle": "7. Uso del veicolo",
+      "driveLawfully": "Guida nel rispetto della legge, con prudenza e dei limiti di velocità dell’isola.",
+      "prohibitedUse": "Non guidare sotto l’effetto di alcol o droghe, non superare i posti disponibili e non subaffittare il veicolo.",
+      "reportIncidents": "Comunicaci subito qualsiasi incidente, danno o guasto.",
+      "cancellationsTitle": "8. Annullamenti",
+      "cancellationsBody": "Avvisaci il prima possibile se devi annullare. Gli eventuali rimborsi seguono le condizioni di annullamento indicate nella conferma della prenotazione.",
+      "contactTitle": "9. Contatti",
+      "contactQuestion": "Hai domande su queste condizioni?",
+      "contactLink": "Contattaci"
     }
   },
   "errors": {
     "api": {
-      "business_rule": "Non ? stato possibile completare la richiesta. Riprova.",
-      "conflict": "La prenotazione non ? compatibile con la disponibilit?. Modifica le date o scegli un?altra auto.",
-      "server_error": "Il servizio ? temporaneamente non disponibile. Riprova tra poco.",
+      "business_rule": "Non è stato possibile completare la richiesta. Riprova.",
+      "conflict": "La prenotazione non è compatibile con la disponibilità. Modifica le date o scegli un’altra auto.",
+      "server_error": "Il servizio è temporaneamente non disponibile. Riprova tra poco.",
       "validation_error": "Alcuni dati richiedono una correzione. Controlla il modulo e riprova.",
-      "not_found": "L?elemento richiesto non ? stato trovato."
+      "not_found": "L’elemento richiesto non è stato trovato."
     }
   }
 }
