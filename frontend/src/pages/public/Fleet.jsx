@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { CarFront, Search, SlidersHorizontal, X } from "lucide-react";
 import { useVehicles } from "../../lib/hooks";
-import { cx, todayISO } from "../../lib/format";
+import { cx } from "../../lib/format";
 import { Seo } from "../../lib/seo";
 import { Button, EmptyState, ErrorState, Skeleton } from "../../components/ui";
 import VehicleCard from "../../components/VehicleCard";
@@ -61,19 +61,6 @@ function Filters({ params, set, clear, count }) {
           {[2, 4, 5, 7, 8].map((n) => <option key={n} value={n}>{n}+ {t("vehicle.seats")}</option>)}
         </select>
       </label>
-      <fieldset>
-        <legend className="label">{t("fleet.availability")}</legend>
-        <label className="flex items-center gap-2.5 text-sm">
-          <input type="checkbox" className="size-4 accent-navy-900" checked={params.get("available") === "true"}
-            onChange={(e) => set({ available: e.target.checked ? "true" : "" })} />
-          {t("fleet.availableNow")}
-        </label>
-        <p className="mt-3 text-sm text-muted">{t("fleet.checkDates")}</p>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <input aria-label={t("fleet.from")} type="date" min={todayISO()} className="input" value={params.get("from") || ""} onChange={(e) => set({ from: e.target.value })} />
-          <input aria-label={t("fleet.to")} type="date" min={params.get("from") || todayISO()} className="input" value={params.get("to") || ""} onChange={(e) => set({ to: e.target.value })} />
-        </div>
-      </fieldset>
       <div className="flex items-center justify-between border-t border-line pt-5">
         <span className="text-sm text-muted">{count ?? "…"} {t("fleet.vehicleCount", { count: count ?? 0 })}</span>
         <button type="button" onClick={clear} className="text-sm font-semibold text-navy-700 underline underline-offset-4">{t("actions.clear")}</button>
@@ -88,11 +75,9 @@ export default function Fleet() {
   const [showFilters, setShowFilters] = useState(false);
   const query = useMemo(() => {
     const q = {};
-    for (const k of ["search", "transmission", "min_price", "max_price", "min_passengers", "available", "ordering"]) if (params.get(k)) q[k] = params.get(k);
+    for (const k of ["search", "transmission", "min_price", "max_price", "min_passengers", "ordering"]) if (params.get(k)) q[k] = params.get(k);
     const cats = params.getAll("category");
     if (cats.length === 1) q.category = cats[0]; // several types are filtered client-side below
-    const from = params.get("from"), to = params.get("to");
-    if (from && to && to > from) { q.pickup_at = `${from}T10:00:00`; q.return_at = `${to}T10:00:00`; }
     return q;
   }, [params]);
   const { data, isLoading, error, refetch } = useVehicles(query);

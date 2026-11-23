@@ -5,7 +5,7 @@ import { ArrowLeft, Briefcase, Check, ChevronLeft, ChevronRight, DoorOpen, Expan
 import { useVehicle, useVehicles } from "../../lib/hooks";
 import { cx, usd } from "../../lib/format";
 import { Seo, SITE_URL } from "../../lib/seo";
-import { Alert, Badge, Button, ErrorState, PageLoader } from "../../components/ui";
+import { Alert, Button, ErrorState, PageLoader } from "../../components/ui";
 import VehicleCard, { VehicleImage } from "../../components/VehicleCard";
 
 function Lightbox({ images, index, setIndex, onClose }) {
@@ -85,7 +85,6 @@ export default function VehicleDetail() {
     [Settings2, t("vehicle.transmission"), v.transmission_display], [Users, t("vehicle.passengers"), `${v.passenger_capacity} ${t("vehicle.seats", { defaultValue: "seats" })}`],
     [Fuel, t("vehicle.fuel"), v.fuel_type_display], [Briefcase, t("vehicle.luggage"), `${v.luggage_capacity} ${t("vehicle.bags", { defaultValue: "bags" })}`], [DoorOpen, t("vehicle.doors"), v.doors],
   ];
-  const bookable = v.availability_status === "AVAILABLE";
 
   return (
     <>
@@ -95,7 +94,7 @@ export default function VehicleDetail() {
           "@context": "https://schema.org", "@type": "Product", name: `${v.brand} ${v.model} rental — ${v.name}`,
           image: v.images?.map((i) => i.url), description: v.description, brand: { "@type": "Brand", name: v.brand },
           offers: { "@type": "Offer", priceCurrency: "USD", price: v.price_per_day, url: `${SITE_URL}/fleet/${v.slug}`,
-            availability: bookable ? "https://schema.org/InStock" : "https://schema.org/OutOfStock" },
+            availability: "https://schema.org/InStock" },
         }} />
       <div className="container-x py-8 sm:py-12">
         <Link to="/fleet" className="inline-flex items-center gap-1.5 text-sm font-medium text-navy-700 hover:text-navy-900">
@@ -138,7 +137,6 @@ export default function VehicleDetail() {
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <div className="card p-6">
-              <Badge status={v.availability_status}>{v.availability_display}</Badge>
               <h1 className="display-md mt-3">{v.name}</h1>
               <p className="text-muted">{v.brand} {v.model}{v.year ? ` · ${v.year}` : ""} · {v.category_display}</p>
               <p className="mt-6">
@@ -150,15 +148,14 @@ export default function VehicleDetail() {
                 <li className="flex items-center gap-2"><Plane className="size-4 text-orange-600" /> {t("vehicle.freeHandover")}</li>
                 <li className="flex items-center gap-2"><Check className="size-4 text-orange-600" /> {t("vehicle.priceShown")}</li>
               </ul>
-              <Button to={`/book?vehicle=${v.slug}`} size="lg" className="mt-6 w-full" disabled={!bookable}
-                aria-disabled={!bookable}>{bookable ? t("actions.book") : t("vehicle.notAvailable")}</Button>
+              <Button to={`/book?vehicle=${v.slug}`} size="lg" className="mt-6 w-full">{t("actions.book")}</Button>
             </div>
           </aside>
         </div>
       </div>
       {/* Related vehicles: same category first, then closest price */}
       {(() => {
-        const others = (fleet.data || []).filter((x) => x.slug !== v.slug && x.availability_status === "AVAILABLE");
+        const others = (fleet.data || []).filter((x) => x.slug !== v.slug);
         const related = [...others].sort((a, b) =>
           (a.category === v.category ? 0 : 1) - (b.category === v.category ? 0 : 1)
           || Math.abs(a.price_per_day - v.price_per_day) - Math.abs(b.price_per_day - v.price_per_day)).slice(0, 3);
@@ -182,7 +179,7 @@ export default function VehicleDetail() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 py-3 backdrop-blur-lg lg:hidden" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         <div className="flex items-center justify-between gap-4">
           <p><span className="font-display text-2xl font-bold text-navy-900">{usd(v.price_per_day)}</span><span className="text-sm text-muted"> / {t("vehicle.perDay")}</span></p>
-          <Button to={`/book?vehicle=${v.slug}`} disabled={!bookable} arrow={bookable}>{bookable ? t("actions.book") : t("actions.unavailable")}</Button>
+          <Button to={`/book?vehicle=${v.slug}`} arrow>{t("actions.book")}</Button>
         </div>
       </div>
       <div className="h-20 lg:hidden" aria-hidden />

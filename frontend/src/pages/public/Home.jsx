@@ -147,12 +147,11 @@ function QuickSearch() {
 }
 
 /* --------------------- Sections */
-function Stats({ vehicles, options, fromPrice }) {
+function Stats({ vehicles, fromPrice }) {
   const { t } = useTranslation();
   const stats = [
     vehicles?.length ? { v: vehicles.length, label: t("home.stats.fleet"), sub: t("home.stats.fleetNote") } : null,
     { v: 0, prefix: "$", label: t("home.stats.handover"), sub: t("home.stats.handoverNote") },
-    { v: options?.hold_hours ?? 24, suffix: "h", label: t("home.stats.hold"), sub: t("home.stats.holdNote") },
     fromPrice != null ? { v: Number(fromPrice), prefix: "$", label: t("home.stats.price"), sub: t("home.stats.priceNote") } : null,
   ].filter(Boolean);
   return (
@@ -212,7 +211,7 @@ function FleetShowcase({ vehicles, loading }) {
               <h3 className="text-xl font-semibold">{t("home.fleetUpdating")}</h3>
               <p className="mt-1 text-muted">{t("home.fleetUpdatingText")}</p>
             </div>
-            <Button to="/contact" variant="navy" arrow>{t("home.askAvailability")}</Button>
+            <Button to="/contact" variant="navy" arrow>{t("home.askDirect")}</Button>
           </div>
         )}
       </div>
@@ -478,7 +477,7 @@ export default function Home() {
         jsonLd={[businessJsonLd(site), { "@context": "https://schema.org", "@type": "FAQPage",
           mainEntity: faqList.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) }]} />
       <Hero site={site} fromPrice={fromPrice} />
-      <Stats vehicles={vehicles.data} options={options} fromPrice={fromPrice} />
+      <Stats vehicles={vehicles.data} fromPrice={fromPrice} />
       <FleetShowcase vehicles={vehicles.data} loading={vehicles.isLoading} />
       <Zones options={options} />
       <Bento options={options} />

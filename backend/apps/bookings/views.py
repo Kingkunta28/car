@@ -17,7 +17,7 @@ from apps.core.files import private_file_response
 from apps.core.throttles import BookingAccessThrottle, BookingCreateThrottle, QuoteThrottle
 from apps.core.utils import audit
 
-from . import availability, services
+from . import services
 from .models import Booking, BookingDocument, BookingNote, BookingStatus, DocumentStatus, DocumentType, ExtraService
 from .pricing import build_quote
 from .serializers import (
@@ -68,7 +68,7 @@ class QuoteView(APIView):
         services.validate_rental_window(pickup_at, return_at)
         quote = build_quote(vehicle=quote_vehicle(d["vehicle_snapshot"]), pickup_at=pickup_at, return_at=return_at,
                             pickup_type=d["pickup_type"], return_type=d["return_type"], extras=d.get("extras"))
-        return Response({**quote.as_dict(), "available": availability.is_available(d["vehicle_slug"], pickup_at, return_at)})
+        return Response(quote.as_dict())
 
 
 class BookingCreateView(APIView):

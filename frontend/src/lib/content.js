@@ -18,7 +18,7 @@ export function unitPrice(extra, qty) {
 /** "$60.00 per seat ($50.00 each for 2 or more)" */
 export function babySeatText(options) {
   const e = options?.extras?.find((x) => x.code === "baby_seat");
-  if (!e) return "available";
+  if (!e) return "Ask us for details";
   return `${usd(e.price)} per seat`;
 }
 
@@ -49,8 +49,8 @@ export function faqs(options) {
       a: "You can pay online by card through our secure payment partner (when available), or choose manual payment such as bank transfer or mobile money. Manual payments are checked by our team before they are marked as paid, and you'll receive a receipt for every verified payment.",
     },
     {
-      q: "Is my booking confirmed straight away?",
-      a: `When you submit a booking we reserve the car for you and email your invoice immediately. Our team then confirms the booking — usually within a few hours, and always before the reservation hold expires.`,
+      q: "What happens after I book?",
+      a: "We record your booking and email your invoice and booking reference. You can use the private link in the email to view your booking details.",
     },
     {
       q: "How can I reach you during my trip?",
@@ -66,7 +66,7 @@ export function faqs(options) {
 export const HOW_IT_WORKS = [
   { title: "Choose your car", text: "Browse the fleet and pick a car that suits your group, luggage and itinerary." },
   { title: "Book in minutes", text: "Tell us your dates, where to meet you, and any extras. See the full price before you submit." },
-  { title: "Get your invoice", text: "Your invoice arrives instantly by email. We confirm the booking and send you the details." },
+  { title: "Get your invoice", text: "Your invoice and booking details arrive by email after you submit." },
   { title: "Drive Zanzibar", text: "Meet us at the airport, in Stone Town or at your hotel — and enjoy the island at your own pace." },
 ];
 

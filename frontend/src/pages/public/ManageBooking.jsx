@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock, CreditCard, Download, FileText, KeyRound, Landmark, MessageCircle, Receipt, Upload } from "lucide-react";
 import { api, download } from "../../lib/api";
-import { fmtDate, fmtDateTime, fmtTime, usd, whatsappLink } from "../../lib/format";
+import { fmtDate, fmtTime, usd, whatsappLink } from "../../lib/format";
 import { useSite } from "../../lib/hooks";
 import { getBusinessInfo } from "../../data/businessInfo";
 import { clearGuest, loadGuest, saveGuest } from "../../lib/guest";
@@ -143,7 +143,7 @@ export default function ManageBooking() {
             <p className="eyebrow">{t("manage.yourBooking")}</p>
             <h1 className="mt-2 font-display text-3xl font-bold tracking-wide sm:text-4xl">{b.booking_reference}</h1>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Badge status={b.booking_status}>{b.booking_status_display}</Badge>
+              <Badge status={b.booking_status}>{b.booking_status === "PENDING_CONFIRMATION" ? t("manage.awaiting") : b.booking_status_display}</Badge>
               <Badge status={b.payment_status}>{b.payment_status_display}</Badge>
             </div>
           </div>
@@ -154,7 +154,7 @@ export default function ManageBooking() {
       <div className="container-x grid gap-8 py-10 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
           {b.booking_status === "PENDING_CONFIRMATION" && (
-            <Alert tone="warning" title={t("manage.awaiting")}>{t("manage.awaitingText", { date: fmtDateTime(b.hold_expires_at) })}</Alert>
+            <Alert tone="info" title={t("manage.awaiting")}>{t("manage.awaitingText")}</Alert>
           )}
           <div className="card overflow-hidden sm:flex">
             <div className="aspect-[16/10] sm:aspect-auto sm:w-64 shrink-0 bg-slate-100"><VehicleImage vehicle={b.vehicle} image={b.vehicle.image ? { url: b.vehicle.image } : null} /></div>

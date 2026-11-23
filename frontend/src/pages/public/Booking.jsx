@@ -256,11 +256,9 @@ function Summary({ s, quote, price, vehicle, compact }) {
         {!q && !price?.error && <p className="mt-4 text-sm text-muted">{t("booking.quoteHelp")}</p>}
         {price?.error && <p className="mt-4 text-sm text-red-600" role="alert">{t("booking.priceConfigError")}</p>}
         {quote.isFetching && <div className="mt-3 flex items-center gap-2 text-xs text-muted"><Spinner />{t("booking.checkingPrice")}</div>}
-        {quote.error && <p className="mt-3 text-sm text-red-700" role="alert">{t("booking.quoteUnavailable")}</p>}
         {quote.data && q && quote.data.grand_total !== q.grand_total && <Alert tone="error" className="mt-3">{t("booking.priceChanged")}</Alert>}
         {q && (
           <>
-            {quote.data && !quote.data.available && <Alert tone="error" className="mt-4">{t("booking.reservedConflict")}</Alert>}
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between"><dt className="text-muted">{t("booking.rentalLine", { days: q.rental_days, rate: usd(q.daily_rate) })}</dt><dd className="font-medium tabular-nums">{usd(q.rental_total)}</dd></div>
               <div className="flex justify-between"><dt className="text-muted">{t("booking.deliveryFee")}</dt><dd className="tabular-nums">{Number(deliveryFee) ? usd(deliveryFee) : t("booking.free")}</dd></div>
@@ -327,7 +325,6 @@ export default function Booking() {
   const go = (n) => { setStep(n); setErrors({}); topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); };
   const next = () => {
     const e = validateStep(step, s, files, options, t, vehicle);
-    if (step === 1 && quote.data && !quote.data.available) e.vehicle = t("booking.reservedConflict");
     setErrors(e);
     if (Object.keys(e).length) {
       requestAnimationFrame(() => document.querySelector('[aria-invalid="true"], [role="alert"]')?.focus?.());
@@ -346,22 +343,10 @@ export default function Booking() {
     setSubmitting(true);
     setSubmitError("");
     try {
-      // Always verify the quote for the current form values immediately before
-      // submission. This keeps the displayed estimate and submitted snapshot aligned.
-      const latestQuote = await quote.refetch();
-      if (latestQuote.error || !latestQuote.data) {
-        setSubmitError(t("booking.quoteUnavailable"));
-        setStep(1);
-        return;
-      }
-      if (!latestQuote.data.available) {
-        setErrors({ vehicle: t("booking.reservedConflict") });
-        setSubmitError(t("booking.reservedConflict"));
-        setStep(1);
-        return;
-      }
-      if (price.error || latestQuote.data.grand_total !== price.grand_total) {
-        setSubmitError(t("booking.priceChanged"));
+      // Submit the numeric estimate; Django validates the authoritative price
+      // and rejects stale totals without checking vehicle availability.
+      if (price.error || !price.grand_total) {
+        setSubmitError(t("booking.priceConfigError"));
         setStep(1);
         return;
       }
@@ -401,7 +386,7 @@ export default function Booking() {
   const babySeat = options.extras.find((x) => x.code === "baby_seat");
   const permit = options.extras.find((x) => x.code === "driving_permit");
   const others = options.extras.filter((x) => !["baby_seat", "driving_permit"].includes(x.code));
-  const bookable = (vehicles.data || []).filter((v) => v.availability_status === "AVAILABLE");
+  const bookable = vehicles.data || [];
 
   return (
     <>

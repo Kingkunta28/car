@@ -23,7 +23,6 @@ function localizedVehicle(vehicle, t) {
     category_display: t(`vehicle.categories.${vehicle.category}`, { defaultValue: vehicle.category_display }),
     transmission_display: t(`vehicle.values.${vehicle.transmission.toLowerCase()}`, { defaultValue: vehicle.transmission_display }),
     fuel_type_display: t(`vehicle.values.${vehicle.fuel_type.toLowerCase()}`, { defaultValue: vehicle.fuel_type_display }),
-    availability_display: t(`vehicle.availability.${vehicle.availability_status}`, { defaultValue: vehicle.availability_display }),
     description: t(`catalogue.${vehicle.slug}`, { defaultValue: vehicle.description }),
     features: vehicle.features.map((feature) => t(`vehicle.features.${featureKeys[feature]}`, { defaultValue: feature })),
   };

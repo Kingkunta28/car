@@ -123,11 +123,18 @@ class BookingFlowTests(TestCase):
         self.assertEqual(res.status_code, 201, res.data)
         booking = Booking.objects.get(booking_reference=res.data["booking_reference"])
         self.assertIsNone(booking.vehicle_id)
+        self.assertFalse(booking.blocks_inventory)
         self.assertEqual(booking.vehicle_slug, slug)
         self.assertEqual(booking.vehicle_snapshot["name"], "Toyota RAV4")
         self.assertEqual(booking.daily_rate, Decimal("35.00"))
         invoice = Invoice.objects.get(booking=booking)
         self.assertTrue(invoice.pdf_file)
+
+        # Static catalogue vehicles are always bookable; the catalogue does not
+        # participate in Django inventory conflict checks.
+        again = self.create(payload)
+        self.assertEqual(again.status_code, 201, again.data)
+        self.assertEqual(Booking.objects.filter(vehicle_slug=slug).count(), 2)
 
     def test_static_catalogue_booking_rejects_unapproved_price(self):
         slug = "toyota-rav4-2018"
@@ -315,4 +322,4 @@ class BookingFlowTests(TestCase):
             "extras")}, format="json")
         self.assertEqual(quote.status_code, 200)
         self.assertEqual(quote.data["grand_total"], "275.00")
-        self.assertTrue(quote.data["available"])
+        self.assertNotIn("available", quote.data)

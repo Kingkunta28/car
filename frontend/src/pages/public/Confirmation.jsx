@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, CheckCircle2, Clock, Download, Home, MapPin, MessageCircle, Settings } from "lucide-react";
+import { CalendarDays, CheckCircle2, Download, FileText, Home, MapPin, MessageCircle, Settings } from "lucide-react";
 import { api, download } from "../../lib/api";
-import { fmtDate, fmtDateTime, fmtTime, usd, whatsappLink } from "../../lib/format";
+import { fmtDate, fmtTime, usd, whatsappLink } from "../../lib/format";
 import { getBusinessInfo } from "../../data/businessInfo";
 import { loadGuest } from "../../lib/guest";
 import { Seo } from "../../lib/seo";
@@ -97,8 +97,8 @@ export default function Confirmation() {
                 </div>
               ) : <Alert tone="info" className="m-5">{t("confirmation.fallback")}</Alert>}
               <div className="flex items-start gap-3 border-t border-line bg-sand-50 p-5 text-sm text-muted">
-                <Clock className="mt-0.5 size-5 shrink-0 text-orange-600" />
-                <p>{t("confirmation.hold", { date: fmtDateTime(state.hold_expires_at) })}</p>
+                <FileText className="mt-0.5 size-5 shrink-0 text-orange-600" />
+                <p>{t("confirmation.hold")}</p>
               </div>
             </div>
 
@@ -106,7 +106,7 @@ export default function Confirmation() {
             <div className="space-y-6">
               <div className="card p-5">
                 <div className="flex flex-wrap gap-2">
-                  <Badge status={state.booking_status}>{state.booking_status_display}</Badge>
+                  <Badge status={state.booking_status}>{state.booking_status === "PENDING_CONFIRMATION" ? t("manage.awaiting") : state.booking_status_display}</Badge>
                   <Badge status={b?.payment_status || state.payment_status}>{b?.payment_status_display || state.payment_status_display}</Badge>
                   <Badge tone="slate">{state.payment_method_display}</Badge>
                 </div>

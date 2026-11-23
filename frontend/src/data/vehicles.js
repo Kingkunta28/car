@@ -42,7 +42,7 @@ export const DEFAULT_BOOKING_OPTIONS = {
   max_rental_days: 30,
   max_upload_mb: 8,
   payment_methods: {
-    manual: { available: true, instructions: "Payment instructions will be shared after availability is confirmed." },
+    manual: { available: true, instructions: "Payment instructions will be shared after your booking is received." },
     online: { available: false, gateways: [] },
   },
 };
@@ -91,7 +91,6 @@ function matchesFilters(vehicle, params) {
   if (params.min_price && Number(vehicle.price_per_day) < Number(params.min_price)) return false;
   if (params.max_price && Number(vehicle.price_per_day) > Number(params.max_price)) return false;
   if (params.min_passengers && vehicle.passenger_capacity < Number(params.min_passengers)) return false;
-  if (params.available === "true" && vehicle.availability_status !== "AVAILABLE") return false;
   return true;
 }
 

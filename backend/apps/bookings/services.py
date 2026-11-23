@@ -131,8 +131,8 @@ class BookingResult:
 def create_booking(data: dict, *, documents: dict | None = None, request=None) -> BookingResult:
     """Create a booking from validated serializer data.
 
-    Runs in one transaction: customer upsert, availability lock + check,
-    server-side pricing, extras, flight, private documents, hold, invoice,
+    Runs in one transaction: customer upsert, server-side pricing, extras,
+    flight, private documents, invoice,
     and queued notifications (sent after commit).
     """
     from apps.invoices.services import issue_invoice
@@ -156,9 +156,9 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
 
     try:
         with transaction.atomic():
-            availability.release_expired_holds()
             vehicle_model = data.get("vehicle_model")
             if vehicle_model is not None:
+                availability.release_expired_holds()
                 vehicle = Vehicle.objects.select_for_update().get(pk=vehicle_model.pk)
                 if not vehicle.is_bookable:
                     raise BusinessRuleError("This vehicle is not currently available for booking.")
@@ -167,7 +167,9 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
                 vehicle = None
                 vehicle_snapshot = data["vehicle_snapshot"]
             vehicle_slug = data["vehicle_slug"]
-            if availability.conflicting_bookings(vehicle_slug, pickup_at, return_at).exists():
+            # The public frontend catalogue is not inventory-managed in Django.
+            # Preserve the legacy database vehicle guard for staff-managed cars.
+            if vehicle_model is not None and availability.conflicting_bookings(vehicle_slug, pickup_at, return_at).exists():
                 raise ConflictError(OVERLAP_MESSAGE)
 
             quote = build_quote(vehicle=quote_vehicle(vehicle_snapshot), pickup_at=pickup_at, return_at=return_at,
@@ -199,6 +201,9 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
                 payment_method=data["payment_method"], language=data.get("language", "en"),
                 customer_notes=c.get("additional_info", ""),
                 hold_expires_at=timezone.now() + timedelta(hours=settings.BOOKING_HOLD_HOURS),
+                # Static frontend catalogue bookings do not reserve a Django fleet
+                # record or block another visitor from booking the same catalogue car.
+                blocks_inventory=vehicle_model is not None,
             )
             _apply_quote(booking, quote)
             booking.save()
