@@ -5,6 +5,7 @@ from .base import *  # noqa: F401,F403
 from .base import REST_FRAMEWORK, STORAGES, env
 
 DEBUG = False
+PRIVATE_DOCUMENTS_DURABLE = True  # Tests use isolated temporary private storage, never production media.
 # Tests create/drop a temporary database, so they must use the direct Neon URL,
 # never the pooled PgBouncer URL. Pooling can keep a session connected while
 # Django tries to remove its test database.

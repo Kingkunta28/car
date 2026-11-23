@@ -1,14 +1,17 @@
-import base64
 import uuid
+from io import BytesIO
 from unittest import skipUnless
 from datetime import timedelta
 from decimal import Decimal
 
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection, IntegrityError, transaction
 from django.test import TestCase
 from django.utils import timezone
 import pypdfium2 as pdfium
+from PIL import Image as PillowImage, ImageDraw
+from reportlab.pdfgen.canvas import Canvas
 from rest_framework.test import APIClient
 
 from apps.accounts.models import Role
@@ -135,7 +138,13 @@ class BookingFlowTests(TestCase):
         invoice = Invoice.objects.get(booking=booking)
         self.assertTrue(invoice.pdf_file)
         self.assertTrue(res.data["voucher_available"])
-        voucher_bytes = base64.b64decode(res.data["voucher_pdf"])
+        self.assertTrue(booking.voucher_file.storage.exists(booking.voucher_file.name))
+        voucher_response = self.client.get(
+            "/api/v1/bookings/confirmation/download/", **self.guest_headers(res),
+        )
+        self.assertEqual(voucher_response.status_code, 200)
+        self.assertIn("private, no-store", voucher_response["Cache-Control"])
+        voucher_bytes = b"".join(voucher_response.streaming_content)
         self.assertTrue(voucher_bytes.startswith(b"%PDF"))
         voucher = pdfium.PdfDocument(voucher_bytes)
         voucher_text = "\n".join(voucher[i].get_textpage().get_text_range() for i in range(len(voucher)))
@@ -162,17 +171,20 @@ class BookingFlowTests(TestCase):
         payload = f.booking_payload(self.v)
         payload.update(vehicle=slug, vehicle_id=slug, vehicle_snapshot=snapshot, daily_rate="35.00")
 
-        with patch("apps.bookings.pdf.render_confirmation_pdf", side_effect=RuntimeError("renderer unavailable")):
+        with patch("apps.bookings.vouchers.render_confirmation_pdf", side_effect=RuntimeError("renderer unavailable")):
             res = self.create(payload)
 
         self.assertEqual(res.status_code, 201, res.data)
         self.assertFalse(res.data["voucher_available"])
         booking = Booking.objects.get(booking_reference=res.data["booking_reference"])
         self.assertEqual(booking.booking_status, BookingStatus.CONFIRMED)
+        self.assertFalse(booking.voucher_file)
         self.assertEqual(Booking.objects.filter(booking_reference=booking.booking_reference).count(), 1)
         pdf = self.client.get("/api/v1/bookings/confirmation/download/", **self.guest_headers(res))
         self.assertEqual(pdf.status_code, 200)
-        self.assertTrue(pdf.content.startswith(b"%PDF"))
+        self.assertTrue(b"".join(pdf.streaming_content).startswith(b"%PDF"))
+        booking.refresh_from_db()
+        self.assertTrue(booking.voucher_file.storage.exists(booking.voucher_file.name))
 
     def test_booking_submission_key_reuses_saved_booking_on_retry(self):
         slug = "toyota-rav4-2018"
@@ -192,6 +204,48 @@ class BookingFlowTests(TestCase):
         self.assertEqual(first.data["booking_reference"], second.data["booking_reference"])
         self.assertEqual(Booking.objects.filter(submission_key=payload["submission_key"]).count(), 1)
         self.assertEqual(Booking.objects.filter(vehicle_slug=slug).count(), 1)
+
+    def test_guest_voucher_contains_only_uploaded_identity_document_pages(self):
+        slug = "toyota-rav4-2018"
+        snapshot = {
+            "id": slug, "slug": slug, "name": "Toyota RAV4", "brand": "Toyota", "model": "RAV4",
+            "category": "SUV", "price_per_day": "35.00", "transmission": "AUTOMATIC", "fuel_type": "PETROL",
+            "passenger_capacity": 5, "luggage_capacity": 3,
+        }
+        payload = f.booking_payload(self.v, extras={"driving_permit": 1})
+        payload.update(vehicle=slug, vehicle_id=slug, vehicle_snapshot=snapshot, daily_rate="35.00")
+        self.v.delete()
+
+        image_stream = BytesIO()
+        image = PillowImage.new("RGB", (900, 600), "white")
+        ImageDraw.Draw(image).text((30, 30), "SYNTHETIC PASSPORT TEST", fill="black")
+        image.save(image_stream, format="PNG")
+        passport = SimpleUploadedFile("passport.png", image_stream.getvalue(), content_type="image/png")
+        pdf_stream = BytesIO()
+        canvas = Canvas(pdf_stream)
+        canvas.drawString(50, 700, "SYNTHETIC LICENCE TEST PAGE 1")
+        canvas.showPage()
+        canvas.drawString(50, 700, "SYNTHETIC LICENCE TEST PAGE 2")
+        canvas.save()
+        licence = SimpleUploadedFile("licence.pdf", pdf_stream.getvalue(), content_type="application/pdf")
+        response = self.create(payload, files={"passport": passport, "driving_licence": licence})
+        self.assertEqual(response.status_code, 201, response.data)
+        booking = Booking.objects.get(booking_reference=response.data["booking_reference"])
+        self.assertEqual(booking.documents.count(), 2)
+        self.assertTrue(booking.voucher_file)
+
+        guest_pdf = self.client.get("/api/v1/bookings/confirmation/download/", **self.guest_headers(response))
+        self.assertEqual(guest_pdf.status_code, 200)
+        rendered = pdfium.PdfDocument(b"".join(guest_pdf.streaming_content))
+        self.assertGreaterEqual(len(rendered), 5)  # two booking pages + image + two uploaded PDF pages
+        text = " ".join(rendered[index].get_textpage().get_text_range() for index in range(len(rendered)))
+        rendered.close()
+        self.assertIn("ACCEPTED", text)
+        self.assertIn("PASSPORT PAGE", text)
+        self.assertIn("DRIVING LICENCE PAGE", text)
+
+        public_guess = self.client.get(f"/media/{booking.documents.first().secure_file.name}")
+        self.assertNotEqual(public_guess.status_code, 200)
 
     def test_static_catalogue_booking_rejects_unapproved_price(self):
         slug = "toyota-rav4-2018"
@@ -360,7 +414,10 @@ class BookingFlowTests(TestCase):
 
     def test_retention_purges_documents(self):
         p = f.booking_payload(self.v, extras={"driving_permit": 1})
-        self.create(p, files={"passport": f.pdf_upload(), "driving_licence": f.pdf_upload()})
+        response = self.create(p, files={"passport": f.pdf_upload(), "driving_licence": f.pdf_upload()})
+        booking = Booking.objects.get(booking_reference=response.data["booking_reference"])
+        voucher_storage, voucher_name = booking.voucher_file.storage, booking.voucher_file.name
+        self.assertTrue(voucher_storage.exists(voucher_name))
         doc = BookingDocument.objects.first()
         storage, name = doc.secure_file.storage, doc.secure_file.name
         Booking.objects.update(return_at=timezone.now() - timedelta(days=60), pickup_at=timezone.now() - timedelta(days=63),
@@ -369,6 +426,20 @@ class BookingFlowTests(TestCase):
         doc.refresh_from_db()
         self.assertEqual(doc.verification_status, "PURGED")
         self.assertFalse(storage.exists(name))
+        booking.refresh_from_db()
+        self.assertFalse(booking.voucher_file)
+        self.assertFalse(voucher_storage.exists(voucher_name))
+        # A guest retry creates a clean voucher from the booking snapshot,
+        # without the expired identity pages.
+        clean_voucher_response = self.client.get(
+            "/api/v1/bookings/confirmation/download/", **self.guest_headers(response),
+        )
+        self.assertEqual(clean_voucher_response.status_code, 200)
+        clean_voucher = pdfium.PdfDocument(b"".join(clean_voucher_response.streaming_content))
+        clean_text = " ".join(clean_voucher[index].get_textpage().get_text_range()
+                               for index in range(len(clean_voucher)))
+        clean_voucher.close()
+        self.assertNotIn("PASSPORT PAGE", clean_text)
 
     # ---- Quote endpoint ------------------------------------------------------
     def test_quote_matches_booking_price(self):

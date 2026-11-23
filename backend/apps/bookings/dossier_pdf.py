@@ -83,7 +83,7 @@ def _render_pdf_pages(raw):
                 width, height = page.get_size()
                 # 144 dpi by default, with a pixel cap for unusually large pages.
                 scale = min(2.0, (8_000_000 / max(width * height, 1)) ** 0.5)
-                bitmap = page.render(scale=scale, rotation=0, fill_color=(255, 255, 255, 255))
+                bitmap = page.render(scale=scale, rotation=page.get_rotation(), fill_color=(255, 255, 255, 255))
                 try:
                     pil = bitmap.to_pil()
                     yield index + 1, ImageOps.exif_transpose(pil).copy()
@@ -103,6 +103,57 @@ def _read_doc(doc):
         return doc.secure_file.read()
     finally:
         doc.secure_file.close()
+
+
+VOUCHER_DOCUMENT_COPY = {
+    "en": {"passport": "Passport page", "licence": "Driving licence page", "title": "Booking document",
+           "page": "Original page", "privacy": "Private identity document — keep this voucher secure."},
+    "it": {"passport": "Pagina del passaporto", "licence": "Pagina della patente", "title": "Documento di prenotazione",
+           "page": "Pagina originale", "privacy": "Documento d'identità riservato: conserva questo voucher in modo sicuro."},
+    "es": {"passport": "Página del pasaporte", "licence": "Página del permiso de conducir", "title": "Documento de reserva",
+           "page": "Página original", "privacy": "Documento de identidad privado: guarda este bono de forma segura."},
+    "fr": {"passport": "Page du passeport", "licence": "Page du permis de conduire", "title": "Document de réservation",
+           "page": "Page originale", "privacy": "Document d'identité privé : conservez ce bon en lieu sûr."},
+    "de": {"passport": "Reisepassseite", "licence": "Führerscheineseite", "title": "Buchungsdokument",
+           "page": "Originalseite", "privacy": "Privates Ausweisdokument – bewahren Sie diesen Voucher sicher auf."},
+    "pt": {"passport": "Página do passaporte", "licence": "Página da carta de condução", "title": "Documento da reserva",
+           "page": "Página original", "privacy": "Documento de identificação privado — guarde este voucher em segurança."},
+}
+
+
+def append_voucher_document_pages(story, booking):
+    """Append only real, stored identity-document pages to the guest voucher."""
+    from reportlab.lib.utils import ImageReader
+
+    language = booking.language if booking.language in VOUCHER_DOCUMENT_COPY else "en"
+    copy = VOUCHER_DOCUMENT_COPY[language]
+    settings = SiteSettings.load()
+    site = site_dict(settings)
+    logo = logo_path(settings)
+    documents = booking.documents.exclude(verification_status=DocumentStatus.PURGED).order_by("document_type", "uploaded_at")
+    for doc in documents:
+        raw = _read_doc(doc)
+        if not raw:
+            continue
+        heading = copy["passport"] if doc.document_type == DocumentType.PASSPORT else copy["licence"]
+        if doc.file_kind == "pdf":
+            pages = _render_pdf_pages(raw)
+        else:
+            image = _image_flowable(raw, doc.file_kind)
+            # Keep the original image as one page, without inventing details.
+            pages = [(1, image)]
+        for page_number, image in pages:
+            story.append(PageBreak())
+            story.extend([
+                brand_header(site, copy["title"], [("Booking ref.", booking.booking_reference)], logo),
+                section(heading),
+                p(f'{copy["page"]} {page_number}  ·  {copy["privacy"]}', "small"),
+                Spacer(1, 4 * mm),
+            ])
+            if doc.file_kind == "pdf":
+                story.append(fitted_image(ImageReader(image), CONTENT_W - 22 * mm, 175 * mm))
+            else:
+                story.append(image)
 
 
 def render_booking_dossier(booking) -> bytes:

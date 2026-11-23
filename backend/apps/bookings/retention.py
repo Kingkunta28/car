@@ -36,13 +36,20 @@ def _secure_erase(field_file):
 
 
 def purge_document(doc: BookingDocument, *, actor=None, reason="retention policy"):
-    # The cached staff PDF contains a copy of this identity document too.
+    # Cached PDFs contain copies of uploaded identity documents too. Remove
+    # them as well as the original, so retention applies to every stored copy.
     dossier = BookingDossier.objects.filter(booking=doc.booking).first()
     if dossier and dossier.pdf_file:
         _secure_erase(dossier.pdf_file)
         dossier.pdf_file = ""
         dossier.source_digest = ""
         dossier.save(update_fields=["pdf_file", "source_digest", "updated_at"])
+    booking = doc.booking
+    if booking.voucher_file:
+        _secure_erase(booking.voucher_file)
+        booking.voucher_file = ""
+        booking.voucher_sha256 = ""
+        booking.save(update_fields=["voucher_file", "voucher_sha256", "updated_at"])
     if doc.secure_file:
         _secure_erase(doc.secure_file)
     doc.secure_file = ""

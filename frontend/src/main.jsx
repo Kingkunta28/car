@@ -58,6 +58,7 @@ createRoot(document.getElementById("root")).render(
                 <Route path="fleet" element={<Fleet />} />
                 <Route path="fleet/:slug" element={<VehicleDetail />} />
                 <Route path="book" element={<Booking />} />
+                <Route path="booking/confirmation/:bookingReference" element={<Confirmation />} />
                 <Route path="booking/confirmation" element={<Confirmation />} />
                 <Route path="booking/manage" element={<ManageBooking />} />
                 <Route path="invoice" element={<ManageBooking />} />

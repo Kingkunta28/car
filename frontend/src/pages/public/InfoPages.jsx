@@ -159,6 +159,7 @@ export function BeforeYouRent() {
             <ul className="mt-5 space-y-3">
               {s.keys.map((key) => <li key={key} className="flex gap-3 leading-relaxed text-muted"><BadgeCheck className="mt-0.5 size-5 shrink-0 text-orange-600" />{t(key, { hours: o?.hold_hours ?? 24 })}</li>)}
             </ul>
+            {s.id === "permit" && <Button to="/book?permit=1" size="sm" className="mt-6">{t("booking.uploadPermitDocuments")}</Button>}
           </div>
         ))}
       </section>

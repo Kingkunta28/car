@@ -93,6 +93,9 @@ class ExtraService(UUIDModel, TimeStampedModel):
 class Booking(UUIDModel, TimeStampedModel):
     submission_key = models.UUIDField(null=True, blank=True, unique=True, editable=False)
     booking_reference = models.CharField(max_length=20, unique=True)
+    voucher_file = models.FileField(storage=private_storage, upload_to=RandomUploadPath("vouchers"), blank=True,
+                                    max_length=255)
+    voucher_sha256 = models.CharField(max_length=64, blank=True)
     customer = models.ForeignKey("customers.Customer", on_delete=models.PROTECT, related_name="bookings")
     # ``vehicle`` is retained only to keep older bookings linked to their
     # original inventory rows. New frontend-catalogue bookings use the slug and

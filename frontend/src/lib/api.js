@@ -49,13 +49,51 @@ export async function ensureCsrf() {
   return data.csrfToken;
 }
 
+function uploadWithProgress(url, form, headers, signal, onUploadProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const abort = () => xhr.abort();
+    xhr.open("POST", url);
+    xhr.withCredentials = true;
+    Object.entries(headers).forEach(([key, value]) => xhr.setRequestHeader(key, value));
+    xhr.upload.addEventListener("progress", (event) => {
+      onUploadProgress({ loaded: event.loaded, total: event.total, percent: event.lengthComputable
+        ? Math.round((event.loaded / Math.max(event.total, 1)) * 100) : null });
+    });
+    xhr.onload = () => {
+      signal?.removeEventListener("abort", abort);
+      const contentType = xhr.getResponseHeader("content-type") || "";
+      let data = null;
+      if (contentType.includes("application/json")) {
+        try { data = JSON.parse(xhr.responseText); } catch { data = null; }
+      }
+      if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+      else reject(new ApiError(xhr.status, data));
+    };
+    xhr.onerror = () => {
+      signal?.removeEventListener("abort", abort);
+      reject(new TypeError("Network request failed"));
+    };
+    xhr.onabort = () => {
+      signal?.removeEventListener("abort", abort);
+      reject(new DOMException("The upload was cancelled.", "AbortError"));
+    };
+    if (signal?.aborted) {
+      xhr.abort();
+      return;
+    }
+    signal?.addEventListener("abort", abort, { once: true });
+    xhr.send(form);
+  });
+}
+
 /**
  * request(path, { method, body, form, guest, raw })
  *  - body: JSON payload; form: FormData (multipart)
  *  - guest: { reference, token } → sent as headers, never in the URL
  *  - raw: return the Response (for file downloads)
  */
-export async function request(path, { method = "GET", body, form, guest, raw, params, signal } = {}) {
+export async function request(path, { method = "GET", body, form, guest, raw, params, signal, onUploadProgress } = {}) {
   const headers = { Accept: "application/json" };
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (guest) {
@@ -69,7 +107,9 @@ export async function request(path, { method = "GET", body, form, guest, raw, pa
     headers["X-CSRFToken"] = await ensureCsrf();
   }
   const qs = params ? "?" + new URLSearchParams(Object.entries(params).filter(([, v]) => v !== "" && v != null)) : "";
-  const res = await fetch(`${BASE}${path}${qs}`, {
+  const url = `${BASE}${path}${qs}`;
+  if (form && onUploadProgress) return uploadWithProgress(url, form, headers, signal, onUploadProgress);
+  const res = await fetch(url, {
     method, headers, credentials: "include", signal,
     body: form || (body !== undefined ? JSON.stringify(body) : undefined),
   });
@@ -81,39 +121,32 @@ export async function request(path, { method = "GET", body, form, guest, raw, pa
   return data;
 }
 
-/** Download a file response and save it with the server-provided filename. */
-export async function download(path, opts = {}, fallbackName = "document.pdf") {
+/** Fetch a protected PDF into a blob URL for preview and/or download. */
+export async function fetchPdf(path, opts = {}, fallbackName = "document.pdf") {
   const res = await request(path, { ...opts, raw: true });
   const blob = await res.blob();
   const cd = res.headers.get("content-disposition") || "";
   const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(cd);
   const name = match ? decodeURIComponent(match[1]) : fallbackName;
   const url = URL.createObjectURL(blob);
+  return { url, name };
+}
+
+export function triggerDownload(url, name) {
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/** Download a protected PDF and save it with the server-provided filename. */
+export async function download(path, opts = {}, fallbackName = "document.pdf") {
+  const { url, name } = await fetchPdf(path, opts, fallbackName);
   if (opts.preview) {
     window.open(url, "_blank", "noopener");
   } else {
-    const a = Object.assign(document.createElement("a"), { href: url, download: name });
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    triggerDownload(url, name);
   }
-  setTimeout(() => URL.revokeObjectURL(url), 30_000);
-}
-
-/** Save a PDF included as base64 in a successful booking response. */
-export function downloadBase64Pdf(encoded, fileName) {
-  if (typeof encoded !== "string" || !encoded) throw new Error("The voucher PDF was empty.");
-  const binary = window.atob(encoded);
-  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-  const blob = new Blob([bytes], { type: "application/pdf" });
-  if (blob.size < 5 || new TextDecoder().decode(bytes.subarray(0, 5)) !== "%PDF-") {
-    throw new Error("The voucher response was not a valid PDF.");
-  }
-  const url = URL.createObjectURL(blob);
-  const link = Object.assign(document.createElement("a"), { href: url, download: fileName });
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 

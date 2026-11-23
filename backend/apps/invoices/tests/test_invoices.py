@@ -63,7 +63,7 @@ class InvoiceTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/pdf")
         self.assertEqual(response["Cache-Control"], "private, no-store, max-age=0")
-        self.assertTrue(b"%PDF" in response.content[:10])
+        self.assertTrue(b"%PDF" in b"".join(response.streaming_content)[:10])
 
         denied = self.client.get("/api/v1/bookings/confirmation/download/")
         self.assertEqual(denied.status_code, 404)

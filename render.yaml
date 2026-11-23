@@ -63,7 +63,7 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: https://car-lovat-two.vercel.app,https://www.rafikicarhire.com
       - key: USE_S3
-        sync: false # Set true after provisioning the two Neon Object Storage buckets.
+        sync: false # Set true in Render before accepting passport/licence uploads; private uploads must be durable.
       - key: AWS_ACCESS_KEY_ID
         sync: false # Branch-scoped Neon Object Storage credential.
       - key: AWS_SECRET_ACCESS_KEY

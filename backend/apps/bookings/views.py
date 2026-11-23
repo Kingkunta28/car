@@ -1,15 +1,14 @@
-import base64
 import logging
 
 import django_filters
+from django.conf import settings
 from django.db.models import Q
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -83,6 +82,11 @@ class BookingCreateView(APIView):
     def post(self, request):
         s = BookingCreateSerializer.from_request(request)
         s.is_valid(raise_exception=True)
+        if (request.FILES and not settings.DEBUG
+                and not getattr(settings, "PRIVATE_DOCUMENTS_DURABLE", False)):
+            raise ValidationError({
+                "documents": "Secure durable document storage is not configured. Please contact us to arrange this booking."
+            })
         documents = {}
         if request.FILES.get("passport"):
             documents[DocumentType.PASSPORT] = request.FILES["passport"]
@@ -93,11 +97,12 @@ class BookingCreateView(APIView):
         # The booking is already committed before voucher rendering starts.
         # If PDF generation fails, keep the saved booking and let the guest
         # retry through the protected confirmation-download endpoint.
-        voucher_pdf = None
+        voucher_available = False
         try:
-            from .pdf import render_confirmation_pdf
+            from .vouchers import ensure_voucher
 
-            voucher_pdf = base64.b64encode(render_confirmation_pdf(b)).decode("ascii")
+            ensure_voucher(b)
+            voucher_available = True
         except Exception:
             logging.getLogger(__name__).exception(
                 "Guest voucher generation failed for saved booking %s", b.booking_reference
@@ -116,8 +121,7 @@ class BookingCreateView(APIView):
             "currency": b.currency,
             "hold_expires_at": b.hold_expires_at,
             "whatsapp_url": guest_to_owner_url(b),
-            "voucher_pdf": voucher_pdf,
-            "voucher_available": voucher_pdf is not None,
+            "voucher_available": voucher_available,
             "voucher_download_url": "/api/v1/bookings/confirmation/download/",
         }, status=status.HTTP_201_CREATED)
         response["Cache-Control"] = "private, no-store, max-age=0"
@@ -147,12 +151,13 @@ class GuestBookingConfirmationDownloadView(APIView):
 
     def get(self, request):
         booking = guest_booking_or_404(request)
-        from .pdf import render_confirmation_pdf
+        from .vouchers import ensure_voucher
 
-        pdf = render_confirmation_pdf(booking)
-        response = HttpResponse(pdf, content_type="application/pdf")
-        response["Content-Disposition"] = f'attachment; filename="Rafiki-Booking-{booking.booking_reference}.pdf"'
-        response["Cache-Control"] = "private, no-store, max-age=0"
+        voucher = ensure_voucher(booking)
+        as_attachment = request.query_params.get("inline") != "1"
+        response = private_file_response(
+            voucher, f"Rafiki-Booking-{booking.booking_reference}.pdf", as_attachment=as_attachment,
+        )
         response["X-Content-Type-Options"] = "nosniff"
         return response
 

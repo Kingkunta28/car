@@ -33,6 +33,10 @@ CSRF_COOKIE_SECURE = True
 # filesystem; on Render's free service those files are ephemeral.
 _use_s3 = env.bool("USE_S3", default=False)
 SERVE_LOCAL_MEDIA = not _use_s3
+# Render's local filesystem is ephemeral. Never accept passport/licence
+# uploads for production bookings unless the private durable storage bucket is
+# configured.
+PRIVATE_DOCUMENTS_DURABLE = _use_s3
 
 if _use_s3:
     _access_key = env("AWS_ACCESS_KEY_ID", default="").strip()

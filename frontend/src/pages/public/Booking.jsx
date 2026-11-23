@@ -5,7 +5,7 @@ import {
   ArrowLeft, ArrowRight, Baby, Building2, Check, ChevronDown, CreditCard, FileCheck2, Landmark, Lock, MapPin, Minus, Plane,
   Plus, ShieldCheck, Upload,
 } from "lucide-react";
-import { api, ApiError, download, downloadBase64Pdf } from "../../lib/api";
+import { api, ApiError, fetchPdf, triggerDownload } from "../../lib/api";
 import { useBookingOptions, useVehicles } from "../../lib/hooks";
 import { cx, fmtDate, rentalDays, todayISO, usd } from "../../lib/format";
 import { babySeatText, unitPrice } from "../../lib/content";
@@ -47,7 +47,7 @@ const initialState = (sp) => ({
   pickup: { ...emptyLeg, type: sp.get("pickup_type") || "" },
   ret: { ...emptyLeg },
   flight: { airline_name: "", flight_number: "", arrival_date: "", arrival_time: "", arrival_airport: "", notes: "" },
-  extras: {},
+  extras: sp.get("permit") === "1" ? { driving_permit: 1 } : {},
   payment_method: "",
   accept_terms: false,
 });
@@ -63,6 +63,7 @@ function loadDraft(sp) {
     merged.ret = { ...base.ret, ...(d.ret || {}) };
     merged.flight = { ...base.flight, ...(d.flight || {}) };
     merged.extras = d.extras && typeof d.extras === "object" && !Array.isArray(d.extras) ? d.extras : {};
+    if (sp.get("permit") === "1") merged.extras = { ...merged.extras, driving_permit: 1 };
     for (const k of ["vehicle", "pickup_date", "return_date"]) if (sp.get(k)) merged[k] = sp.get(k);
     if (sp.get("pickup_type")) merged.pickup = { ...merged.pickup, type: sp.get("pickup_type") };
     return merged;
@@ -219,24 +220,53 @@ function Qty({ value, max, onChange, label }) {
   );
 }
 
-function FileDrop({ id, label, file, onFile, error, maxMb }) {
+function FileDrop({ id, label, file, onFile, error, maxMb, uploading, progress }) {
   const { t } = useTranslation();
   const ref = useRef(null);
+  const [fileError, setFileError] = useState("");
+  const selectFile = (candidate) => {
+    if (!candidate) return;
+    const extension = candidate.name.split(".").pop()?.toLowerCase();
+    if (!["pdf", "jpg", "jpeg", "png", "webp"].includes(extension)) {
+      setFileError(t("booking.validation.fileType"));
+      return;
+    }
+    if (candidate.size > maxMb * 1024 * 1024) {
+      setFileError(t("booking.validation.fileSize", { size: maxMb }));
+      return;
+    }
+    setFileError("");
+    onFile(candidate);
+  };
   return (
     <div>
       <span className="label">{label} <span className="text-orange-600">*</span></span>
-      <button type="button" onClick={() => ref.current?.click()} aria-describedby={`${id}-h`}
-        className={cx("flex w-full items-center gap-3 rounded-xl border-2 border-dashed p-4 text-left transition",
-          error ? "border-red-400 bg-red-50" : file ? "border-emerald-500 bg-emerald-50" : "border-line hover:border-navy-600")}>
-        {file ? <FileCheck2 className="size-6 text-emerald-700" /> : <Upload className="size-6 text-navy-600" />}
-        <span className="min-w-0">
-          <span className="block truncate font-medium text-navy-900">{file ? file.name : t("booking.chooseFile")}</span>
-          <span id={`${id}-h`} className="text-sm text-muted">{t("booking.fileSize", { size: maxMb })}</span>
-        </span>
-      </button>
+      <div className={cx("rounded-xl border-2 border-dashed p-4 transition",
+        error || fileError ? "border-red-400 bg-red-50" : file ? "border-emerald-500 bg-emerald-50" : "border-line")}>
+        <div className="flex min-w-0 items-start gap-3">
+          {file ? <FileCheck2 className="mt-1 size-6 shrink-0 text-emerald-700" /> : <Upload className="mt-1 size-6 shrink-0 text-navy-600" />}
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium text-navy-900">{file?.name || t("booking.chooseFile")}</p>
+            <p id={`${id}-h`} className="text-sm text-muted">{t("booking.fileSize", { size: maxMb })}</p>
+            {file && !uploading && <p className="mt-1 text-xs font-medium text-emerald-800">{t("booking.documentReady")}</p>}
+            {uploading && file && <div className="mt-3">
+              <div className="flex justify-between text-xs text-muted"><span>{t("booking.uploadingDocument")}</span><span>{progress ?? 0}%</span></div>
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white" role="progressbar" aria-label={t("booking.uploadingDocument")} aria-valuemin="0" aria-valuemax="100" aria-valuenow={progress ?? 0}>
+                <div className="h-full rounded-full bg-emerald-600 transition-[width]" style={{ width: `${progress ?? 0}%` }} />
+              </div>
+            </div>}
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <Button type="button" size="sm" variant="outline" icon={file ? FileCheck2 : Upload} disabled={uploading} onClick={() => ref.current?.click()}>
+            {t("booking.uploadDocument")}
+          </Button>
+          <span className="text-xs text-muted">PDF, JPG, JPEG, PNG, WebP</span>
+        </div>
+      </div>
       <input ref={ref} id={id} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" className="sr-only"
-        onChange={(e) => onFile(e.target.files?.[0] || null)} />
-      {error && <p className="mt-1.5 text-sm text-red-600" role="alert">{error}</p>}
+        onChange={(e) => { selectFile(e.target.files?.[0]); e.target.value = ""; }} />
+      {(error || fileError) && <p className="mt-1.5 text-sm text-red-600" role="alert">{fileError || error}</p>}
     </div>
   );
 }
@@ -292,6 +322,7 @@ export default function Booking() {
   const [s, setS] = useState(() => loadDraft(sp));
   const [step, setStep] = useState(0);
   const [files, setFiles] = useState({ passport: null, driving_licence: null });
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -364,32 +395,29 @@ export default function Booking() {
       if (s.extras.driving_permit) {
         form.append("passport", files.passport);
         form.append("driving_licence", files.driving_licence);
+        setUploadProgress(0);
       }
-      const res = await api.upload("/bookings/", form);
+      const res = await api.upload("/bookings/", form, {
+        onUploadProgress: s.extras.driving_permit ? ({ percent }) => setUploadProgress(percent ?? 0) : undefined,
+      });
+      if (s.extras.driving_permit) setUploadProgress(100);
       saveGuest(res.booking_reference, res.access_token);
       try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
       let voucher_ready = false;
       const guest = { reference: res.booking_reference, token: res.access_token };
-      if (res.voucher_pdf) {
-        try {
-          downloadBase64Pdf(res.voucher_pdf, `${res.booking_reference}-voucher.pdf`);
-          voucher_ready = true;
-        } catch (err) {
-          if (import.meta.env.DEV) console.error("Booking was saved, but its voucher could not be downloaded.", err);
-        }
-      }
       // If generation or the browser download failed, try the protected
       // endpoint once. The booking is already saved; never submit it again.
-      if (!voucher_ready) {
-        try {
-          await download("/bookings/confirmation/download/", { guest }, `${res.booking_reference}-voucher.pdf`);
-          voucher_ready = true;
-        } catch (err) {
-          if (import.meta.env.DEV) console.error("Saved booking voucher is not ready yet.", err);
-        }
+      try {
+        const pdf = await fetchPdf("/bookings/confirmation/download/", { guest, params: { inline: 1 } }, `${res.booking_reference}-voucher.pdf`);
+        triggerDownload(pdf.url, `${res.booking_reference}-voucher.pdf`);
+        setTimeout(() => URL.revokeObjectURL(pdf.url), 30_000);
+        voucher_ready = true;
+      } catch (err) {
+        if (import.meta.env.DEV) console.error("Saved booking voucher is not ready yet.", err);
       }
-      const { voucher_pdf: _voucherPdf, ...confirmation } = res;
-      nav("/booking/confirmation", { state: { ...confirmation, voucher_ready }, replace: true });
+      nav(`/booking/confirmation/${encodeURIComponent(res.booking_reference)}`, {
+        state: { ...res, voucher_ready }, replace: true,
+      });
       try { sessionStorage.removeItem(SUBMISSION_KEY); } catch { /* ignore */ }
     } catch (err) {
       if (err instanceof ApiError) {
@@ -565,9 +593,11 @@ export default function Booking() {
                         {t("booking.documentPrivacy")}</p>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <FileDrop id="passport" label={t("booking.passport")} file={files.passport} error={errors.passport} maxMb={options.max_upload_mb}
-                          onFile={(f) => setFiles((x) => ({ ...x, passport: f }))} />
+                          uploading={submitting} progress={uploadProgress}
+                          onFile={(f) => { setErrors((prev) => ({ ...prev, passport: undefined })); setSubmitError(""); setFiles((x) => ({ ...x, passport: f })); }} />
                         <FileDrop id="licence" label={t("booking.licence")} file={files.driving_licence} error={errors.driving_licence} maxMb={options.max_upload_mb}
-                          onFile={(f) => setFiles((x) => ({ ...x, driving_licence: f }))} />
+                          uploading={submitting} progress={uploadProgress}
+                          onFile={(f) => { setErrors((prev) => ({ ...prev, driving_licence: undefined })); setSubmitError(""); setFiles((x) => ({ ...x, driving_licence: f })); }} />
                       </div>
                       {errors.documents && <p className="text-sm text-red-600" role="alert">{errors.documents}</p>}
                     </div>
