@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft, ArrowRight, Baby, Building2, Check, ChevronDown, CreditCard, FileCheck2, Landmark, Lock, MapPin, Minus, Plane,
   Plus, ShieldCheck, Upload,
@@ -14,7 +13,7 @@ import { calculateBookingPrice } from "../../lib/bookingPrice";
 import { DEFAULT_BOOKING_OPTIONS, vehicleSnapshot } from "../../data/vehicles";
 import { saveGuest } from "../../lib/guest";
 import { Seo } from "../../lib/seo";
-import { Alert, Button, ErrorState, Field, PageLoader, Spinner } from "../../components/ui";
+import { Alert, Button, ErrorState, Field, PageLoader } from "../../components/ui";
 import { VehicleImage } from "../../components/VehicleCard";
 
 const STEPS = Array.from({ length: 8 }, (_, index) => `booking.steps.${index}`);
@@ -115,7 +114,7 @@ const FIELD_STEP = (k) => k.startsWith("customer") ? 0
   : k.startsWith("pickup_") ? 2 : k.startsWith("return_") ? 3 : k.startsWith("flight") ? 4
   : /^(extras|documents|passport|driving_licence)/.test(k) ? 5 : k.startsWith("payment") ? 6 : 7;
 
-function toPayload(s, vehicle, totalAmount, options) {
+function toPayload(s, vehicle, totalAmount) {
   const flight = Object.fromEntries(Object.entries(s.flight).map(([k, v]) => [k, v || (k.includes("date") || k.includes("time") ? null : "")]));
   return {
     customer: s.customer, vehicle: s.vehicle, vehicle_id: vehicle.id, language: document.documentElement.lang || "en",
@@ -133,22 +132,6 @@ function extraLabel(extra, t) {
   if (!extra) return "";
   const key = { baby_seat: "booking.babySeats", driving_permit: "booking.permit", outside_zone_delivery: "booking.deliveryFee" }[extra.code];
   return key ? t(key) : extra.name;
-}
-
-function useQuote(s, vehicle) {
-  const ready = s.vehicle && s.pickup_date && s.return_date && s.pickup_time && s.return_time
-    && vehicle && rentalDays(s.pickup_date, s.pickup_time, s.return_date, s.return_time) > 0;
-  const body = useMemo(() => ({
-    vehicle: s.vehicle, vehicle_id: vehicle?.id, vehicle_snapshot: vehicleSnapshot(vehicle), daily_rate: vehicle?.price_per_day,
-    pickup_date: s.pickup_date, pickup_time: s.pickup_time, return_date: s.return_date,
-    return_time: s.return_time, pickup_type: s.pickup.type || "AIRPORT", return_type: s.ret.type || "AIRPORT",
-    extras: Object.fromEntries(Object.entries(s.extras).filter(([, q]) => q > 0)),
-  }), [s.vehicle, vehicle, s.pickup_date, s.pickup_time, s.return_date, s.return_time,
-    s.pickup.type, s.ret.type, s.extras]);
-  return useQuery({
-    queryKey: ["quote", body], enabled: !!ready, retry: false,
-    queryFn: () => api.post("/bookings/quote/", body),
-  });
 }
 
 function LocationPicker({ prefix, leg, onChange, options, errors, isReturn }) {
@@ -239,7 +222,7 @@ function FileDrop({ id, label, file, onFile, error, maxMb }) {
   );
 }
 
-function Summary({ s, quote, price, vehicle, compact }) {
+function Summary({ s, price, vehicle, compact }) {
   const { t } = useTranslation();
   const q = price?.grand_total ? price : null;
   const deliveryFee = q ? (q.delivery_fee ?? (Number(q.pickup_fee) + Number(q.return_fee))) : 0;
@@ -255,8 +238,6 @@ function Summary({ s, quote, price, vehicle, compact }) {
         )}
         {!q && !price?.error && <p className="mt-4 text-sm text-muted">{t("booking.quoteHelp")}</p>}
         {price?.error && <p className="mt-4 text-sm text-red-600" role="alert">{t("booking.priceConfigError")}</p>}
-        {quote.isFetching && <div className="mt-3 flex items-center gap-2 text-xs text-muted"><Spinner />{t("booking.checkingPrice")}</div>}
-        {quote.data && q && quote.data.grand_total !== q.grand_total && <Alert tone="error" className="mt-3">{t("booking.priceChanged")}</Alert>}
         {q && (
           <>
             <dl className="mt-4 space-y-2 text-sm">
@@ -298,7 +279,6 @@ export default function Booking() {
   const submitLock = useRef(false);
   const topRef = useRef(null);
   const vehicle = useMemo(() => vehicles.data?.find((v) => v.slug === s.vehicle), [vehicles.data, s.vehicle]);
-  const quote = useQuote(s, vehicle);
   const price = useMemo(() => calculateBookingPrice({
     vehicle,
     pickupDate: s.pickup_date,
@@ -372,7 +352,7 @@ export default function Booking() {
         }
         if (!keys.includes("total_amount")) setSubmitError(err.message);
       } else {
-        setSubmitError(t("booking.quoteUnavailable"));
+        setSubmitError(t("booking.submitError"));
       }
     } finally {
       submitLock.current = false;
@@ -386,7 +366,7 @@ export default function Booking() {
   const babySeat = options.extras.find((x) => x.code === "baby_seat");
   const permit = options.extras.find((x) => x.code === "driving_permit");
   const others = options.extras.filter((x) => !["baby_seat", "driving_permit"].includes(x.code));
-  const bookable = vehicles.data || [];
+  const catalogueVehicles = vehicles.data || [];
 
   return (
     <>
@@ -416,10 +396,10 @@ export default function Booking() {
             <details className="group mb-8 rounded-2xl border border-line bg-sand-50 lg:hidden">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 font-semibold text-navy-900 [&::-webkit-details-marker]:hidden">
                 <span>{t("booking.priceSummary")}</span>
-                <span className="flex items-center gap-2 font-display text-lg">{quote.data ? usd(quote.data.grand_total) : "—"}
+                <span className="flex items-center gap-2 font-display text-lg">{price?.grand_total ? usd(price.grand_total) : "—"}
                   <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden /></span>
               </summary>
-              <div className="px-2 pb-2"><Summary s={s} quote={quote} price={price} vehicle={vehicle} compact /></div>
+              <div className="px-2 pb-2"><Summary s={s} price={price} vehicle={vehicle} compact /></div>
             </details>
           )}
           {step === 0 && (
@@ -448,7 +428,7 @@ export default function Booking() {
                 {(a) => (
                   <select {...a} className="input" value={s.vehicle} onChange={(e) => up({ vehicle: e.target.value })}>
                     <option value="">{t("booking.chooseVehicle")}</option>
-                    {bookable.map((v) => <option key={v.slug} value={v.slug}>{v.name} — {v.transmission_display}, {v.passenger_capacity} {t("vehicle.seats", { defaultValue: "seats" })} — {usd(v.price_per_day)}/{t("vehicle.perDay")}</option>)}
+                    {catalogueVehicles.map((v) => <option key={v.slug} value={v.slug}>{v.name} — {v.transmission_display}, {v.passenger_capacity} {t("vehicle.seats", { defaultValue: "seats" })} — {usd(v.price_per_day)}/{t("vehicle.perDay")}</option>)}
                   </select>
                 )}
               </Field>
@@ -615,7 +595,7 @@ export default function Booking() {
                   </div>
                 ))}
               </div>
-              <div className="lg:hidden"><Summary s={s} quote={quote} price={price} vehicle={vehicle} compact /></div>
+              <div className="lg:hidden"><Summary s={s} price={price} vehicle={vehicle} compact /></div>
               <label className="flex gap-3 text-sm leading-relaxed">
                 <input type="checkbox" className="mt-0.5 size-5 accent-navy-900" checked={s.accept_terms} onChange={(e) => up({ accept_terms: e.target.checked })}
                   aria-invalid={!!errors.accept_terms} />
@@ -637,7 +617,7 @@ export default function Booking() {
           </div>
         </form>
 
-        <aside className="hidden lg:block"><div className="sticky top-24"><Summary s={s} quote={quote} price={price} vehicle={vehicle} /></div></aside>
+        <aside className="hidden lg:block"><div className="sticky top-24"><Summary s={s} price={price} vehicle={vehicle} /></div></aside>
       </div>
     </>
   );

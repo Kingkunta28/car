@@ -1,7 +1,7 @@
 {% extends "emails/base.html" %}{% block content %}
 <h1 style="font-size:22px;color:#0B1F3A;margin:0 0 12px;">Thank you, {{ customer.full_name }}.</h1>
-<p>We have received your booking request and are holding the vehicle for you while our team reviews it. <strong>Status: pending confirmation.</strong> We will confirm by email shortly.</p>
-<p>Your invoice <strong>{{ invoice.invoice_number }}</strong> is attached. An invoice is not a booking confirmation or a receipt &mdash; a receipt is issued once a payment is verified.</p>
+<p>We have received your booking. Your vehicle, rental dates and booking details are recorded under reference <strong>{{ booking.booking_reference }}</strong>.</p>
+<p>Your invoice <strong>{{ invoice.invoice_number }}</strong> is attached. A separate receipt is issued once each payment is verified.</p>
 {% include "emails/_summary.html" %}
 {% if booking.payment_method == "MANUAL" and site.payment_instructions %}<h2 style="font-size:16px;color:#0B1F3A;">How to pay</h2><p style="white-space:pre-line;">{{ site.payment_instructions }}</p>{% endif %}
 {% include "emails/_button.html" with url=manage_url label="View booking &amp; download invoice" %}

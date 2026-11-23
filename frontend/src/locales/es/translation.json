@@ -146,7 +146,6 @@
     "outsideZone": "Fuera de la zona gratuita",
     "pickupDate": "Fecha de recogida",
     "returnDate": "Fecha de devolución",
-    "checkAvailability": "Encuentra un coche",
     "fleet": "La flota",
     "islandRoads": "Coches para las carreteras de la isla.",
     "delivery": "Entrega y devolución",
@@ -253,7 +252,8 @@
     "samplePickup": "Recogida · Nungwi",
     "sampleBabySeats": "Sillas infantiles · 2",
     "totalUSD": "Total USD",
-    "exampleOnly": "Solo un ejemplo"
+    "exampleOnly": "Solo un ejemplo",
+    "findCar": "Encuentra un coche"
   },
   "booking": {
     "steps": [
@@ -305,9 +305,7 @@
     "continue": "Continuar",
     "edit": "Editar",
     "quoteHelp": "Elige un coche y las fechas para ver el precio.",
-    "quoteUnavailable": "No se pudo cargar el precio estimado. Aun así, puedes enviar la reserva y el servidor validará el total.",
     "priceChanged": "El precio ha cambiado. Revisa el nuevo total antes de enviar.",
-    "quoteFinal": "El sistema confirmará el precio final al enviar la solicitud.",
     "progress": "Progreso de la reserva",
     "stepLabel": "Paso {{number}}: {{label}}",
     "stepOf": "Paso {{current}} de {{total}}",
@@ -363,10 +361,9 @@
     "deliveryFee": "Cargo de entrega",
     "permit": "Permiso de conducir",
     "yourBooking": "Tu reserva",
-    "reservedConflict": "No se pudo guardar la reserva. Revisa los datos e inténtalo de nuevo.",
     "rentalLine": "Alquiler — {{days}} — {{rate}}",
     "tax": "Impuesto",
-    "finalPrice": "El sistema confirmará el precio final al enviar la reserva.",
+    "finalPrice": "Este es el total incluido en la reserva.",
     "seatWhole": "para toda la reserva, no por día.",
     "chooseFile": "Elegir archivo",
     "fileSize": "PDF, JPG, PNG o WebP — máx. {{size}} MB",
@@ -404,9 +401,9 @@
       "terms": "Acepta las condiciones para continuar.",
       "serverField": "Revisa este dato de la reserva e inténtalo de nuevo."
     },
-    "checkingPrice": "Comprobando el precio actual...",
     "priceConfigError": "No se pudo calcular un total fiable para el vehículo y las opciones seleccionados.",
-    "deliveryFeeRule": "Se aplica una sola tarifa de entrega de {{amount}} por reserva si la recogida o la devolución es fuera de la zona gratuita."
+    "deliveryFeeRule": "Se aplica una sola tarifa de entrega de {{amount}} por reserva si la recogida o la devolución es fuera de la zona gratuita.",
+    "submitError": "No se pudo enviar la reserva. Comprueba la conexión e inténtalo de nuevo."
   },
   "seo": {
     "home": "Alquiler de coches sin conductor en Zanzíbar",

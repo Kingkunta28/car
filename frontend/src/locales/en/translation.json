@@ -146,7 +146,6 @@
     "outsideZone": "Outside the free zone",
     "pickupDate": "Pickup date",
     "returnDate": "Return date",
-    "checkAvailability": "Find a car",
     "fleet": "The fleet",
     "islandRoads": "Cars chosen for island roads.",
     "delivery": "Delivery & collection",
@@ -222,8 +221,6 @@
       "fleetNote": "Serviced between every rental",
       "handover": "Airport and Stone Town handover",
       "handoverNote": "We meet you at arrivals",
-      "hold": "",
-      "holdNote": "",
       "price": "Per day, from",
       "priceNote": "Clear US-dollar pricing"
     },
@@ -256,8 +253,7 @@
     "sampleBabySeats": "Baby seat × 2",
     "totalUSD": "Total USD",
     "exampleOnly": "Example only",
-    "hold": "Booking reference",
-    "holdNote": "Your invoice arrives by email"
+    "findCar": "Find a car"
   },
   "booking": {
     "steps": [
@@ -309,9 +305,7 @@
     "continue": "Continue",
     "edit": "Edit",
     "quoteHelp": "Choose a car and dates to see your price.",
-    "quoteUnavailable": "The price estimate could not be loaded. You can still submit your booking and the server will validate the total.",
     "priceChanged": "The price changed. Review the updated total before submitting.",
-    "quoteFinal": "Final price is confirmed by our system when you submit.",
     "progress": "Booking progress",
     "stepLabel": "Step {{number}}: {{label}}",
     "stepOf": "Step {{current}} of {{total}}",
@@ -367,10 +361,9 @@
     "deliveryFee": "Delivery fee",
     "permit": "Driving permit",
     "yourBooking": "Your booking",
-    "reservedConflict": "We could not save this booking. Review your details and try again.",
     "rentalLine": "Rental — {{days}} — {{rate}}",
     "tax": "Tax",
-    "finalPrice": "Our system confirms the final price when you submit.",
+    "finalPrice": "This is the total included with your booking.",
     "seatWhole": "for your whole booking, not per day.",
     "chooseFile": "Choose a file",
     "fileSize": "PDF, JPG, PNG or WebP — max {{size}} MB",
@@ -408,9 +401,9 @@
       "terms": "Accept the terms to continue.",
       "serverField": "Check this booking detail and try again."
     },
-    "checkingPrice": "Checking the current price...",
     "priceConfigError": "A reliable total could not be calculated from the selected vehicle and booking options.",
-    "deliveryFeeRule": "A delivery fee of {{amount}} applies once per booking if either pickup or return is outside the free zone."
+    "deliveryFeeRule": "A delivery fee of {{amount}} applies once per booking if either pickup or return is outside the free zone.",
+    "submitError": "We could not submit your booking. Check your connection and try again."
   },
   "seo": {
     "home": "Self-drive car rental in Zanzibar",

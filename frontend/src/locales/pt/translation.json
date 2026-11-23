@@ -146,7 +146,6 @@
     "outsideZone": "Fora da zona gratuita",
     "pickupDate": "Data de recolha",
     "returnDate": "Data de devolução",
-    "checkAvailability": "Encontrar um carro",
     "fleet": "A frota",
     "islandRoads": "Carros escolhidos para as estradas da ilha.",
     "delivery": "Entrega e devolução",
@@ -253,7 +252,8 @@
     "samplePickup": "Recolha · Nungwi",
     "sampleBabySeats": "Cadeiras de bebé · 2",
     "totalUSD": "Total USD",
-    "exampleOnly": "Apenas um exemplo"
+    "exampleOnly": "Apenas um exemplo",
+    "findCar": "Encontrar um carro"
   },
   "booking": {
     "steps": [
@@ -305,9 +305,7 @@
     "continue": "Continuar",
     "edit": "Editar",
     "quoteHelp": "Escolha um carro e as datas para ver o preço.",
-    "quoteUnavailable": "Não foi possível carregar a estimativa do preço. Pode enviar a reserva na mesma e o servidor validará o total.",
     "priceChanged": "O preço mudou. Reveja o novo total antes de enviar.",
-    "quoteFinal": "O sistema confirma o preço final quando enviar o pedido.",
     "progress": "Progresso da reserva",
     "stepLabel": "Etapa {{number}}: {{label}}",
     "stepOf": "Etapa {{current}} de {{total}}",
@@ -363,10 +361,9 @@
     "deliveryFee": "Taxa de entrega",
     "permit": "Carta de condução",
     "yourBooking": "A sua reserva",
-    "reservedConflict": "Não foi possível guardar a reserva. Reveja os dados e tente novamente.",
     "rentalLine": "Aluguer — {{days}} — {{rate}}",
     "tax": "Imposto",
-    "finalPrice": "O sistema confirma o preço final quando enviar a reserva.",
+    "finalPrice": "Este é o valor total incluído na reserva.",
     "seatWhole": "para toda a reserva, não por dia.",
     "chooseFile": "Escolher ficheiro",
     "fileSize": "PDF, JPG, PNG ou WebP — máx. {{size}} MB",
@@ -404,9 +401,9 @@
       "terms": "Aceite os termos para continuar.",
       "serverField": "Verifique este dado da reserva e tente novamente."
     },
-    "checkingPrice": "A confirmar o preço atual...",
     "priceConfigError": "Não foi possível calcular um total fiável para o veículo e as opções selecionados.",
-    "deliveryFeeRule": "Aplica-se uma taxa de entrega de {{amount}} uma só vez por reserva se o levantamento ou a devolução ocorrer fora da zona gratuita."
+    "deliveryFeeRule": "Aplica-se uma taxa de entrega de {{amount}} uma só vez por reserva se o levantamento ou a devolução ocorrer fora da zona gratuita.",
+    "submitError": "Não foi possível enviar a reserva. Verifique a ligação e tente novamente."
   },
   "seo": {
     "home": "Aluguer de carros sem condutor em Zanzibar",

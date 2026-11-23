@@ -66,9 +66,8 @@ class SiteSettings(models.Model):
     invoice_terms = models.TextField(
         blank=True,
         default=(
-            "This invoice confirms that a booking request has been received. It is not a confirmation of "
-            "the reservation or a receipt of payment. Your reservation is confirmed only when Rafiki Car "
-            "Hire confirms it in writing. A payment receipt is issued separately for each verified payment."
+            "This invoice records the selected vehicle, rental dates, customer details and total. "
+            "A payment receipt is issued separately for each verified payment."
         ),
     )
     payment_instructions = models.TextField(

@@ -146,7 +146,6 @@
     "outsideZone": "Außerhalb der kostenlosen Zone",
     "pickupDate": "Abholdatum",
     "returnDate": "Rückgabedatum",
-    "checkAvailability": "Auto finden",
     "fleet": "Die Flotte",
     "islandRoads": "Autos für die Straßen der Insel.",
     "delivery": "Übergabe und Rückgabe",
@@ -253,7 +252,8 @@
     "samplePickup": "Abholung · Nungwi",
     "sampleBabySeats": "Kindersitze · 2",
     "totalUSD": "Gesamt USD",
-    "exampleOnly": "Nur ein Beispiel"
+    "exampleOnly": "Nur ein Beispiel",
+    "findCar": "Auto finden"
   },
   "booking": {
     "steps": [
@@ -305,9 +305,7 @@
     "continue": "Weiter",
     "edit": "Bearbeiten",
     "quoteHelp": "Wählen Sie ein Auto und Daten, um den Preis zu sehen.",
-    "quoteUnavailable": "Der Preis konnte nicht geladen werden. Sie können die Buchung trotzdem absenden; der Server prüft den Gesamtbetrag.",
     "priceChanged": "Der Preis hat sich geändert. Prüfen Sie den neuen Gesamtbetrag vor dem Absenden.",
-    "quoteFinal": "Der endgültige Preis wird beim Absenden vom System bestätigt.",
     "progress": "Buchungsfortschritt",
     "stepLabel": "Schritt {{number}}: {{label}}",
     "stepOf": "Schritt {{current}} von {{total}}",
@@ -363,10 +361,9 @@
     "deliveryFee": "Liefergebühr",
     "permit": "Fahrerlaubnis",
     "yourBooking": "Ihre Buchung",
-    "reservedConflict": "Die Buchung konnte nicht gespeichert werden. Prüfen Sie Ihre Angaben und versuchen Sie es erneut.",
     "rentalLine": "Miete — {{days}} — {{rate}}",
     "tax": "Steuer",
-    "finalPrice": "Unser System bestätigt den Endpreis beim Absenden.",
+    "finalPrice": "Dieser Gesamtbetrag ist in Ihrer Buchung enthalten.",
     "seatWhole": "für die gesamte Buchung, nicht pro Tag.",
     "chooseFile": "Datei auswählen",
     "fileSize": "PDF, JPG, PNG oder WebP — max. {{size}} MB",
@@ -404,9 +401,9 @@
       "terms": "Bitte akzeptieren Sie die Bedingungen, um fortzufahren.",
       "serverField": "Prüfen Sie diese Buchungsangabe und versuchen Sie es erneut."
     },
-    "checkingPrice": "Aktueller Preis wird geprüft...",
     "priceConfigError": "Für das ausgewählte Fahrzeug und die Optionen konnte kein zuverlässiger Gesamtbetrag berechnet werden.",
-    "deliveryFeeRule": "Eine Liefergebühr von {{amount}} fällt einmal pro Buchung an, wenn Abholung oder Rückgabe außerhalb der kostenlosen Zone liegt."
+    "deliveryFeeRule": "Eine Liefergebühr von {{amount}} fällt einmal pro Buchung an, wenn Abholung oder Rückgabe außerhalb der kostenlosen Zone liegt.",
+    "submitError": "Die Buchung konnte nicht gesendet werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
   },
   "seo": {
     "home": "Mietwagen zur Selbstfahrt auf Sansibar",

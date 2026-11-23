@@ -146,7 +146,6 @@
     "outsideZone": "Hors zone gratuite",
     "pickupDate": "Date de prise en charge",
     "returnDate": "Date de retour",
-    "checkAvailability": "Trouver une voiture",
     "fleet": "La flotte",
     "islandRoads": "Des voitures choisies pour les routes de l'île.",
     "delivery": "Livraison et retour",
@@ -253,7 +252,8 @@
     "samplePickup": "Prise en charge · Nungwi",
     "sampleBabySeats": "Sièges bébé · 2",
     "totalUSD": "Total USD",
-    "exampleOnly": "Exemple uniquement"
+    "exampleOnly": "Exemple uniquement",
+    "findCar": "Trouver une voiture"
   },
   "booking": {
     "steps": [
@@ -305,9 +305,7 @@
     "continue": "Continuer",
     "edit": "Modifier",
     "quoteHelp": "Choisissez une voiture et des dates pour afficher le prix.",
-    "quoteUnavailable": "L’estimation du prix n’a pas pu être chargée. Vous pouvez tout de même envoyer la réservation ; le serveur validera le total.",
     "priceChanged": "Le prix a changé. Vérifiez le nouveau total avant l’envoi.",
-    "quoteFinal": "Le système confirmera le prix final lors de l'envoi.",
     "progress": "Progression de la réservation",
     "stepLabel": "Étape {{number}} : {{label}}",
     "stepOf": "Étape {{current}} sur {{total}}",
@@ -363,10 +361,9 @@
     "deliveryFee": "Frais de livraison",
     "permit": "Permis de conduire",
     "yourBooking": "Votre réservation",
-    "reservedConflict": "La réservation n’a pas pu être enregistrée. Vérifiez vos informations et réessayez.",
     "rentalLine": "Location — {{days}} — {{rate}}",
     "tax": "Taxe",
-    "finalPrice": "Notre système confirmera le prix final à l’envoi.",
+    "finalPrice": "Ce montant total est inclus dans votre réservation.",
     "seatWhole": "pour toute la réservation, et non par jour.",
     "chooseFile": "Choisir un fichier",
     "fileSize": "PDF, JPG, PNG ou WebP — max. {{size}} Mo",
@@ -404,9 +401,9 @@
       "terms": "Veuillez accepter les conditions pour continuer.",
       "serverField": "Vérifiez cette information de réservation et réessayez."
     },
-    "checkingPrice": "Vérification du prix actuel...",
     "priceConfigError": "Impossible de calculer un total fiable pour le véhicule et les options sélectionnés.",
-    "deliveryFeeRule": "Des frais de livraison de {{amount}} s'appliquent une seule fois par réservation si le retrait ou le retour a lieu hors de la zone gratuite."
+    "deliveryFeeRule": "Des frais de livraison de {{amount}} s'appliquent une seule fois par réservation si le retrait ou le retour a lieu hors de la zone gratuite.",
+    "submitError": "La réservation n’a pas pu être envoyée. Vérifiez votre connexion et réessayez."
   },
   "seo": {
     "home": "Location de voiture en autonomie à Zanzibar",

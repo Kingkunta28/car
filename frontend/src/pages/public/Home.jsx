@@ -141,7 +141,7 @@ function QuickSearch() {
           {days > 0 && <span className="text-xs font-normal text-muted">{t("booking.durationDays", { count: days })}</span>}</span>
         <input type="date" className="input" min={f.pickup_date} value={f.return_date} required onChange={(e) => setF({ ...f, return_date: e.target.value })} />
       </label>
-      <Button type="submit" size="lg" className="h-[46px] w-full md:w-auto" arrow>{t("home.checkAvailability")}</Button>
+      <Button type="submit" size="lg" className="h-[46px] w-full md:w-auto" arrow>{t("home.findCar")}</Button>
     </form>
   );
 }
