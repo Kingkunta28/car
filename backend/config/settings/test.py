@@ -9,15 +9,16 @@ PRIVATE_DOCUMENTS_DURABLE = True  # Tests use isolated temporary private storage
 # Tests create/drop a temporary database, so they must use the direct Neon URL,
 # never the pooled PgBouncer URL. Pooling can keep a session connected while
 # Django tries to remove its test database.
-_test_database_url = env("TEST_DATABASE_URL", default=env("DATABASE_URL", default="")).strip()
-if _test_database_url:
-    DATABASES["default"] = env.db_url_config(_test_database_url)
-    if not DATABASES["default"]["ENGINE"].endswith("postgresql"):
-        raise RuntimeError("Django tests require a direct PostgreSQL TEST_DATABASE_URL or DATABASE_URL.")
-    DATABASES["default"]["CONN_MAX_AGE"] = 0
-    DATABASES["default"]["CONN_HEALTH_CHECKS"] = False
-elif "pooler" in DATABASES["default"].get("HOST", "").lower():
-    raise RuntimeError("Django tests need a direct TEST_DATABASE_URL or DATABASE_URL, not DATABASE_URL_POOLED.")
+_test_database_url = env("TEST_DATABASE_URL", default="").strip()
+if not _test_database_url:
+    raise RuntimeError("Set TEST_DATABASE_URL to a direct URL for an isolated Neon test database.")
+DATABASES["default"] = env.db_url_config(_test_database_url)
+if not DATABASES["default"]["ENGINE"].endswith("postgresql"):
+    raise RuntimeError("Django tests require a direct PostgreSQL TEST_DATABASE_URL.")
+if "pooler" in DATABASES["default"].get("HOST", "").lower():
+    raise RuntimeError("Django tests require a direct Neon URL, not a pooled connection URL.")
+DATABASES["default"]["CONN_MAX_AGE"] = 0
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = False
 
 _test_database_name = env("DJANGO_TEST_DATABASE_NAME", default="").strip()
 if _test_database_name:

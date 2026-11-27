@@ -9,7 +9,7 @@ export function zoneFee(options) {
 }
 const p = (v, fallback = "a small fee") => (v != null ? usd(v) : fallback);
 
-/** Unit price for an extra at a quantity (applies the volume price, e.g. 2+ baby seats). */
+/** Unit price for an extra at a quantity (baby seats stay at the configured per-seat price). */
 export function unitPrice(extra, qty) {
   if (extra?.code !== "baby_seat" && extra?.bulk_min_quantity && extra.bulk_unit_price != null && qty >= extra.bulk_min_quantity) return Number(extra.bulk_unit_price);
   return Number(extra?.price || 0);
@@ -46,7 +46,7 @@ export function faqs(options) {
     },
     {
       q: "How do I pay?",
-      a: "You can pay online by card through our secure payment partner (when available), or choose manual payment such as bank transfer or mobile money. Manual payments are checked by our team before they are marked as paid, and you'll receive a receipt for every verified payment.",
+      a: "You do not pay online. Pay locally when you arrive or pick up the vehicle. Your booking request is reviewed separately, and the booking stays unpaid until our team records the money received. We issue a receipt for each recorded payment.",
     },
     {
       q: "What happens after I book?",

@@ -182,8 +182,9 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
 
             quote = build_quote(vehicle=quote_vehicle(vehicle_snapshot), pickup_at=pickup_at, return_at=return_at,
                                 pickup_type=data["pickup_type"], return_type=data["return_type"], extras=extras)
-            if data.get("total_amount") is not None and data["total_amount"] != quote.grand_total:
-                raise ValidationError({"total_amount": "The booking total changed. Review the updated quote before submitting."})
+            # total_amount from the browser is a display estimate only. Always
+            # persist the server-calculated quote, without requiring a separate
+            # availability or charge-confirmation round trip.
 
             c = data["customer"]
             customer, created = Customer.objects.get_or_create(
@@ -208,12 +209,11 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
                 return_address=data.get("return_address", ""), return_instructions=data.get("return_instructions", ""),
                 payment_method=data["payment_method"], language=data.get("language", "en"),
                 customer_notes=c.get("additional_info", ""),
-                # The public static catalogue is directly bookable. Once its
-                # validated details are saved, accept it without an inventory
-                # confirmation hold. Legacy database vehicles keep the
-                # existing staff confirmation workflow.
-                booking_status=(BookingStatus.PENDING_CONFIRMATION if vehicle_model is not None
-                                else BookingStatus.CONFIRMED),
+                # Static catalogue vehicles remain selectable but wait for
+                # staff confirmation without reserving a Django fleet record.
+                # Legacy database vehicles use the same confirmation workflow
+                # and retain their existing inventory checks.
+                booking_status=BookingStatus.PENDING_CONFIRMATION,
                 hold_expires_at=(timezone.now() + timedelta(hours=settings.BOOKING_HOLD_HOURS)
                                  if vehicle_model is not None else None),
                 # Static frontend catalogue bookings do not reserve a Django fleet
@@ -238,8 +238,7 @@ def create_booking(data: dict, *, documents: dict | None = None, request=None) -
                 )
 
             _record_status(booking, BookingStatusHistory.Field.BOOKING, "", booking.booking_status,
-                           notes=("Booking submitted by guest; awaiting staff confirmation."
-                                  if vehicle_model is not None else "Static catalogue booking accepted after saving."))
+                           notes="Booking submitted by guest; awaiting staff confirmation.")
             token = issue_access_token(booking, purpose="confirmation")
             invoice = issue_invoice(booking)
             notify.booking_submitted(booking, invoice)
@@ -307,10 +306,10 @@ def change_status(booking: Booking, new_status: str, *, actor=None, notes: str =
             b.booking_status = new_status
             b.status_reason = notes[:255]
             if new_status == BookingStatus.CONFIRMED:
-                if previous == BookingStatus.EXPIRED:
+                if previous == BookingStatus.EXPIRED and b.vehicle_id is not None:
                     if availability.conflicting_bookings(b.vehicle_slug, b.pickup_at, b.return_at, exclude_pk=b.pk).exists():
                         raise ConflictError("The vehicle has since been reserved by another booking for these dates.")
-                b.blocks_inventory, b.hold_expires_at, b.confirmed_at = True, None, now
+                b.blocks_inventory, b.hold_expires_at, b.confirmed_at = (b.vehicle_id is not None), None, now
             elif new_status in (BookingStatus.REJECTED, BookingStatus.CANCELLED):
                 b.blocks_inventory = False
                 b.cancelled_at = now

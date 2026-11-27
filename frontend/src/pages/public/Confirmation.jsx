@@ -155,8 +155,9 @@ export default function Confirmation() {
                 <div className="flex flex-wrap gap-2">
                   <Badge status={bookingStatus}>{bookingStatus === "CONFIRMED" ? t("confirmation.accepted") : bookingStatus === "PENDING_CONFIRMATION" ? t("manage.awaiting") : bookingStatusDisplay}</Badge>
                   <Badge status={b?.payment_status || state?.payment_status}>{b?.payment_status_display || state?.payment_status_display}</Badge>
-                  <Badge tone="slate">{paymentMethodDisplay}</Badge>
+                  <Badge tone="slate">{paymentMethod === "MANUAL" ? t("booking.manualPay") : paymentMethodDisplay}</Badge>
                 </div>
+                {paymentMethod === "MANUAL" && <Alert tone="info" className="mt-4">{t("confirmation.localPaymentNote")}</Alert>}
                 <dl className="mt-4 divide-y divide-line">
                   {b && <>
                     <Row label={t("confirmation.rental", { days: b.rental_days, rate: usd(b.daily_rate) })} value={usd(b.rental_total)} />

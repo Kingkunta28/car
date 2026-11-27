@@ -2,7 +2,7 @@ from decimal import Decimal
 from unittest import mock
 
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from apps.accounts.models import Role
@@ -31,14 +31,22 @@ class PaymentTestBase(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             return self.client.post("/api/v1/payments/manual/", data, format="multipart", **self.headers)
 
+    def record_offline(self, amount="100.00", notes="Cash received at vehicle pickup", channel="CASH"):
+        self.client.force_authenticate(self.manager)
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.client.post("/api/v1/admin/payments/record/", {
+                "booking": str(self.booking.pk), "amount": amount, "channel": channel, "notes": notes,
+            }, format="json")
+
 
 class ManualPaymentTests(PaymentTestBase):
     def test_submission_does_not_mark_paid(self):
         res = self.submit_manual("165.00")
-        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(res.status_code, 400, res.data)
         self.booking.refresh_from_db()
-        self.assertEqual(self.booking.payment_status, PaymentStatus.PENDING_VERIFICATION)
+        self.assertEqual(self.booking.payment_status, PaymentStatus.UNPAID)
         self.assertEqual(self.booking.amount_paid, Decimal("0.00"))
+        self.assertFalse(Payment.objects.exists())
         self.assertFalse(Receipt.objects.exists())
 
     def test_requires_valid_token(self):
@@ -53,24 +61,17 @@ class ManualPaymentTests(PaymentTestBase):
     def test_requires_reference_or_proof(self):
         self.assertEqual(self.submit_manual("50.00", transaction_reference="").status_code, 400)
         res = self.submit_manual("50.00", transaction_reference="", proof=f.png_upload("slip.png"))
-        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.status_code, 400)
 
     def test_verification_is_audited_and_issues_receipt(self):
-        self.submit_manual("165.00")
+        res = self.record_offline("165.00", notes="Cash received at airport handover")
+        self.assertEqual(res.status_code, 201, res.data)
         p = Payment.objects.get()
-        self.client.force_authenticate(self.manager)
-        # Must explicitly confirm.
-        self.assertEqual(self.client.post(f"/api/v1/admin/payments/{p.pk}/verify/", {"confirm": False},
-                                          format="json").status_code, 400)
-        with self.captureOnCommitCallbacks(execute=True):
-            res = self.client.post(f"/api/v1/admin/payments/{p.pk}/verify/", {"confirm": True, "notes": "Seen in bank"},
-                                   format="json")
-        self.assertEqual(res.status_code, 200, res.data)
         p.refresh_from_db()
         self.assertEqual(p.payment_status, Status.VERIFIED)
         self.assertEqual(p.verified_by, self.manager)
         self.assertIsNotNone(p.verified_at)
-        self.assertEqual(p.verification_source, "STAFF_REVIEW")
+        self.assertEqual(p.verification_source, "STAFF_RECORDED")
         self.assertTrue(AuditLog.objects.filter(action="payment.verified", target_id=str(p.pk)).exists())
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.payment_status, PaymentStatus.PAID)
@@ -79,15 +80,16 @@ class ManualPaymentTests(PaymentTestBase):
         self.assertTrue(r.pdf_file)
 
     def test_staff_role_cannot_verify(self):
-        self.submit_manual()
+        self.record_offline("100.00")
         p = Payment.objects.get()
         self.client.force_authenticate(f.staff(Role.STAFF))
         res = self.client.post(f"/api/v1/admin/payments/{p.pk}/verify/", {"confirm": True}, format="json")
         self.assertEqual(res.status_code, 403)
 
     def test_reject(self):
-        self.submit_manual()
-        p = Payment.objects.get()
+        p = Payment.objects.create(booking=self.booking, payment_reference="RCP-PENDING", payment_method="MANUAL",
+                                   channel="BANK_TRANSFER", amount=Decimal("100.00"), currency="USD",
+                                   payment_status=Status.PENDING_VERIFICATION)
         self.client.force_authenticate(self.manager)
         with self.captureOnCommitCallbacks(execute=True):
             res = self.client.post(f"/api/v1/admin/payments/{p.pk}/reject/", {"reason": "No funds received"},
@@ -97,10 +99,8 @@ class ManualPaymentTests(PaymentTestBase):
         self.assertEqual(self.booking.payment_status, PaymentStatus.UNPAID)
 
     def test_partial_payments_and_offline_record(self):
-        self.submit_manual("65.00")
-        p = Payment.objects.get()
-        self.client.force_authenticate(self.manager)
-        self.client.post(f"/api/v1/admin/payments/{p.pk}/verify/", {"confirm": True}, format="json")
+        first = self.record_offline("65.00")
+        self.assertEqual(first.status_code, 201, first.data)
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.payment_status, PaymentStatus.PARTIALLY_PAID)
         self.assertEqual(self.booking.balance_due, Decimal("100.00"))
@@ -108,9 +108,7 @@ class ManualPaymentTests(PaymentTestBase):
         self.assertEqual(self.client.post("/api/v1/admin/payments/record/", {
             "booking": str(self.booking.pk), "amount": "100.00", "channel": "CASH", "notes": ""},
             format="json").status_code, 400)
-        res = self.client.post("/api/v1/admin/payments/record/", {
-            "booking": str(self.booking.pk), "amount": "100.00", "channel": "CASH",
-            "notes": "Cash received at airport handover"}, format="json")
+        res = self.record_offline("100.00", notes="Cash received at airport handover")
         self.assertEqual(res.status_code, 201, res.data)
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.payment_status, PaymentStatus.PAID)
@@ -159,6 +157,7 @@ def pesapal_router(status_payload):
     return _request
 
 
+@override_settings(PAYMENT_GATEWAYS_ENABLED=["pesapal"])
 class OnlinePaymentTests(PaymentTestBase):
     def initiate(self, status_payload, amount=None):
         with mock.patch("apps.payments.gateways.pesapal.requests.request", side_effect=pesapal_router(status_payload)):

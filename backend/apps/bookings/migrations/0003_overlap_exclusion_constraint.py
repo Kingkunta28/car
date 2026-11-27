@@ -1,8 +1,8 @@
 """Database-level double-booking protection (PostgreSQL only).
 
 No two inventory-blocking bookings of the same vehicle may overlap in time
-(pickup → return + turnaround). On SQLite (local development only) this is a
-no-op and the application-level locked check in create_booking() applies.
+(pickup → return + turnaround). The migration is a no-op on unsupported database
+vendors; application settings require PostgreSQL.
 """
 from django.db import migrations
 

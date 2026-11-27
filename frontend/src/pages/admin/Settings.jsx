@@ -54,7 +54,7 @@ function Business() {
         </div>
       </div>
       <div className="card grid gap-4 p-5">
-        {area("payment_instructions", "Manual payment instructions", "Bank and mobile-money details shown to guests who choose manual payment, and printed on invoices.")}
+        {area("payment_instructions", "Local payment notes", "Optional notes about collecting payment on arrival or at vehicle pickup.")}
         {area("invoice_terms", "Invoice terms & notes")}
         {inp("invoice_footer", "Invoice footer")}
         <div className="grid gap-4 sm:grid-cols-2">
@@ -87,7 +87,7 @@ function Pricing() {
         <Table rows={data} onRow={edit ? (r) => setDraft({ ...r }) : undefined} columns={[
           { key: "n", label: "Service", render: (r) => <><span className="font-semibold">{r.name}</span>{r.is_system && <Badge tone="navy" className="ml-2">Core</Badge>}<span className="block text-xs text-muted">{r.description}</span></> },
           { key: "p", label: "Price", className: "text-right", render: (r) => <><span className="font-semibold tabular-nums">{usd(r.price)}</span>{r.bulk_min_quantity && <span className="block text-xs text-muted">{usd(r.bulk_unit_price)} each for {r.bulk_min_quantity}+</span>}</> },
-          { key: "t", label: "Charged", render: (r) => ({ PER_BOOKING: r.code === "outside_zone_delivery" ? "Per leg" : "Per booking", PER_UNIT: "Per unit, per booking", PER_DAY: "Per day", PER_UNIT_PER_DAY: "Per unit, per day" })[r.pricing_type] },
+          { key: "t", label: "Charged", render: (r) => ({ PER_BOOKING: r.code === "outside_zone_delivery" ? "Once per booking" : "Per booking", PER_UNIT: "Per unit, per booking", PER_DAY: "Per day", PER_UNIT_PER_DAY: "Per unit, per day" })[r.pricing_type] },
           { key: "m", label: "Max qty", render: (r) => r.max_quantity },
           { key: "a", label: "Active", render: (r) => <Badge tone={r.is_active ? "green" : "slate"}>{r.is_active ? "Active" : "Off"}</Badge> },
         ]} />

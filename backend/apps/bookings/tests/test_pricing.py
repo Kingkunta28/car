@@ -59,6 +59,12 @@ class PricingEngineTests(TestCase):
         ExtraService.objects.filter(code="baby_seat").update(bulk_min_quantity=None, bulk_unit_price=None)
         self.assertEqual(self.q(extras={"baby_seat": 2}).extras_total, Decimal("120.00"))
 
+    def test_baby_seat_volume_discount_is_not_applied(self):
+        ExtraService.objects.filter(code="baby_seat").update(
+            bulk_min_quantity=2, bulk_unit_price=Decimal("50.00"),
+        )
+        self.assertEqual(self.q(extras={"baby_seat": 2}).extras_total, Decimal("120.00"))
+
     def test_baby_seat_zero_quantity_ignored(self):
         self.assertEqual(self.q(extras={"baby_seat": 0}).extras_total, Decimal("0.00"))
 

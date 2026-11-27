@@ -95,13 +95,16 @@ class BookingFlowTests(TestCase):
         self.assertEqual(res.status_code, 201)
         self.assertEqual(res.data["grand_total"], "225.00")
 
-    def test_stale_submitted_quote_is_rejected_before_booking_creation(self):
+    def test_submitted_frontend_total_does_not_block_and_server_price_is_saved(self):
         payload = f.booking_payload(self.v)
         payload["total_amount"] = "1.00"
         res = self.create(payload)
-        self.assertEqual(res.status_code, 400, res.data)
-        self.assertEqual(res.data["error"]["code"], "validation_error")
-        self.assertFalse(Booking.objects.exists())
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(res.data["grand_total"], "165.00")
+        booking = Booking.objects.get(booking_reference=res.data["booking_reference"])
+        self.assertEqual(booking.grand_total, Decimal("165.00"))
+        self.assertEqual(Invoice.objects.get(booking=booking).total_amount, Decimal("165.00"))
+        self.assertTrue(booking.voucher_file)
 
     def test_matching_submitted_quote_creates_booking(self):
         payload = f.booking_payload(self.v)
@@ -128,8 +131,8 @@ class BookingFlowTests(TestCase):
         res = self.create(payload)
         self.assertEqual(res.status_code, 201, res.data)
         booking = Booking.objects.get(booking_reference=res.data["booking_reference"])
-        self.assertEqual(res.data["booking_status"], BookingStatus.CONFIRMED)
-        self.assertEqual(booking.booking_status, BookingStatus.CONFIRMED)
+        self.assertEqual(res.data["booking_status"], BookingStatus.PENDING_CONFIRMATION)
+        self.assertEqual(booking.booking_status, BookingStatus.PENDING_CONFIRMATION)
         self.assertIsNone(booking.vehicle_id)
         self.assertFalse(booking.blocks_inventory)
         self.assertEqual(booking.vehicle_slug, slug)
@@ -149,9 +152,14 @@ class BookingFlowTests(TestCase):
         voucher = pdfium.PdfDocument(voucher_bytes)
         voucher_text = "\n".join(voucher[i].get_textpage().get_text_range() for i in range(len(voucher)))
         voucher.close()
-        self.assertIn("ACCEPTED", voucher_text)
+        self.assertIn("PENDING CONFIRMATION", voucher_text.upper())
         self.assertIn(booking.booking_reference, voucher_text)
         self.assertIn("Toyota RAV4", voucher_text)
+        from apps.bookings.services import change_status
+        change_status(booking, BookingStatus.CONFIRMED, actor=f.staff(Role.MANAGER), notify_guest=False)
+        booking.refresh_from_db()
+        self.assertEqual(booking.booking_status, BookingStatus.CONFIRMED)
+        self.assertFalse(booking.blocks_inventory)
 
         # Static catalogue vehicles are always bookable; the catalogue does not
         # participate in Django inventory conflict checks.
@@ -177,7 +185,7 @@ class BookingFlowTests(TestCase):
         self.assertEqual(res.status_code, 201, res.data)
         self.assertFalse(res.data["voucher_available"])
         booking = Booking.objects.get(booking_reference=res.data["booking_reference"])
-        self.assertEqual(booking.booking_status, BookingStatus.CONFIRMED)
+        self.assertEqual(booking.booking_status, BookingStatus.PENDING_CONFIRMATION)
         self.assertFalse(booking.voucher_file)
         self.assertEqual(Booking.objects.filter(booking_reference=booking.booking_reference).count(), 1)
         pdf = self.client.get("/api/v1/bookings/confirmation/download/", **self.guest_headers(res))
@@ -240,7 +248,7 @@ class BookingFlowTests(TestCase):
         self.assertGreaterEqual(len(rendered), 5)  # two booking pages + image + two uploaded PDF pages
         text = " ".join(rendered[index].get_textpage().get_text_range() for index in range(len(rendered)))
         rendered.close()
-        self.assertIn("ACCEPTED", text)
+        self.assertIn("PENDING CONFIRMATION", text.upper())
         self.assertIn("PASSPORT PAGE", text)
         self.assertIn("DRIVING LICENCE PAGE", text)
 

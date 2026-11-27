@@ -86,18 +86,15 @@ TEMPLATES = [
 # --------------------------------------------------------------------------
 database_url = env(
     "DATABASE_URL_POOLED",
-    default=env("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
-)
+    default=env("DATABASE_URL", default=""),
+).strip()
+if not database_url:
+    raise RuntimeError("Set DATABASE_URL to the direct Neon PostgreSQL URL; SQLite is not supported.")
 DATABASES = {"default": env.db_url_config(database_url)}
-if DATABASES["default"]["ENGINE"].endswith("sqlite3"):
-    # SQLite is for local development only. Production must use PostgreSQL,
-    # which adds the database-level double-booking EXCLUSION constraint.
-    name = Path(DATABASES["default"]["NAME"])
-    DATABASES["default"]["NAME"] = str(name if name.is_absolute() else BASE_DIR / name)
-    DATABASES["default"]["OPTIONS"] = {"timeout": 20, "transaction_mode": "IMMEDIATE"}
-else:
-    DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
-    DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+if not DATABASES["default"]["ENGINE"].endswith("postgresql"):
+    raise RuntimeError("Rafiki requires Neon PostgreSQL; SQLite is not supported.")
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 
 # --------------------------------------------------------------------------
 # Passwords & auth
@@ -262,11 +259,9 @@ CURRENCY = "USD"
 # --------------------------------------------------------------------------
 # Payment gateways (credentials only ever from the environment)
 # --------------------------------------------------------------------------
-PAYMENT_GATEWAYS_ENABLED = [
-    gateway.strip()
-    for gateway in env.list("PAYMENT_GATEWAYS_ENABLED", default=["pesapal"])
-    if gateway.strip().lower() not in {"", "none", "disabled"}
-]
+# Public checkout is local-payment only. Tests may explicitly override this
+# setting to exercise the legacy gateway integration.
+PAYMENT_GATEWAYS_ENABLED = []
 PESAPAL_ENV = env("PESAPAL_ENV", default="sandbox")
 PESAPAL_CONSUMER_KEY = env("PESAPAL_CONSUMER_KEY", default="")
 PESAPAL_CONSUMER_SECRET = env("PESAPAL_CONSUMER_SECRET", default="")

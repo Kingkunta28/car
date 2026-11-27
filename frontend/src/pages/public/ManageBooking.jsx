@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock, CreditCard, Download, FileText, KeyRound, Landmark, MessageCircle, Receipt, Upload } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Clock, Download, FileText, KeyRound, MessageCircle, Receipt } from "lucide-react";
 import { api, download } from "../../lib/api";
 import { fmtDate, fmtTime, usd, whatsappLink } from "../../lib/format";
 import { useSite } from "../../lib/hooks";
 import { getBusinessInfo } from "../../data/businessInfo";
 import { clearGuest, loadGuest, saveGuest } from "../../lib/guest";
 import { Seo } from "../../lib/seo";
-import { Alert, Badge, Button, ErrorState, Field, Modal, PageLoader, useToast } from "../../components/ui";
+import { Alert, Badge, Button, ErrorState, Field, PageLoader, useToast } from "../../components/ui";
 import { VehicleImage } from "../../components/VehicleCard";
 
 function AccessForm({ onAccess }) {
@@ -30,55 +30,10 @@ function AccessForm({ onAccess }) {
   );
 }
 
-function ManualPaymentForm({ guest, booking, onDone }) {
-  const { t } = useTranslation();
-  const toast = useToast();
-  const [f, setF] = useState({ amount: booking.balance_due, channel: "BANK_TRANSFER", transaction_reference: "", note: "" });
-  const [proof, setProof] = useState(null);
-  const [err, setErr] = useState({});
-  const [busy, setBusy] = useState(false);
-  const submit = async (e) => {
-    e.preventDefault();
-    setBusy(true); setErr({});
-    try {
-      const form = new FormData();
-      Object.entries(f).forEach(([k, v]) => form.append(k, v));
-      if (proof) form.append("proof", proof);
-      await api.upload("/payments/manual/", form, { guest });
-      toast(t("manage.thanks"));
-      onDone();
-    } catch (ex) {
-      setErr({ ...ex.fieldErrors?.(), _: ex.message });
-    } finally { setBusy(false); }
-  };
-  return (
-    <form onSubmit={submit} className="space-y-4">
-      {booking.payment_options?.manual?.instructions && (
-        <div className="rounded-xl bg-sand-50 p-4 text-sm"><p className="font-semibold">{t("manage.paymentInstructions")}</p><p className="mt-1 whitespace-pre-line text-muted">{booking.payment_options.manual.instructions}</p></div>
-      )}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t("manage.amount")} required error={err.amount}>{(a) => <input {...a} type="number" step="0.01" min="0.01" max={booking.balance_due} className="input" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} />}</Field>
-        <Field label={t("manage.method")} required error={err.channel}>{(a) => (
-          <select {...a} className="input" value={f.channel} onChange={(e) => setF({ ...f, channel: e.target.value })}>
-            <option value="BANK_TRANSFER">{t("manage.bank")}</option><option value="MOBILE_MONEY">{t("manage.mobileMoney")}</option><option value="OTHER">{t("manage.other")}</option>
-          </select>)}</Field>
-      </div>
-      <Field label={t("manage.transaction")} error={err.transaction_reference} hint={t("manage.transactionHint")}>{(a) => <input {...a} className="input" value={f.transaction_reference} onChange={(e) => setF({ ...f, transaction_reference: e.target.value })} />}</Field>
-      <Field label={t("manage.proof")} error={err.proof} hint="PDF, JPG or PNG">{(a) => <input {...a} type="file" accept=".pdf,.jpg,.jpeg,.png" className="input" onChange={(e) => setProof(e.target.files?.[0] || null)} />}</Field>
-      <Field label={t("manage.note")}>{(a) => <textarea {...a} rows={2} className="input" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />}</Field>
-      {err._ && <Alert tone="error">{err._}</Alert>}
-      <Button type="submit" loading={busy} icon={Upload} className="w-full">{t("manage.paymentDetails")}</Button>
-    </form>
-  );
-}
-
 export default function ManageBooking() {
   const { t } = useTranslation();
   const [guest, setGuest] = useState(() => loadGuest());
-  const qc = useQueryClient();
   const toast = useToast();
-  const [modal, setModal] = useState(null);
-  const [paying, setPaying] = useState(false);
   const [confirmationBusy, setConfirmationBusy] = useState(false);
   const { data: site } = useSite();
   const business = getBusinessInfo(site);
@@ -112,8 +67,6 @@ export default function ManageBooking() {
 
   const b = q.data;
   const bookingWhatsApp = whatsappLink(business.whatsappNumber, `Hello Rafiki Car Hire, I have a question about booking ${b.booking_reference}.`);
-  const refresh = () => qc.invalidateQueries({ queryKey: ["guest-booking"] });
-  const canPay = Number(b.balance_due) > 0 && ["PENDING_CONFIRMATION", "CONFIRMED"].includes(b.booking_status);
   const dl = async (path, params, name) => {
     try { await download(path, { guest, params }, name); } catch (e) { toast(e.message, "error"); }
   };
@@ -123,17 +76,6 @@ export default function ManageBooking() {
     catch (e) { toast(e.message || "Download failed — please try again.", "error"); }
     finally { setConfirmationBusy(false); }
   };
-  const payOnline = async () => {
-    setPaying(true);
-    try {
-      const res = await api.post("/payments/online/initiate/", { gateway: b.payment_options.online.gateways[0]?.code }, { guest });
-      window.location.assign(res.redirect_url);
-    } catch (e) {
-      toast(e.message, "error");
-      setPaying(false);
-    }
-  };
-
   return (
     <>
       <Seo title={`Booking ${b.booking_reference}`} noindex />
@@ -219,11 +161,8 @@ export default function ManageBooking() {
               <div className="flex justify-between text-emerald-700"><dt>{t("manage.paid")}</dt><dd>{usd(b.amount_paid)}</dd></div>
               <div className="flex justify-between font-display text-lg font-bold text-navy-900"><dt>{t("manage.balance")}</dt><dd>{usd(b.balance_due)}</dd></div>
             </dl>
-            {canPay && (
-              <div className="mt-5 space-y-2.5">
-                {b.payment_options?.online?.available && <Button className="w-full" size="lg" icon={CreditCard} loading={paying} onClick={payOnline}>{t("manage.payOnline", { amount: usd(b.balance_due) })}</Button>}
-                <Button className="w-full" variant="outline" icon={Landmark} onClick={() => setModal("manual")}>{t("manage.manualPaid")}</Button>
-              </div>
+            {b.payment_method === "MANUAL" && Number(b.balance_due) > 0 && (
+              <Alert tone="info" className="mt-5">{t("manage.localPaymentNote")}</Alert>
             )}
           </div>
           {b.documents.length > 0 && (
@@ -237,9 +176,6 @@ export default function ManageBooking() {
         </aside>
       </div>
 
-      <Modal open={modal === "manual"} onClose={() => setModal(null)} title={t("manage.submitManual")}>
-        <ManualPaymentForm guest={guest} booking={b} onDone={() => { setModal(null); refresh(); }} />
-      </Modal>
     </>
   );
 }

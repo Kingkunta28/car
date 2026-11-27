@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft, ArrowRight, Baby, Building2, Check, ChevronDown, CreditCard, FileCheck2, Landmark, Lock, MapPin, Minus, Plane,
+  ArrowLeft, ArrowRight, Baby, Building2, Check, ChevronDown, FileCheck2, Landmark, Lock, MapPin, Minus, Plane,
   Plus, ShieldCheck, Upload,
 } from "lucide-react";
 import { api, ApiError, fetchPdf, triggerDownload } from "../../lib/api";
 import { useBookingOptions, useVehicles } from "../../lib/hooks";
 import { cx, fmtDate, rentalDays, todayISO, usd } from "../../lib/format";
-import { babySeatText, unitPrice } from "../../lib/content";
+import { babySeatText } from "../../lib/content";
 import { calculateBookingPrice } from "../../lib/bookingPrice";
 import { DEFAULT_BOOKING_OPTIONS, vehicleSnapshot } from "../../data/vehicles";
 import { saveGuest } from "../../lib/guest";
@@ -63,6 +63,7 @@ function loadDraft(sp) {
     merged.ret = { ...base.ret, ...(d.ret || {}) };
     merged.flight = { ...base.flight, ...(d.flight || {}) };
     merged.extras = d.extras && typeof d.extras === "object" && !Array.isArray(d.extras) ? d.extras : {};
+    if (merged.payment_method === "ONLINE") merged.payment_method = "MANUAL";
     if (sp.get("permit") === "1") merged.extras = { ...merged.extras, driving_permit: 1 };
     for (const k of ["vehicle", "pickup_date", "return_date"]) if (sp.get(k)) merged[k] = sp.get(k);
     if (sp.get("pickup_type")) merged.pickup = { ...merged.pickup, type: sp.get("pickup_type") };
@@ -124,7 +125,7 @@ function localizedApiFieldError(field, t) {
   if (field.startsWith("extras")) return t("booking.validation.extras");
   if (field.startsWith("flight")) return t("booking.validation.serverField");
   if (field === "accept_terms") return t("booking.validation.terms");
-  if (/^(total_amount|daily_rate)$/.test(field)) return t("booking.priceChanged");
+  if (/^(total_amount|daily_rate)$/.test(field)) return t("booking.validation.serverField");
   return t("booking.validation.serverField");
 }
 
@@ -341,6 +342,7 @@ export default function Booking() {
     options,
   }), [vehicle, s.pickup_date, s.pickup_time, s.return_date, s.return_time,
     s.pickup.type, s.ret.type, s.extras, options]);
+  const babySeatLine = price.lines?.find((line) => line.code === "baby_seat");
 
   useEffect(() => {
     const { accept_terms, ...draft } = s; // eslint-disable-line no-unused-vars
@@ -381,8 +383,7 @@ export default function Booking() {
     setSubmitting(true);
     setSubmitError("");
     try {
-      // Submit the numeric estimate; Django validates the authoritative price
-      // and rejects stale totals without checking vehicle availability.
+      // Submit the exact estimate displayed in the booking summary.
       if (price.error || !price.grand_total) {
         setSubmitError(t("booking.priceConfigError"));
         setStep(1);
@@ -426,10 +427,9 @@ export default function Booking() {
         if (keys.length) {
           const mapped = Object.fromEntries(keys.map((k) => [k.replace(/^(\w+)\.0$/, "$1"), localizedApiFieldError(k, t)]));
           setErrors(mapped);
-          if (fe.total_amount) setSubmitError(t("booking.priceChanged"));
           setStep(Math.min(...keys.map(FIELD_STEP)));
         }
-        if (!keys.includes("total_amount")) setSubmitError(err.message);
+        setSubmitError(t("booking.submitError"));
       } else {
         setSubmitError(t("booking.submitError"));
       }
@@ -569,7 +569,7 @@ export default function Booking() {
                     <div>
                       <h3 className="font-semibold">{t("booking.babySeats")}</h3>
                       <p className="text-sm text-muted">{babySeatText(options)} {t("booking.seatWhole")}</p>
-                      {(s.extras.baby_seat || 0) > 0 && <p className="mt-1 text-sm font-semibold text-navy-900">{s.extras.baby_seat} × {usd(unitPrice(babySeat, s.extras.baby_seat))} = {usd(s.extras.baby_seat * unitPrice(babySeat, s.extras.baby_seat))}</p>}
+                      {babySeatLine && <p className="mt-1 text-sm font-semibold text-navy-900">{babySeatLine.quantity} × {usd(babySeatLine.unit_price)} = {usd(babySeatLine.total)}</p>}
                     </div>
                   </div>
                   <Qty label={t("booking.babySeats")} value={s.extras.baby_seat || 0} max={babySeat.max_quantity} onChange={(q) => setExtra("baby_seat", q)} />
@@ -623,13 +623,8 @@ export default function Booking() {
             <div className="space-y-6">
               <fieldset>
                 <legend className="sr-only">{t("booking.payment")}</legend>
-                <div className={`grid gap-4 ${options.payment_methods.online.available ? "sm:grid-cols-2" : "sm:grid-cols-1"}`} role="radiogroup">
-                  {[
-                    ...(options.payment_methods.online.available ? [
-                      { code: "ONLINE", icon: CreditCard, title: t("booking.onlinePay"), text: t("booking.onlineDescription") },
-                    ] : []),
-                    { code: "MANUAL", icon: Landmark, title: t("booking.manualPay"), text: t("booking.manualDescription") },
-                  ].map((m) => (
+                <div className="grid gap-4" role="radiogroup">
+                  {[{ code: "MANUAL", icon: Landmark, title: t("booking.manualPay"), text: t("booking.manualDescription") }].map((m) => (
                     <button key={m.code} type="button" role="radio" aria-checked={s.payment_method === m.code}
                       onClick={() => up({ payment_method: m.code })}
                       className={cx("flex flex-col items-start rounded-2xl border-2 p-5 text-left transition disabled:cursor-not-allowed disabled:opacity-50",
@@ -642,16 +637,7 @@ export default function Booking() {
                 </div>
                 {errors.payment_method && <p className="mt-2 text-sm text-red-600" role="alert">{errors.payment_method}</p>}
               </fieldset>
-              {s.payment_method === "MANUAL" && options.payment_methods.manual.instructions && (
-                <div className="rounded-2xl bg-sand-50 p-5">
-                  <h3 className="font-semibold">{t("booking.paymentHow")}</h3>
-                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">{options.payment_methods.manual.instructions}</p>
-                  <p className="mt-3 text-sm text-muted">{t("booking.paymentInstructions")}</p>
-                </div>
-              )}
-              {s.payment_method === "ONLINE" && (
-                <Alert tone="info">{t("booking.onlineInfo")}</Alert>
-              )}
+              {s.payment_method === "MANUAL" && <Alert tone="info">{t("booking.localPaymentNote")}</Alert>}
             </div>
           )}
 
@@ -665,7 +651,7 @@ export default function Booking() {
                   [t("booking.review.return"), <>{t(`booking.locations.${s.ret.type}`, { defaultValue: options.locations.find((l) => l.code === s.ret.type)?.label })}{s.ret.area && ` — ${s.ret.area}`}<br />{s.ret.address}</>, 3],
                   [t("booking.review.flight"), s.flight.flight_number || s.flight.airline_name ? `${s.flight.airline_name} ${s.flight.flight_number}` : t("booking.review.notProvided"), 4],
                   [t("booking.review.extras"), Object.entries(s.extras).filter(([, q]) => q > 0).map(([c, q]) => `${extraLabel(options.extras.find((e) => e.code === c), t)} × ${q}`).join(", ") || t("booking.review.none"), 5],
-                  [t("booking.review.payment"), s.payment_method === "ONLINE" ? t("booking.onlinePay") : s.payment_method === "MANUAL" ? t("booking.manualPay") : t("booking.review.notChosen"), 6],
+                  [t("booking.review.payment"), s.payment_method === "MANUAL" ? t("booking.manualPay") : t("booking.review.notChosen"), 6],
                 ].map(([title, body, st]) => (
                   <div key={title} className="rounded-2xl border border-line p-4">
                     <div className="flex items-center justify-between">

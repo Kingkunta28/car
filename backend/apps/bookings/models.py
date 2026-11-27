@@ -160,8 +160,8 @@ class Booking(UUIDModel, TimeStampedModel):
             models.CheckConstraint(condition=Q(blocked_until__gte=models.F("return_at")), name="booking_block_after_return"),
             models.CheckConstraint(condition=Q(rental_days__gte=1), name="booking_min_one_day"),
             models.CheckConstraint(condition=Q(grand_total__gte=0), name="booking_total_non_negative"),
-            # The PostgreSQL EXCLUSION constraint "booking_no_vehicle_overlap" is
-            # added by migration 0003 (PostgreSQL only, so SQLite works for dev).
+            # The PostgreSQL EXCLUSION constraint "booking_no_vehicle_overlap"
+            # is added by migration 0003.
         ]
         indexes = [
             models.Index(fields=["vehicle", "blocks_inventory", "pickup_at"]),

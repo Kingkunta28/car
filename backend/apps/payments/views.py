@@ -21,9 +21,8 @@ from apps.core.utils import audit
 from . import services
 from .gateways import GatewayError, get_gateway
 from .models import Method, Payment, Status
-from .serializers import (ManualPaymentSerializer, OnlineInitiateSerializer, OnlineVerifySerializer,
-                          PaymentSerializer, RecordPaymentSerializer, RefundInputSerializer, RejectSerializer,
-                          VerifySerializer)
+from .serializers import (OnlineInitiateSerializer, OnlineVerifySerializer, PaymentSerializer,
+                          RecordPaymentSerializer, RefundInputSerializer, RejectSerializer, VerifySerializer)
 
 logger = logging.getLogger(__name__)
 
@@ -42,14 +41,10 @@ class ManualPaymentView(APIView):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def post(self, request):
-        booking = guest_booking_or_404(request)
-        s = ManualPaymentSerializer(data=request.data)
-        s.is_valid(raise_exception=True)
-        d = s.validated_data
-        payment = services.submit_manual_payment(
-            booking, amount=d["amount"], channel=d["channel"], transaction_reference=d["transaction_reference"],
-            note=d["note"], proof=d.get("proof"), request=request)
-        return Response(_guest_payment(payment), status=status.HTTP_201_CREATED)
+        guest_booking_or_404(request)
+        from apps.core.exceptions import BusinessRuleError
+
+        raise BusinessRuleError("Payment is collected locally on arrival or at vehicle pickup.")
 
 
 class OnlinePaymentInitiateView(APIView):

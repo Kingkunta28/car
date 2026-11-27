@@ -28,19 +28,19 @@ A reference alone is never enough.
 | GET | `/site/` | Public business info (name, contacts, WhatsApp, logo, hero image) |
 | GET | `/testimonials/` | Published reviews |
 | POST | `/contact/` | `{name, email, phone?, subject?, message}`. Rate-limited, honeypot field `website` |
-| GET | `/vehicles/` | Active fleet. Filters: `category`, `transmission`, `fuel_type`, `min_price`, `max_price`, `min_passengers`, `available=true`, `featured=true`, `pickup_at`+`return_at` (ISO datetimes; returns only cars free for that window), `search`, `ordering` |
+| GET | `/vehicles/` | Active fleet. Filters: `category`, `transmission`, `fuel_type`, `min_price`, `max_price`, `min_passengers`, `featured=true`, `search`, `ordering`. Availability filters apply only to database-managed legacy vehicles; the static customer catalogue is always selectable. |
 | GET | `/vehicles/{slug}/` | Vehicle details, images and features |
-| GET | `/vehicles/{slug}/availability/` | Without parameters: `{bookable, busy: [{start, end}]}` with no customer data. With `pickup_at`/`return_at`: `{available, reason}` |
+| GET | `/vehicles/{slug}/availability/` | Legacy database-managed vehicle availability; the customer booking form does not call this endpoint. |
 | GET | `/booking-options/` | Locations with fees, extras with prices, default airport, hold hours, upload limit, available payment methods and manual payment instructions |
-| POST | `/bookings/quote/` | `{vehicle, pickup_date, pickup_time, return_date, return_time, pickup_type, return_type, extras}` → full server price breakdown plus `available` |
+| POST | `/bookings/quote/` | `{vehicle, pickup_date, pickup_time, return_date, return_time, pickup_type, return_type, extras}` → server-calculated price breakdown |
 | POST | `/bookings/` | Create a booking (below) |
 | GET | `/bookings/track/` | *Guest headers.* Booking, invoices, receipts, payments and payment options |
 | GET | `/invoices/download/?invoice=<number\|latest>` | *Guest headers.* PDF |
 | GET | `/receipts/download/?receipt=<number>` | *Guest headers.* PDF |
-| POST | `/payments/manual/` | *Guest headers.* Multipart `{amount, channel, transaction_reference?, note?, proof?}` → status `PENDING_VERIFICATION` |
-| POST | `/payments/online/initiate/` | *Guest headers.* `{gateway: "pesapal", amount?}` (defaults to the balance) → `{redirect_url, …}` |
-| POST | `/payments/online/verify/` | `{order_tracking_id}`. The server checks the status with the gateway and returns minimal status data |
-| GET/POST | `/webhooks/payments/{provider}/` | Gateway IPN. Always re-verified against the gateway API |
+| POST | `/payments/manual/` | Guest payment submissions are disabled. Payment is recorded by authorized staff after local collection. |
+| POST | `/payments/online/initiate/` | Online gateways are disabled; this endpoint cannot start customer checkout. |
+| POST | `/payments/online/verify/` | Legacy gateway callback; no new customer payments can be initiated. |
+| GET/POST | `/webhooks/payments/{provider}/` | Legacy gateway callback; no new customer payments can be initiated. |
 | GET | `/sitemap.xml` (site root) | Sitemap including every active vehicle |
 
 ### Create booking: `POST /bookings/`

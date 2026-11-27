@@ -16,7 +16,7 @@ This is the car rental and booking management platform for Rafiki Car Hire in Za
 | Background jobs | Celery and Redis (emails, retries, hold expiry, document purge, payment reconciliation) |
 | Frontend | React 19, Vite 7, Tailwind CSS 4, TanStack Query |
 | PDFs | ReportLab (server-side) |
-| Payments | Manual payments verified by staff; online payments are disabled by default and can be re-enabled with Pesapal |
+| Payments | Pay locally on arrival or at pickup; staff record received payments and issue receipts |
 | Storage | Local disk by default; optional S3-compatible public and **private** buckets |
 
 ---
@@ -68,9 +68,7 @@ car/
 cd backend
 python -m venv ../venv && ../venv/Scripts/activate      # macOS/Linux: source ../venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env                                     # then edit (see §3)
-# Local dev defaults to SQLite (DATABASE_URL=sqlite:///db.sqlite3) — no database server needed.
-# To develop on PostgreSQL instead: createdb -U postgres rafiki, and set DATABASE_URL=postgres://...
+cp .env.example .env                                     # set DATABASE_URL and DATABASE_URL_POOLED (see section 3)
 python manage.py migrate                                 # also seeds the core fees and site settings
 python manage.py createsuperuser                         # your first ADMIN user
 python manage.py runserver
@@ -105,13 +103,15 @@ All secrets are read from environment variables. `backend/.env.example` document
 | Variable | Purpose |
 |---|---|
 | `DJANGO_SECRET_KEY` | Long random string. Different in each environment. |
-| `DATABASE_URL` | `postgres://user:pass@host:5432/rafiki` |
+| `DATABASE_URL` | Direct Neon PostgreSQL URL for migrations |
+| `DATABASE_URL_POOLED` | Neon pooled URL for normal app traffic |
+| `TEST_DATABASE_URL` | Direct URL on a dedicated Neon test branch; Django creates and drops a test database here |
 | `REDIS_URL` | Celery broker, cache and rate-limit store |
 | `FRONTEND_URL`, `BACKEND_URL` | Used in email links, payment callbacks and the webhook URL |
 | `EMAIL_*`, `DEFAULT_FROM_EMAIL` | SMTP relay (Brevo, Resend, Postmark and others) |
 | `OWNER_NOTIFICATION_EMAIL` | Fallback address for owner alerts. Can also be set in the dashboard. |
-| `PAYMENT_GATEWAYS_ENABLED` | Set to `pesapal` to enable online payments; use `disabled` to turn them off (default in Render) |
-| `PESAPAL_*` | Pesapal credentials, only needed when online payments are enabled |
+| `PAYMENT_GATEWAYS_ENABLED` | Online gateways are disabled in the application; this setting cannot enable customer checkout |
+| `PESAPAL_*` | Legacy gateway credentials are not used for customer checkout |
 | `USE_S3`, `AWS_*` | Optional S3-compatible public and private storage. Without it, files use local disk and may be lost on hosted restarts or redeploys. |
 | `BOOKING_HOLD_HOURS` | How long a pending booking blocks the car (default 24) |
 | `BOOKING_TURNAROUND_HOURS` | Cleaning buffer between rentals (default 2) |
@@ -128,7 +128,7 @@ Never commit `.env`. It is listed in `.gitignore`.
 
   | Service | Price | How it's charged |
   |---|---:|---|
-  | `outside_zone_delivery` | $25 | Per leg (pickup and return charged separately) |
+  | `outside_zone_delivery` | $25 | Once per booking if either leg is outside the free zone |
   | `baby_seat` | $60 | Per seat, per booking (not per day) |
   | `driving_permit` | $25 | Once per booking |
 
@@ -138,10 +138,11 @@ Never commit `.env`. It is listed in `.gitignore`.
 - A full `pricing_breakdown` is saved on every booking. Later price changes never alter existing bookings. When staff modify a booking, the originally agreed daily rate is kept unless the car itself changes.
 
 ### Availability (`apps/bookings/availability.py`)
-- A submitted booking creates a **hold** (`blocks_inventory=True`, `hold_expires_at`).
+- Static customer-catalogue vehicles are always selectable. Their bookings wait for staff confirmation and do not create Django fleet inventory holds.
+- Database-managed vehicles keep the existing hold (`blocks_inventory=True`, `hold_expires_at`) and conflict checks.
 - Double booking is prevented at two levels:
   1. **In the application:** the vehicle row is locked with `SELECT … FOR UPDATE` and conflicts are checked.
-  2. **In the database:** a PostgreSQL `EXCLUSION` constraint (`btree_gist`, added by migration `bookings.0003`) forbids two blocking bookings for the same vehicle whose time ranges overlap, including the turnaround buffer. SQLite (local development only) relies on check 1. Production settings refuse to start unless the database is PostgreSQL.
+  2. **In the database:** a PostgreSQL `EXCLUSION` constraint (`btree_gist`, added by migration `bookings.0003`) forbids two blocking bookings for the same vehicle whose time ranges overlap, including the turnaround buffer.
 - Rejected, cancelled, expired and completed bookings release the car. Lapsed holds expire automatically (Celery beat, plus a check on every new booking). Bookings with any verified payment are never expired automatically.
 
 ### Invoices (`apps/invoices`)
@@ -183,7 +184,7 @@ cd backend
 DJANGO_SETTINGS_MODULE=config.settings.test python manage.py test apps
 ```
 
-**Result: 78 tests, all passing on PostgreSQL 18.** They cover:
+Set `TEST_DATABASE_URL` to a direct Neon endpoint on a dedicated test branch before running this command. Django creates and drops a separate test database; do not point it at a shared or production branch. The suite covers:
 - pricing for every fee rule;
 - booking creation and validation;
 - conflicting bookings, the turnaround buffer and the database-level overlap constraint;
@@ -192,7 +193,7 @@ DJANGO_SETTINGS_MODULE=config.settings.test python manage.py test apps
 - the driving permit's document requirement, disguised or oversized uploads, document access by role, and retention purging;
 - invoice contents, numbering under concurrency, revisions, regeneration of a missing PDF, and admin resend;
 - email failure: the failure is recorded, retried with backoff, and eventually abandoned;
-- manual payment submission, verification, rejection, audit trail and receipts;
+- offline payment recording, verification, rejection, audit trail and receipts (customers pay locally);
 - partial payments, offline payments and refunds;
 - Pesapal: checkout, webhook verification, forged webhooks, amount and reference mismatches, failed payments, duplicate notifications;
 - admin permissions and roles, the CSRF-protected login, and booking status transitions.
@@ -207,7 +208,7 @@ Frontend: `npm run build` completes without errors.
 
 The free Render setup is **frontend on Vercel** and one free Render web service running the Django API plus best-effort Celery tasks. Neon provides PostgreSQL, and an existing Render Key Value instance supplies Redis (`render.yaml` does not create another one). Uploads use the Render service's local disk, which is temporary; uploaded images and customer documents may disappear after a restart or redeploy. This setup is for demos and testing rather than reliable background processing or long-term file retention.
 
-1. **Render.** Choose New → Blueprint and select this repository and its production branch. The Blueprint uses the existing Neon database and Render Key Value instance; it creates neither datastore. During first setup, provide `DATABASE_URL` (Neon's direct URL), `DATABASE_URL_POOLED` (Neon's pooled URL), and `REDIS_URL` (the existing Key Value connection URL). Both database URLs must have TLS enabled. Also provide SMTP and owner email when prompted. Online payments are disabled by default; set `PAYMENT_GATEWAYS_ENABLED=pesapal` and provide Pesapal settings to enable them. If the Blueprint already exists, make sure `USE_S3=false` in the service's Environment settings. On free Render, migrations run at service startup; the API and Celery processes share one web service.
+1. **Render.** Choose New → Blueprint and select this repository and its production branch. The Blueprint uses the existing Neon database and Render Key Value instance; it creates neither datastore. During first setup, provide `DATABASE_URL` (Neon's direct URL), `DATABASE_URL_POOLED` (Neon's pooled URL), and `REDIS_URL` (the existing Key Value connection URL). Both database URLs must have TLS enabled. Also provide SMTP and owner email when prompted. Customer payments are local only; online gateways are disabled in application settings. Before accepting bookings that require passport or licence uploads, configure durable private object storage with `USE_S3=true` and the required bucket credentials. On free Render, migrations run at service startup; the API and Celery processes share one web service.
 3. **Frontend.** Import the `frontend/` folder into Vercel, set the root directory to `frontend`, build command to `npm run build`, output directory to `dist`, and set `VITE_SITE_URL=https://car-lovat-two.vercel.app`. Leave `VITE_API_BASE` empty: the existing rewrite sends `/api` to `https://rafiki-api-3gm3.onrender.com`, preserving same-origin session and CSRF behavior. The fleet catalogue and images are bundled with the frontend; booking submission still needs the Django API. Do not put database or backend secrets in any `VITE_*` variable.
 4. **DNS and HTTPS.** The Vercel rewrites use `https://rafiki-api-3gm3.onrender.com` for the API. If you later add a custom API domain, update the rewrites and Render's `BACKEND_URL` to match. Point the `www` and apex site domains to Vercel if using them. Both providers issue TLS certificates automatically. Django enforces HTTPS, HSTS and secure cookies in production.
 5. **Admin setup.** Free Render does not provide shell access. Create the Django admin user from a trusted local environment using the Neon `DATABASE_URL`, or temporarily upgrade the service to run the management command.
@@ -226,12 +227,11 @@ Run `python manage.py check_setup` at any time to see what's still missing.
 | First admin account | `python manage.py createsuperuser` |
 | Business email, phone, **WhatsApp number**, address | Dashboard → Settings → Business |
 | Owner notification email | Dashboard → Settings → Business |
-| **Manual payment instructions** (bank and mobile-money details) | Dashboard → Settings → Business |
+| Optional local payment notes for collection on arrival or pickup | Dashboard → Settings → Business |
 | Logo and homepage hero photo | Dashboard → Settings → Business |
 | Vehicles, real prices and **real photos** | Dashboard → Vehicles |
 | Genuine guest reviews (optional) | Dashboard → Settings → Reviews |
 | SMTP account (Brevo or Resend: verify your sending domain, then set SPF and DKIM records) | environment `EMAIL_*` |
-| Pesapal merchant account: sandbox keys first, then live keys after Pesapal approves the merchant account | environment `PESAPAL_*` |
 | Optional S3-compatible storage | environment `AWS_*` |
 | Domain name: update `robots.txt`, `vercel.json`/`netlify.toml` and `VITE_SITE_URL` | frontend |
 | Open Graph share image (`frontend/public/og-image.jpg`, 1200×630) | frontend |
